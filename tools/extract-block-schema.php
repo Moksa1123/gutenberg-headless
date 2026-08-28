@@ -200,6 +200,29 @@ foreach ( ( isset( $global_settings['blocks'] ) ? $global_settings['blocks'] : a
 	$block_settings[ $name ] = $decl;
 }
 
+// ---- the breakpoints each block hardcodes in its own stylesheet -------------
+// theme.json's `settings.viewport` decides what `style["@mobile"]` compiles to,
+// and it decides NOTHING about a block that ships its own media query. Measured
+// here rather than assumed, because the values disagree: core/columns stacks at
+// 781px and core/media-text at 600px, both through an attribute called
+// `isStackedOnMobile`.
+$block_breakpoints = array();
+$css_dir = ABSPATH . WPINC . '/blocks';
+if ( is_dir( $css_dir ) ) {
+	foreach ( glob( $css_dir . '/*/style.min.css' ) as $file ) {
+		$css = file_get_contents( $file );
+		if ( ! $css || false === strpos( $css, '@media' ) ) {
+			continue;
+		}
+		preg_match_all( '/@media\s*\(([^)]*(?:width)[^)]*)\)/i', $css, $m );
+		if ( empty( $m[1] ) ) {
+			continue;
+		}
+		$slug = basename( dirname( $file ) );
+		$block_breakpoints[ 'core/' . $slug ] = array_values( array_unique( array_map( 'trim', $m[1] ) ) );
+	}
+}
+
 $pattern_categories = array();
 if ( class_exists( 'WP_Block_Pattern_Categories_Registry' ) ) {
 	foreach ( WP_Block_Pattern_Categories_Registry::get_instance()->get_all_registered() as $c ) {
@@ -248,6 +271,7 @@ $out = array(
 	'theme_supports'     => $theme_supports,
 	'block_style_defaults' => $block_styles_defaults,
 	'block_settings'     => $block_settings,
+	'block_breakpoints'  => $block_breakpoints,
 );
 
 echo wp_json_encode( $out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );

@@ -411,7 +411,7 @@ tools/
   validate-post.py           pre-flight both halves of every block
   apply-post.php             write past kses/slashing/strip-filters, byte-verify, purge
   verify-live.py             the public URL, through the cache, fluid-aware
-  el2blocks.py               Elementor -> blocks, driven by elementor-headless's measured CSS map
+  el2blocks.py               Elementor -> blocks: _elementor_data, a template export, or a kit .zip
   audit-coverage.py          every Elementor control the converter never read - the completeness check
   collect-states.js          hover/focus/transition per interactive element
   audit-contrast.js          in-page WCAG contrast audit (gradients, cover dims, symbols)
@@ -427,7 +427,7 @@ tools/
 
 references/  data-model · supports-and-styles · dynamic-blocks · canonicalization
              wp71-new-surface · woo-onepage · fidelity · extraction-traps
-             custom-css-js · elementor-migration · editor-surface
+             custom-css-js · elementor-migration · editor-surface · responsive
 examples/    demo-page.html          the first proof page (editor byte-identical)
              wp71-features.html      WP 7.1's new surface, exercised and verified
              fidelity-target.html    a hand-designed HTML/CSS/JS/SVG page...

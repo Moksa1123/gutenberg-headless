@@ -122,7 +122,15 @@ python tools/gb.py bindings                       # what metadata.bindings may n
 python tools/gb.py templates                      # the four different things called "template"
 python tools/gb.py settings                       # what the editor ALLOWS here, and what the theme already styles
 python tools/gb.py patterns --show hero-product   # canonical markup core/Woo/the theme ship, for THIS site
+python tools/gb.py rwd                            # every responsive mechanism here, with its real width
 ```
+
+Run `gb.py rwd` before writing any breakpoint. On the reference site FOUR
+different widths call themselves "mobile": `style["@mobile"]` is 689.98px (from
+theme.json `settings.viewport`), `core/columns` stacks at 781px and
+`core/media-text` at 600px (both hardcoded in their own CSS, both through an
+attribute named `isStackedOnMobile`), and `@tablet` is a RANGE, not a
+max-width. references/responsive.md.
 
 The 86 shipped patterns are also the corpus the validator is checked against:
 `tools/selftest-patterns.py` runs its rules over markup WordPress itself wrote.

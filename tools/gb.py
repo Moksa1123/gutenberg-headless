@@ -495,6 +495,60 @@ def cmd_settings(s, a):
             print(f"    {name:28} {', '.join(sorted(decl))}")
 
 
+def cmd_rwd(s, a):
+    """Every responsive mechanism the block editor gives you HERE, with the
+    width each one actually uses.
+
+    The reason this is a command and not a paragraph: the numbers disagree, and
+    nothing in the editor tells you so. On this site four different widths all
+    call themselves "mobile"."""
+    gs = s.get("global_settings") or {}
+    vp = gs.get("viewport") or {}
+    print("1. per-block breakpoint STATES  (WP 7.1)   style[\"@mobile\"] / style[\"@tablet\"]")
+    if vp:
+        mob, tab = vp.get("mobile"), vp.get("tablet")
+        print(f"     from theme.json settings.viewport: mobile={mob}  tablet={tab}")
+        if mob:
+            print(f"     @mobile  -> @media (width <= {mob})")
+        if mob and tab:
+            # A RANGE, not a max-width - a value set at @tablet does not apply
+            # below the mobile breakpoint.
+            print(f"     @tablet  -> @media ({mob} < width <= {tab})   <- a RANGE, not max-width")
+        elif tab:
+            print(f"     @tablet  -> @media (width <= {tab})")
+    else:
+        print("     settings.viewport not set - the defaults in WP_Theme_JSON apply")
+
+    bp = s.get("block_breakpoints") or {}
+    print(f"\n2. breakpoints blocks HARDCODE in their own stylesheet ({len(bp)} blocks)")
+    print("     theme.json decides nothing about these.")
+    for name, qs in sorted(bp.items()):
+        if a.grep and a.grep not in name:
+            continue
+        print(f"     {name:24} {', '.join(qs)}")
+
+    resp_attrs = []
+    for name, b in s["blocks"].items():
+        hits = [x for x in (b.get("attributes") or {})
+                if any(k in x.lower() for k in ("stackedonmobile", "responsive", "overlaymenu",
+                                                "mobilecolumns", "tabletcolumns"))]
+        if hits:
+            resp_attrs.append((name, hits))
+    print(f"\n3. blocks with a responsive ATTRIBUTE ({len(resp_attrs)})")
+    for name, hits in sorted(resp_attrs):
+        print(f"     {name:24} {', '.join(hits)}")
+
+    lay = gs.get("layout") or {}
+    print("\n4. layout")
+    print(f"     contentSize: {lay.get('contentSize')}   wideSize: {lay.get('wideSize')}")
+    print(f"     useRootPaddingAwareAlignments: {gs.get('useRootPaddingAwareAlignments')}")
+    fluid = (gs.get("typography") or {}).get("fluid")
+    print(f"\n5. fluid typography: {j(fluid)}"
+          + ("   <- every font-size you write is rewritten to clamp()" if fluid else ""))
+    ts = s.get("theme_supports") or {}
+    print(f"6. responsive-embeds theme support: {'yes' if ts.get('responsive-embeds') else 'no'}")
+
+
 def cmd_bindings(s, a):
     """Sources a `metadata.bindings` entry may name. core/pattern-overrides is
     what turns a synced pattern into a template with editable slots."""
@@ -615,6 +669,8 @@ def main():
     p.add_argument("--grep")
     p = sub.add_parser("save")
     p.add_argument("block")
+    p = sub.add_parser("rwd")
+    p.add_argument("--grep")
     sub.add_parser("settings")
     sub.add_parser("bindings")
     sub.add_parser("templates")

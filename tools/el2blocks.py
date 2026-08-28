@@ -1532,9 +1532,64 @@ def convert_element(e, ctx) -> str:
     return ""
 
 
+def load_elementor(path: Path, want: str | None = None):
+    """Read whatever Elementor actually hands you, and say which it was.
+
+    Returns (label, tree, extras). Four shapes, all confirmed against
+    Elementor's own source rather than assumed:
+
+      _elementor_data     a bare array - what the postmeta holds
+      the same, encoded   postmeta stores it as a JSON *string*, so a dump of
+                          the meta value is a JSON document containing a string
+      template export     `elementor-<id>-<date>.json` from Export Template:
+                          {"content": [...], "page_settings": {...},
+                           "version", "title", "type"} and, on newer versions,
+                          "global_classes" / "global_variables"
+                          (local.php::prepare_template_export)
+      kit .zip            Export Kit: templates at content/<post_type>/<ID>.json,
+                          each one a template export, beside manifest.json and
+                          site-settings.json
+                          (import-export/runners/export/elementor-content.php)
+    """
+    def unwrap(doc, label):
+        if isinstance(doc, str):                       # postmeta is a string
+            doc = json.loads(doc)
+        if isinstance(doc, list):
+            return label, doc, {}
+        if isinstance(doc, dict) and isinstance(doc.get("content"), list):
+            extras = {k: doc[k] for k in
+                      ("page_settings", "global_classes", "global_variables", "type", "version")
+                      if doc.get(k)}
+            return doc.get("title") or label, doc["content"], extras
+        raise ValueError(f"{label}: not Elementor data - expected an element array, "
+                         f"or an export with a 'content' array")
+
+    if path.suffix.lower() == ".zip":
+        import zipfile
+        with zipfile.ZipFile(path) as z:
+            members = sorted(n for n in z.namelist()
+                             if n.startswith("content/") and n.endswith(".json"))
+            if not members:
+                raise ValueError(f"{path}: no content/*/*.json inside - not an Elementor kit")
+            if want:
+                members = [m for m in members if want in m] or members[:0]
+                if not members:
+                    raise ValueError(f"no template matching {want!r} in the kit")
+            elif len(members) > 1:
+                note("warn", "-", f"kit holds {len(members)} templates; converting the first. "
+                                  f"Use --template to pick: "
+                                  f"{', '.join(Path(m).stem for m in members[:6])}")
+            m = members[0]
+            return unwrap(json.loads(z.read(m).decode("utf-8")), Path(m).stem)
+
+    return unwrap(json.loads(path.read_text(encoding="utf-8")), path.stem)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("file", help="_elementor_data JSON")
+    ap.add_argument("file", help="_elementor_data JSON, an Elementor template export, "
+                                 "or an exported kit .zip")
+    ap.add_argument("--template", help="which template to take out of a kit .zip")
     ap.add_argument("--el-skill", type=Path,
                     default=Path(os.path.expanduser("~/.claude/skills/elementor-headless")),
                     help="path to the elementor-headless skill (its measured CSS map drives the mapping)")
@@ -1546,7 +1601,33 @@ def main():
         note("warn", "-", "elementor-headless not found - style mapping limited to the built-in cases")
     ctx = {"elmap": elmap, "cssmap": css_to_style_path()}
 
-    tree = json.loads(Path(a.file).read_text(encoding="utf-8"))
+    label, tree, extras = load_elementor(Path(a.file), a.template)
+    if extras.get("type"):
+        note("info", "-", f"{label}: Elementor template export, type={extras['type']}"
+                          + (f" (v{extras['version']})" if extras.get("version") else ""))
+
+    # An export carries more than the element tree, and dropping it silently is
+    # how a converted page loses its page background or its global classes.
+    ps = extras.get("page_settings") or {}
+    if ps:
+        interesting = {k: v for k, v in ps.items()
+                       if v not in (None, "", [], {}) and not k.startswith("_")}
+        if interesting:
+            note("warn", "page_settings",
+                 f"the export sets {len(interesting)} PAGE-level settings that belong to the "
+                 f"document, not to any element, so no block carries them: "
+                 f"{', '.join(sorted(interesting)[:8])}"
+                 + (" ..." if len(interesting) > 8 else "")
+                 + " - re-apply them on the destination page or wrap the result in a group")
+    for key, what in (("global_classes", "global CSS classes"),
+                      ("global_variables", "global variables")):
+        if extras.get(key):
+            n = len(extras[key]) if hasattr(extras[key], "__len__") else "?"
+            note("warn", key,
+                 f"the export carries {n} {what}. Elements referencing them resolve through "
+                 f"Elementor's own stylesheet, which a block page does not load - the values "
+                 f"they resolve to are not in this file")
+
     body = "\n\n".join(x for x in (convert_element(e, ctx) for e in tree) if x)
     # The design layer goes FIRST and carries the layout rules an optimiser
     # must not be able to strip (see DESIGN_RULES).
