@@ -120,6 +120,7 @@ python tools/gb.py deprecated core/image          # why "valid" is not "stable" 
 python tools/gb.py save core/button               # the exact shape save() writes - canonical order
 python tools/gb.py bindings                       # what metadata.bindings may name
 python tools/gb.py templates                      # the four different things called "template"
+python tools/gb.py settings                       # what the editor ALLOWS here, and what the theme already styles
 ```
 
 The last six read `data/editor-surface.json`, extracted from the EDITOR rather

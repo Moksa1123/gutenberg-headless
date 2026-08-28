@@ -35,6 +35,9 @@ Warnings:
   W-WRAPPER   first element lacks the wp-block-* class this block normally carries
   W-EDITOR    block the SERVER registers but the editor's registry does not -
               the page renders and the editor cannot read or place it
+  W-DEPRECATED the wrapper tag matches an OLD save() of this block. WordPress
+              accepts it - that is what a deprecation is for - and rewrites it
+              the moment anyone edits the block, running migrate() if it has one
   W-ORDER     class or inline-CSS order differs from what this block's save()
               writes. Legal, and the editor accepts it; what it does not survive
               is the editor's own next save, which regenerates the page and
@@ -171,6 +174,38 @@ def _violation(before, actual):
     return None
 
 
+def deprecated_form(rep, where, srec, tag_str):
+    """Is this markup an OLD form of the block rather than the current one?
+
+    WordPress accepts it - that is what a deprecation is for - and then rewrites
+    it the moment anyone edits the block, silently, with whatever `migrate()`
+    decides. The check is deliberately narrow: only the wrapper TAG, which is
+    unambiguous. Eight deprecations on this site change it, and each is a real
+    trap for hand-written markup: core/button's pre-6.x form is a bare <a>
+    where the current one is a <div> wrapping one, core/pullquote was a
+    <blockquote> and is now a <figure>, core/cover was a <section>."""
+    save = srec.get("save") or {}
+    els = save.get("elements") or []
+    if not els or not tag_str:
+        return
+    current = els[0].get("tag")
+    m = re.match(r"<([a-zA-Z][a-zA-Z0-9]*)", tag_str)
+    if not current or not m:
+        return
+    actual = m.group(1).lower()
+    if actual == current:
+        return
+    for d in srec.get("deprecated") or []:
+        sh = d.get("shape") or {}
+        if sh.get("tag") == actual:
+            how = " and migrate() REWRITES the attributes" if d.get("hasMigrate") else ""
+            rep.warn("W-DEPRECATED", where,
+                     f"<{actual}> is deprecated form #{d['index']} of this block; the current "
+                     f"save() writes <{current}>. WordPress accepts it{how} - "
+                     f"the next edit rewrites the block")
+            return
+
+
 def canon_order(rep, where, srec, classes, first_style):
     save = srec.get("save") or {}
     variants = save.get("variants") or []
@@ -230,6 +265,7 @@ def validate(tree, schema, rep):
                      "the page renders, and the editor cannot read or place this block")
         elif srec:
             canon_order(rep, where, srec, wrapper_classes, first_style(html))
+            deprecated_form(rep, where, srec, _tag)
 
         # parent / ancestor
         if bdef.get("parent"):

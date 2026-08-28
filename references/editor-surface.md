@@ -24,6 +24,7 @@ python tools/gb.py deprecated core/image      # and what each old form differed 
 python tools/gb.py save core/button           # the exact shape save() writes
 python tools/gb.py bindings                   # what metadata.bindings may name
 python tools/gb.py templates                  # the four things called "template"
+python tools/gb.py settings                   # what the editor ALLOWS here
 ```
 
 ## 22 blocks the editor cannot read
@@ -94,8 +95,8 @@ Three things that cost real time to learn the hard way are in that output:
 
 `core/separator` emits `has-text-color has-alpha-channel-opacity` when a
 background is set and the reverse when it is not. So the extractor probes each
-block six ways (full / colours / text-only / typography / border / spacing) and
-ships all six; `validate-post.py` keeps only the pairs whose order never flips
+block nine ways (full / colours / text-only / typography / border / spacing /
+dimensions / presets / alignment) and ships all of them; `validate-post.py` keeps only the pairs whose order never flips
 and reports a violation of those as **W-ORDER**.
 
 Treating a single probe as THE order produced four false positives on a page the
@@ -137,6 +138,53 @@ style object** in the comment JSON. The editor reserializes that object exactly
 as it parsed it, so any self-consistent order round-trips - which the identical
 round-trip on that page demonstrates. It is not measurable from `save()`,
 because it never reaches the saved HTML.
+
+## Deprecated forms are detectable
+
+Each deprecation's `save()` is probed too, so the shape it wrote is on record.
+Eight of the 192 change the wrapper TAG, and each is a real trap for
+hand-written markup:
+
+| block | old | current |
+|---|---|---|
+| core/button | `<a>` | `<div>` wrapping one |
+| core/pullquote | `<blockquote>` | `<figure>` |
+| core/cover | `<section>` | `<div>` |
+| core/gallery | `<ul>` / `<div>` | `<figure>` |
+| core/math | `<math>` | `<div>` |
+
+`validate-post.py` reports **W-DEPRECATED** when the wrapper tag matches an old
+form instead of the current one. The check is deliberately limited to the tag,
+which is unambiguous - a class list is not, and a false positive here would be
+worse than no check.
+
+```
+W-DEPRECATED core/button  <a> is deprecated form #8 of this block; the current
+             save() writes <div>. WordPress accepts it and migrate() REWRITES
+             the attributes - the next edit rewrites the block
+```
+
+## What the site allows: `gb.py settings`
+
+```
+insertable  : every registered block
+custom values: allowed for colors, font sizes, gradients, spacing
+controls    : enableCustomLineHeight, enableCustomSpacing   units: px, em, rem, %, vh, vw
+```
+
+None of this constrains the MARKUP - a page can carry an inline line-height on
+a theme that switches the control off, and it renders. What it decides is
+whether a human can change the value afterwards.
+
+Note the two layers disagree on purpose: `theme_supports('custom-line-height')`
+is **off** on this site while the resolved `enableCustomLineHeight` is **on**,
+because global settings can enable what the theme never declared. The resolved
+editor settings are the answer; theme_supports is one of its inputs, and the
+only one a classic theme writes.
+
+`gb.py settings` also lists what the theme already styles per block - 11 of
+them here - which is why a block can look styled before you write anything, and
+why a value you did write can look ignored.
 
 ## Templates: four different things
 
