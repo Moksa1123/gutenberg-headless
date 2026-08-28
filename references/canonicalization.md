@@ -26,24 +26,84 @@ byte-identity.
 
 ## Class order in saved HTML
 
-Deterministic, computed by save() regardless of your stored order:
+Deterministic, computed by save() regardless of your stored order. Ask the
+editor rather than guessing - `getSaveContent` on synthetic attributes that
+set every class-producing support at once answers it exactly:
+
+```js
+const t = wp.blocks.getBlockType('core/group')
+wp.blocks.getSaveContent(t, { ...wp.blocks.getBlockAttributes(t, ''),
+  align: 'full', className: 'ZZ', fontFamily: 'ff', fontSize: 'large',
+  style: { color:{background:'#111',text:'#222'}, border:{color:'#333',width:'1px'},
+           css:'color:red' } }, [])
+```
+
+That returns, for group / heading / paragraph / list alike:
 
 ```
-wp-block-{name}  align{full|wide}  has-text-align-*  has-border-color
-has-custom-css  has-{slug}-color  has-{slug}-background-color
-has-text-color  has-background  is-style-*  {className}
+wp-block-{name}  align{full|wide}  has-text-align-*  {className}
+has-border-color  has-custom-css  has-text-color  has-background
+has-{slug}-font-family  has-{slug}-font-size
 ```
 
-Measured anchors: `wp-block-group alignfull has-custom-css has-background`,
-`wp-block-group has-border-color has-custom-css has-palette-color-6-background-color has-background`,
-`wp-block-button has-custom-css` (button colors live on the inner `<a>`:
-`wp-block-button__link has-{slug}-color has-{slug}-background-color
-has-text-color has-background wp-element-button`).
+**`className` comes EARLY - right after the alignment classes**, not last. An
+out-of-order list is still valid (the validator compares class tokens as a
+set) but not byte-identical, so the editor's next save reshuffles it.
+
+`core/button` is composed differently, and its two elements have two orders:
+
+```
+<div class="wp-block-button {className}">
+  <a class="wp-block-button__link has-text-color has-background has-border-color
+            has-{slug}-font-family has-{slug}-font-size has-custom-font-size
+            wp-element-button">
+```
+
+Note `className` lands on the **wrapper**, never on the `<a>`. A design-layer
+class written onto the link is markup save() would never produce: the server
+stores it, the page renders right, and the editor marks the block invalid.
+Style the link through a descendant selector instead
+(`.cls.cls .wp-block-button__link`).
+
+## Declare every custom class in `className`
+
+The parser pulls any class it did not generate off the wrapper and into the
+`className` attribute. So a class written only into the HTML leaves the block
+valid but not round-trip stable - the editor's resave adds
+`"className":"..."` to the comment. Write it yourself, and **merge** rather
+than skip when the block already has one (a heading carrying
+`has-custom-font-size` still needs its design classes appended).
+
+Gate this on `supports.customClassName`, not `supports.className`: the latter
+means "do not add the generated `wp-block-<name>` class" and core/paragraph
+sets exactly that.
+
+## Inline style declaration order
+
+A flat CSS-property order, NOT an order over the style object's groups - read
+from the same `getSaveContent` probe with every style group populated:
+
+```
+border-color  border-style  border-width  border-radius
+color  background-color
+aspect-ratio  height  min-height  width
+margin-*  padding-*
+font-family  font-size  font-style  font-weight  letter-spacing  line-height
+text-decoration  text-transform
+box-shadow
+```
+
+`core/button`'s link puts **box-shadow before typography** and keeps
+`min-height` on the wrapper instead.
 
 ## HTML attribute order
 
 `id` (from `anchor`) comes BEFORE `class`: `<div id="faq" class="wp-block-group">`.
 Inline `style` comes after `class`.
+
+Block-specific attributes sit BETWEEN them, not before: core/button emits
+`<a class="..." href="..." style="...">`. Writing the href first is valid,
+renders identically, and still makes the editor rewrite the tag on save.
 
 ## Other byte-identity rules (all hit in practice)
 

@@ -98,7 +98,7 @@ def split_breakpoint(ctrl: str) -> tuple[str, str | None]:
     return ctrl, None
 
 
-def design_rule(css_body: str) -> str:
+def design_rule(css_body: str, target: str = "") -> str:
     """Register a layout rule; returns the stable class to put on the element.
 
     The selector is doubled (`.x.x`) and every declaration marked important:
@@ -107,7 +107,7 @@ def design_rule(css_body: str) -> str:
     `margin-left:-22px` on them), which silently defeats a plain
     `margin-left:auto`. Layout the converted page depends on has to win."""
     cls = new_design_class()
-    emit_design_rule(cls, css_body)
+    emit_design_rule(cls, css_body, target=target)
     return cls
 
 
@@ -117,13 +117,22 @@ def new_design_class() -> str:
 
 
 def emit_design_rule(cls: str, css_body: str, breakpoint: str | None = None,
-                     pseudo: str | None = None):
+                     pseudo: str | None = None, target: str = ""):
     """Write one rule for an already-allocated class, optionally inside a
-    breakpoint's media query and/or for a pseudo-state."""
+    breakpoint's media query, for a pseudo-state, and/or aimed at a DESCENDANT
+    of the element carrying the class.
+
+    `target` exists because a block does not always let you put a class on the
+    element you need to style. `core/button`'s `className` lands on the wrapper
+    `<div class="wp-block-button">`, never on the `<a>` inside it - so a class
+    written straight onto the `<a>` is markup the block's own save() would not
+    produce, and the EDITOR rejects the block even though the server accepts it
+    and the page looks right. Measured: four buttons showing "this block
+    contains unexpected or invalid content"."""
     body = ";".join(f"{d.strip()} !important" for d in css_body.split(";") if d.strip())
     if not body:
         return
-    rule = f".{cls}.{cls}{pseudo or ''}{{{body}}}"
+    rule = f".{cls}.{cls}{target}{pseudo or ''}{{{body}}}"
     if breakpoint:
         MEDIA_RULES.setdefault(breakpoint, []).append(rule)
     else:
@@ -252,6 +261,10 @@ class Style:
         self.extra_classes: list[str] = []
         self.responsive: dict[str, list[str]] = {}
         self._rwd_class: str | None = None
+        # A descendant selector appended to every design rule this style emits;
+        # see emit_design_rule. Set by a converter whose block cannot carry a
+        # class on the element that needs styling.
+        self.target: str = ""
 
     def at(self, breakpoint, css_body):
         """A declaration that applies only below (or above) a breakpoint.
@@ -278,14 +291,14 @@ class Style:
         a hover border, transform or shadow has nowhere else to go."""
         if css_body:
             cls = new_design_class()
-            emit_design_rule(cls, css_body, pseudo=pseudo)
+            emit_design_rule(cls, css_body, pseudo=pseudo, target=self.target)
             self.extra_classes.append(cls)
 
     def layout_css(self, css_body):
         """Layout an optimiser must not be able to strip - goes to the design
         layer under a stable class, not to per-block style.css."""
         if css_body:
-            self.extra_classes.append(design_rule(css_body))
+            self.extra_classes.append(design_rule(css_body, target=self.target))
 
     def set(self, path, value):
         if value in (None, "", {}):
@@ -309,6 +322,42 @@ class Style:
     ORDER_BY_BLOCK = {
         "core/button": ["color", "spacing", "border", "typography", "shadow",
                         "outline", "background", "dimensions", "elements", "css"],
+    }
+
+    # The order of the DECLARATIONS in the saved inline style, read out of the
+    # editor itself: `getSaveContent` on synthetic attributes that set every
+    # style group, for each block type. It is a flat CSS-property order, not an
+    # order over the style object's groups - which is what this file assumed,
+    # and why a page could be valid in the editor and still not survive its
+    # resave byte for byte.
+    CSS_ORDER = [
+        "border-color", "border-style", "border-width", "border-radius",
+        "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+        "border-top-left-radius", "border-top-right-radius",
+        "border-bottom-right-radius", "border-bottom-left-radius",
+        "color", "background", "background-color", "background-image",
+        "background-size", "background-position", "background-repeat",
+        # dimensions, in the editor's own order: height, min-height, width
+        "aspect-ratio", "height", "min-height", "width", "max-width",
+        "margin-top", "margin-right", "margin-bottom", "margin-left",
+        "padding-top", "padding-right", "padding-bottom", "padding-left",
+        "font-family", "font-size", "font-style", "font-weight",
+        "letter-spacing", "line-height", "text-decoration", "text-transform",
+        "box-shadow", "outline-color", "outline-style", "outline-width", "outline-offset",
+    ]
+    # core/button composes its own: box-shadow lands BEFORE typography on the
+    # link, and min-height belongs to the wrapper instead.
+    CSS_ORDER_BY_BLOCK = {
+        "core/button": [
+            "border-color", "border-style", "border-width", "border-radius",
+            "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
+            "color", "background", "background-color", "background-image",
+            "margin-top", "margin-right", "margin-bottom", "margin-left",
+            "padding-top", "padding-right", "padding-bottom", "padding-left",
+            "box-shadow",
+            "font-family", "font-size", "font-style", "font-weight",
+            "letter-spacing", "line-height", "text-decoration", "text-transform",
+        ],
     }
 
     # Within spacing, the editor emits margin before padding - and within a box,
@@ -339,6 +388,9 @@ class Style:
     def resolve(self, block=None):
         self.normalize(block)
         rules, classes, _ = gblib.style_expectations(self.style, block)
+        order = self.CSS_ORDER_BY_BLOCK.get(block or "", self.CSS_ORDER)
+        rank = {p: i for i, p in enumerate(order)}
+        rules = sorted(rules, key=lambda pv: (rank.get(pv[0], len(order)), pv[0]))
         inline = []
         for p, v in rules:
             inline.append(f"{p}:{v}")
@@ -357,7 +409,7 @@ class Style:
             cls = new_design_class()
             for bp in BREAKPOINTS:            # widest query first, narrowest last
                 if bp in self.responsive:
-                    emit_design_rule(cls, ";".join(self.responsive[bp]), bp)
+                    emit_design_rule(cls, ";".join(self.responsive[bp]), bp, target=self.target)
             extra.append(cls)
         return self.style, classes + extra, ";".join(inline)
 
@@ -625,15 +677,133 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
             note("info", widget, f"{ctrl} -> style.css ({prop}: no block-native path)")
 
 
-def wrapper(tag, classes, inline, inner, *, extra=""):
-    cls = " ".join(dict.fromkeys(c for c in classes if c))
-    bits = [tag] + ([extra] if extra else []) + \
-           ([f'class="{cls}"'] if cls else []) + ([f'style="{inline}"'] if inline else [])
+def class_rank(c: str) -> int:
+    """Where a class sits in the list the editor's save() produces.
+
+    Measured the same way as CSS_ORDER - `getSaveContent` with every class-
+    producing attribute set at once:
+
+        wp-block-group alignfull <className> has-border-color has-custom-css
+        has-text-color has-background has-x-font-family has-large-font-size
+
+    An out-of-order class list is still VALID (the validator compares class
+    tokens as a set) but not byte-identical, so the editor's next save
+    reshuffles it - and on this page that alone was 1,731 bytes of drift."""
+    if c.startswith("wp-block-"):
+        return 0
+    if c.startswith("align"):
+        return 1
+    if c.startswith("has-text-align-"):
+        return 2
+    if c.startswith("el2b-") or c == "has-custom-font-size":
+        # Both of these reach the markup through the block's `className`
+        # attribute, and the parser emits that attribute's classes as one
+        # group. (On a core/button LINK, has-custom-font-size is generated by
+        # save() instead and sits near the end - see BUTTON_LINK_RANK.)
+        return 3
+    if c == "has-border-color":
+        return 4
+    if c == "has-custom-css":
+        return 5
+    if c == "has-text-color":
+        return 6
+    if c == "has-background":
+        return 7
+    if c.endswith("-font-family"):
+        return 8
+    if c.endswith("-font-size"):
+        return 9
+    if c == "wp-element-button":
+        return 11
+    return 10
+
+
+# core/button's <a> is built by the block's own save(), not by the className
+# support, so its list runs in a different order - measured the same way:
+#   wp-block-button__link has-text-color has-background has-border-color
+#   has-x-font-family has-large-font-size has-custom-font-size wp-element-button
+def button_link_rank(c: str) -> int:
+    for i, want in enumerate(("wp-block-button__link", "has-text-color",
+                              "has-background", "has-border-color")):
+        if c == want:
+            return i
+    if c.endswith("-font-family"):
+        return 4
+    if c == "has-custom-font-size":
+        return 6
+    if c.endswith("-font-size"):
+        return 5
+    if c == "wp-element-button":
+        return 8
+    return 7
+
+
+def order_classes(classes, rank=class_rank):
+    seen = list(dict.fromkeys(c for c in classes if c))
+    return sorted(seen, key=lambda c: (rank(c), seen.index(c)))
+
+
+def wrapper(tag, classes, inline, inner, *, extra="", rank=class_rank,
+            extra_after=False):
+    """`extra_after` puts the block-specific attributes AFTER class.
+
+    Attribute order inside the tag is part of byte-identity too: core/button's
+    save() emits `<a class="..." href="..." style="...">`, and writing the href
+    first is valid, renders the same, and still makes the editor's resave
+    rewrite the tag."""
+    cls = " ".join(order_classes(classes, rank))
+    head = ([f'class="{cls}"'] if cls else [])
+    tail = ([f'style="{inline}"'] if inline else [])
+    mid = [extra] if extra else []
+    bits = [tag] + (head + mid if extra_after else mid + head) + tail
     return f"<{' '.join(bits)}>{inner}</{tag}>"
+
+
+def _blockdef(name):
+    try:
+        return gblib.load_schema()["blocks"].get(name) or {}
+    except Exception:
+        return {}
 
 
 def comment(name, attrs, inner=None):
     short = name[5:] if name.startswith("core/") else name
+
+    bd = _blockdef(name)
+    sup = bd.get("supports") or {}
+
+    # The editor's PARSER pulls any class it did not generate off the wrapper
+    # and into the `className` attribute. So markup that carries a design-layer
+    # class only in the HTML stays valid, but the editor's own resave writes
+    # `"className":"el2b-65 el2b-66"` into the comment - 5,465 bytes of
+    # difference on this page, i.e. the next manual save rewrites the post.
+    # Declaring it ourselves is what the parser would have done.
+    # Gate on `customClassName` ONLY. `supports.className: false` is a
+    # different flag - it says "do not add the generated wp-block-<name>
+    # class", not "no custom classes allowed", and core/paragraph sets exactly
+    # that. Conflating the two silently skipped every paragraph on the page.
+    if inner and attrs is not None and sup.get("customClassName") is not False:
+        m = re.match(r"\s*<[a-z][a-z0-9]*\b[^>]*\bclass=\"([^\"]*)\"", inner)
+        if m:
+            mine = [c for c in m.group(1).split() if c.startswith("el2b-")]
+            if mine:
+                # MERGE, never skip: a heading already declares
+                # `className:"has-custom-font-size"`, and bailing out there left
+                # its design classes undeclared. The parser puts every custom
+                # class in one attribute, design classes first.
+                existing = [c for c in (attrs.get("className") or "").split() if c]
+                attrs["className"] = " ".join(
+                    dict.fromkeys(mine + existing))
+
+    # Attribute order in the comment JSON follows the block's REGISTERED
+    # attribute order (the editor iterates blockType.attributes), not insertion
+    # order. Getting it wrong is valid but not byte-identical, so the next save
+    # reshuffles the whole page.
+    order = list(bd.get("attributes") or {})
+    if attrs and order:
+        rank = {k: i for i, k in enumerate(order)}
+        attrs = {k: attrs[k] for k in sorted(attrs, key=lambda k: (rank.get(k, len(order)), k))}
+
     a = ""
     if attrs:
         a = " " + json.dumps(attrs, ensure_ascii=False, separators=(",", ":")) \
@@ -718,6 +888,9 @@ def conv_button(e, ctx) -> str:
     s = e.get("settings", {})
     href = ((s.get("link") or {}).get("url")) or ""
     st = Style()
+    # Everything this button sends to the design layer must be aimed at the
+    # <a>, because the class itself can only live on the wrapper (see below).
+    st.target = " .wp-block-button__link"
     auto_style(st, "button", s, ctx["elmap"], ctx["cssmap"])
     apply_element_width(st, s)
     apply_custom_css(st, s, "button")
@@ -772,11 +945,25 @@ def conv_button(e, ctx) -> str:
     # explicit className instead). Block-specific, so it lives at the call site.
     if (style.get("typography") or {}).get("fontSize"):
         classes = classes + ["has-custom-font-size"]
-    link_cls = ["wp-block-button__link"] + [c for c in classes if c != "has-custom-css"] + ["wp-element-button"]
+    # core/button's save() puts the block's `className` on the WRAPPER div and
+    # generates the <a>'s class list itself. A design-layer class written onto
+    # the <a> is therefore markup save() would never produce: the server stores
+    # it, the page renders correctly, and the EDITOR marks the block invalid -
+    # "this block contains unexpected or invalid content" on all four buttons,
+    # with an offer to restore that would have thrown the styling away. So the
+    # el2b-* classes ride on the wrapper (declared in `className` so save()
+    # reproduces them) and their rules reach the link through st.target.
+    design_cls = [c for c in classes if c.startswith("el2b-")]
+    link_cls = ["wp-block-button__link"] + \
+               [c for c in classes if c != "has-custom-css" and not c.startswith("el2b-")] + \
+               ["wp-element-button"]
+    wrap_cls = ["wp-block-button"] + [c for c in classes if c == "has-custom-css"] + design_cls
+    if design_cls:
+        attrs["className"] = " ".join(design_cls)
     a = wrapper("a", link_cls, inline, s.get("text", ""),
-                extra=f'href="{html.escape(href)}"' if href else "")
-    button = comment("core/button", attrs,
-                     wrapper("div", ["wp-block-button"] + [c for c in classes if c == "has-custom-css"], "", a))
+                extra=f'href="{html.escape(href)}"' if href else "",
+                rank=button_link_rank, extra_after=True)
+    button = comment("core/button", attrs, wrapper("div", wrap_cls, "", a))
     layout = {}
     if s.get("align") in ALIGN:
         layout = {"layout": {"type": "flex", "justifyContent": s["align"]}}
