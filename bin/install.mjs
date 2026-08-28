@@ -2,14 +2,15 @@
 /**
  * Install the gutenberg-headless skill into any of 8 supported AI platforms.
  *
+ *   npx gutenberg-headless                       # interactive (arrow keys, zh-TW)
  *   npx gutenberg-headless --list
  *   npx gutenberg-headless claude-code --global
  *   npx gutenberg-headless cursor --to /path/to/project
  *   npx gutenberg-headless --dry-run claude-code
  *
- * Pure Node port of tools/install-skill.py (same platform configs, same
- * strategies, same stale-file pruning). Python is NOT needed to install -
- * only to run the skill's query/validation tools afterwards.
+ * Zero dependencies - colors, prompts and progress are hand-rolled so npx
+ * starts instantly. Python is NOT needed to install, only to run the skill's
+ * query/validation tools afterwards.
  *
  * Install types:
  *   full                - SKILL.md + references/ + tools/ + data/ + examples/
@@ -23,13 +24,126 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import readline from "node:readline";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PLATFORMS = path.join(ROOT, "assets", "templates", "platforms");
 
-const die = (msg, code = 1) => { console.error(msg); process.exit(code); };
+// ---------- colors (hand-rolled chalk) -------------------------------------
+
+const TTY = process.stdout.isTTY && !process.env.NO_COLOR && process.env.TERM !== "dumb";
+const esc = (n) => (s) => (TTY ? `\x1b[${n}m${s}\x1b[0m` : s);
+const bold = esc("1"), dim = esc("2");
+const red = esc("1;31"), yellow = esc("1;33"), green = esc("1;32");
+const cyan = esc("1;36"), blue = esc("1;34"), magenta = esc("1;35");
+const gcyan = esc("36"), ggreen = esc("32");
+
+const die = (msg, code = 1) => { console.error(red("error"), msg); process.exit(code); };
+const info = (m) => console.log(blue("info"), m);
+const warn = (m) => console.log(yellow("warn"), m);
 const expand = (p) => (p && p.startsWith("~") ? path.join(os.homedir(), p.slice(1)) : p);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---------- the MOKSA banner ------------------------------------------------
+
+const LETTERS = {
+  M: ["███╗   ███╗", "████╗ ████║", "██╔████╔██║", "██║╚██╔╝██║", "██║ ╚═╝ ██║", "╚═╝     ╚═╝"],
+  O: [" ██████╗ ", "██╔═══██╗", "██║   ██║", "██║   ██║", "╚██████╔╝", " ╚═════╝ "],
+  K: ["██╗  ██╗", "██║ ██╔╝", "█████╔╝ ", "██╔═██╗ ", "██║  ██╗", "╚═╝  ╚═╝"],
+  S: ["███████╗", "██╔════╝", "███████╗", "╚════██║", "███████║", "╚══════╝"],
+  A: [" █████╗ ", "██╔══██╗", "███████║", "██╔══██║", "██║  ██║", "╚═╝  ╚═╝"],
+};
+const PALETTE = [red, yellow, green, cyan, magenta];
+
+function banner(subtitle) {
+  console.log();
+  for (let row = 0; row < 6; row++) {
+    console.log("  " + [..."MOKSA"].map((ch, i) => PALETTE[i % PALETTE.length](LETTERS[ch][row])).join(" "));
+  }
+  console.log();
+  console.log(bold(gcyan("               gutenberg-headless · 區塊編輯器技能包")));
+  console.log(bold(yellow(`               ${subtitle}`)));
+  console.log();
+}
+
+// ---------- the 完成 box ----------------------------------------------------
+
+const visualWidth = (str) => {
+  let w = 0;
+  for (const ch of str.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")) {
+    const c = ch.codePointAt(0);
+    w += (c >= 0x4e00 && c <= 0x9fff) || (c >= 0x3000 && c <= 0x303f) ||
+         (c >= 0xff00 && c <= 0xffef) || (c >= 0xac00 && c <= 0xd7af) ? 2 : 1;
+  }
+  return w;
+};
+
+function box(lines, header = "  完成  ") {
+  const width = Math.max(visualWidth(header), ...lines.map(visualWidth)) + 2;
+  console.log();
+  console.log(ggreen("╭" + "─".repeat(width) + "╮"));
+  console.log(ggreen("│") + green(header) + " ".repeat(width - visualWidth(header)) + ggreen("│"));
+  console.log(ggreen("├" + "─".repeat(width) + "┤"));
+  for (const line of lines) {
+    console.log(ggreen("│ ") + line + " ".repeat(Math.max(0, width - visualWidth(line) - 2)) + ggreen(" │"));
+  }
+  console.log(ggreen("╰" + "─".repeat(width) + "╯"));
+  console.log();
+}
+
+// ---------- animated progress ----------------------------------------------
+
+async function step(label, fn) {
+  if (!TTY) { const out = await fn(); console.log(green("✔"), label); return out; }
+  process.stdout.write(cyan("◐") + " " + label);
+  const t0 = Date.now();
+  const out = await fn();
+  await sleep(Math.max(0, 140 - (Date.now() - t0)));
+  process.stdout.write("\r" + green("✔") + " " + label + "\n");
+  return out;
+}
+
+// ---------- interactive prompts (hand-rolled, zh-TW) ------------------------
+
+function select(message, choices) {
+  return new Promise((resolve) => {
+    let idx = 0;
+    const render = (first) => {
+      if (!first) process.stdout.write(`\x1b[${choices.length + 1}A`);
+      console.log(bold(message) + dim("（↑↓ 選擇，Enter 確定）"));
+      choices.forEach((c, i) => {
+        console.log(i === idx ? cyan(`  ❯ ${c.title}`) : `    ${c.title}`);
+      });
+    };
+    render(true);
+    readline.emitKeypressEvents(process.stdin);
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    const onKey = (_s, key) => {
+      if (key.name === "up") idx = (idx - 1 + choices.length) % choices.length;
+      else if (key.name === "down") idx = (idx + 1) % choices.length;
+      else if (key.name === "return") {
+        process.stdin.setRawMode(false);
+        process.stdin.removeListener("keypress", onKey);
+        process.stdin.pause();
+        return resolve(choices[idx].value);
+      } else if (key.name === "c" && key.ctrl) { process.stdin.setRawMode(false); process.exit(130); }
+      else return;
+      render(false);
+    };
+    process.stdin.on("keypress", onKey);
+  });
+}
+
+function toggle(message, initial = false) {
+  return select(message, [
+    { title: initial ? "要（預設）" : "要", value: true },
+    { title: initial ? "不要" : "不要（預設）", value: false },
+  ].sort((a) => (initial === a.value ? -1 : 1)));
+}
+
+// ---------- platform config ------------------------------------------------
 
 function listPlatforms() {
   return fs.readdirSync(PLATFORMS).filter((f) => f.endsWith(".json")).sort()
@@ -38,9 +152,26 @@ function listPlatforms() {
 
 function loadPlatform(name) {
   const p = path.join(PLATFORMS, `${name}.json`);
-  if (!fs.existsSync(p)) die(`Unknown platform: ${name}\nRun --list to see options.`, 2);
+  if (!fs.existsSync(p)) die(`Unknown platform: ${name} — run --list to see options.`, 2);
   return JSON.parse(fs.readFileSync(p, "utf8"));
 }
+
+function detectPlatforms() {
+  const cwd = process.cwd(), home = os.homedir();
+  const hits = [];
+  const probe = (dir, name) => { if (fs.existsSync(dir)) hits.push(name); };
+  probe(path.join(cwd, ".claude"), "claude-code");
+  probe(path.join(home, ".claude"), "claude-code");
+  probe(path.join(cwd, ".cursor"), "cursor");
+  probe(path.join(home, ".cursor"), "cursor");
+  probe(path.join(cwd, ".github"), "copilot");
+  probe(path.join(home, ".codex"), "codex-cli");
+  probe(path.join(home, ".gemini"), "gemini-cli");
+  probe(path.join(home, ".windsurf"), "windsurf");
+  return [...new Set(hits)];
+}
+
+// ---------- content assembly ------------------------------------------------
 
 function buildFrontmatter(fm) {
   if (!fm) return "";
@@ -121,7 +252,7 @@ function copySection(sec, dstRoot, force) {
 
 // ---------- strategies -----------------------------------------------------
 
-function installFull(cfg, root, force, dry) {
+async function installFull(cfg, root, force, dry) {
   const fsr = cfg.folderStructure;
   const dir = path.join(root, fsr.skillPath);
   const file = path.join(dir, fsr.filename);
@@ -131,18 +262,27 @@ function installFull(cfg, root, force, dry) {
     for (const s of ["references", "tools", "data", "examples"]) if (cfg.sections?.[s]) plan.sections.push(s);
     return plan;
   }
-  fs.mkdirSync(dir, { recursive: true });
-  if (fs.existsSync(file) && !force) die(`Refusing to overwrite ${file} - pass --force.`);
-  fs.writeFileSync(file, content);
+  await step("寫入 SKILL.md", () => {
+    fs.mkdirSync(dir, { recursive: true });
+    if (fs.existsSync(file) && !force) die(`Refusing to overwrite ${file} - pass --force.`);
+    fs.writeFileSync(file, content);
+  });
   for (const s of ["references", "tools", "data", "examples"]) {
     if (!cfg.sections?.[s]) continue;
-    const [n, pruned] = copySection(s, dir, force);
-    plan.sections.push(`${s} (${n} files${pruned ? `, ${pruned} stale removed` : ""})`);
+    await step(`複製 ${s}/`, () => {
+      const [n, pruned] = copySection(s, dir, force);
+      plan.sections.push(`${s} (${n} files${pruned ? `, ${pruned} stale removed` : ""})`);
+    });
   }
+  await step("驗證安裝", () => {
+    if (!fs.existsSync(file)) die("install verification failed: SKILL.md missing");
+    if (cfg.sections?.data && !fs.existsSync(path.join(dir, "data", "block-schema.json")))
+      die("install verification failed: data/block-schema.json missing");
+  });
   return plan;
 }
 
-function installRule(cfg, root, force, dry) {
+async function installRule(cfg, root, force, dry) {
   const fsr = cfg.folderStructure;
   const file = path.join(root, fsr.skillPath, fsr.filename);
   let body = readSkillBody();
@@ -150,13 +290,15 @@ function installRule(cfg, root, force, dry) {
   const content = buildFrontmatter(cfg.frontmatter) + body;
   const plan = { file, size: content.length, embedded: cfg.embedReferences || [] };
   if (dry) return plan;
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  if (fs.existsSync(file) && !force) die(`Refusing to overwrite ${file} - pass --force.`);
-  fs.writeFileSync(file, content);
+  await step("寫入 rule 檔（內嵌參考文件）", () => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    if (fs.existsSync(file) && !force) die(`Refusing to overwrite ${file} - pass --force.`);
+    fs.writeFileSync(file, content);
+  });
   return plan;
 }
 
-function installAppend(cfg, root, force, dry) {
+async function installAppend(cfg, root, force, dry) {
   const fsr = cfg.folderStructure;
   const target = path.join(root, fsr.projectRoot, fsr.filename);
   const { appendMarker: begin, appendMarkerEnd: end } = cfg;
@@ -174,12 +316,14 @@ function installAppend(cfg, root, force, dry) {
   }
   const plan = { file: target, size: content.length, appended: true };
   if (dry) return plan;
-  fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, content);
+  await step("附加到 copilot-instructions.md", () => {
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  });
   return plan;
 }
 
-function installZip(cfg, root, force, dry) {
+async function installZip(cfg, root, force, dry) {
   // Node has no built-in zip. Stage the folder, then use whatever archiver the
   // OS has; if none, the staged folder + instructions are the result.
   const fsr = cfg.folderStructure;
@@ -187,27 +331,29 @@ function installZip(cfg, root, force, dry) {
   const stage = path.join(root, "gutenberg-headless-stage", "gutenberg-headless");
   const plan = { file: outZip, size: 0, entries: [] };
   if (dry) { plan.entries.push("SKILL.md + sections (staged, then zipped)"); return plan; }
-  fs.rmSync(path.dirname(stage), { recursive: true, force: true });
-  fs.mkdirSync(stage, { recursive: true });
-  fs.writeFileSync(path.join(stage, "SKILL.md"), buildFrontmatter(cfg.frontmatter) + readSkillBody());
-  for (const s of ["references", "data", "examples"]) {
-    if (cfg.sections?.[s]) copySection(s, stage, true);
-  }
-  if (fs.existsSync(outZip) && !force) die(`Refusing to overwrite ${outZip} - pass --force.`);
-  fs.mkdirSync(path.dirname(outZip), { recursive: true });
-  try {
-    if (process.platform === "win32") {
-      execFileSync("powershell", ["-NoProfile", "-Command",
-        `Compress-Archive -Path '${stage}' -DestinationPath '${outZip}' -Force`]);
-    } else {
-      execFileSync("zip", ["-qr", outZip, "gutenberg-headless"], { cwd: path.dirname(stage) });
-    }
+  await step("打包 zip（Claude.ai 手動上傳用）", () => {
     fs.rmSync(path.dirname(stage), { recursive: true, force: true });
-    plan.size = fs.statSync(outZip).size;
-  } catch {
-    plan.file = path.dirname(stage);
-    plan.note = `no zip tool found - folder staged at ${path.dirname(stage)}; zip it manually`;
-  }
+    fs.mkdirSync(stage, { recursive: true });
+    fs.writeFileSync(path.join(stage, "SKILL.md"), buildFrontmatter(cfg.frontmatter) + readSkillBody());
+    for (const s of ["references", "data", "examples"]) {
+      if (cfg.sections?.[s]) copySection(s, stage, true);
+    }
+    if (fs.existsSync(outZip) && !force) die(`Refusing to overwrite ${outZip} - pass --force.`);
+    fs.mkdirSync(path.dirname(outZip), { recursive: true });
+    try {
+      if (process.platform === "win32") {
+        execFileSync("powershell", ["-NoProfile", "-Command",
+          `Compress-Archive -Path '${stage}' -DestinationPath '${outZip}' -Force`]);
+      } else {
+        execFileSync("zip", ["-qr", outZip, "gutenberg-headless"], { cwd: path.dirname(stage) });
+      }
+      fs.rmSync(path.dirname(stage), { recursive: true, force: true });
+      plan.size = fs.statSync(outZip).size;
+    } catch {
+      plan.file = path.dirname(stage);
+      plan.note = `no zip tool found - folder staged at ${path.dirname(stage)}; zip it manually`;
+    }
+  });
   return plan;
 }
 
@@ -238,7 +384,7 @@ function cmdInfo(name) {
   console.log(`\n${c.loaderBehaviour}`);
 }
 
-function main() {
+async function main() {
   const argv = process.argv.slice(2);
   const flags = new Set(argv.filter((a) => a.startsWith("--") || a === "-f"));
   const pos = argv.filter((a) => !a.startsWith("-") && argv[argv.indexOf(a) - 1] !== "--to" && argv[argv.indexOf(a) - 1] !== "--info");
@@ -246,30 +392,62 @@ function main() {
 
   if (flags.has("--list")) return cmdList();
   if (getOpt("--info")) return cmdInfo(getOpt("--info"));
-  const name = pos[0];
-  if (!name) { cmdList(); console.log("\nUsage: npx gutenberg-headless <platform> [--global] [--to DIR] [--force] [--dry-run]"); return; }
+
+  let name = pos[0];
+  let useGlobal = flags.has("--global");
+  let force = flags.has("--force") || flags.has("-f");
+  const dry = flags.has("--dry-run");
+
+  // Interactive mode: no platform named, and a real terminal to ask in.
+  if (!name && process.stdin.isTTY && process.stdout.isTTY) {
+    banner("Skill Installer");
+    const detected = detectPlatforms();
+    if (detected.length) info(`偵測到：${detected.map((d) => cyan(d)).join("、")}`);
+    const plats = listPlatforms();
+    name = await select("你想裝在哪個 AI 助手？", plats.map((c) => ({
+      title: `${c.displayName}${detected.includes(c.platform) ? green("  ●") : ""}`,
+      value: c.platform,
+    })));
+    const cfgPeek = loadPlatform(name);
+    if (cfgPeek.folderStructure.globalRoot && cfgPeek.installType !== "zip-upload") {
+      useGlobal = await toggle("要全域安裝嗎？（所有專案都能用）", detected.includes(name));
+    }
+    force = await toggle("檔案如果已經存在要覆蓋嗎？", true);
+  } else if (!name) {
+    cmdList();
+    console.log("\nUsage: npx gutenberg-headless <platform> [--global] [--to DIR] [--force] [--dry-run]");
+    return;
+  } else {
+    banner("Skill Installer");
+  }
 
   const cfg = loadPlatform(name);
   const fsr = cfg.folderStructure;
-  const dry = flags.has("--dry-run");
-  const force = flags.has("--force") || flags.has("-f");
   let root = getOpt("--to") ? path.resolve(expand(getOpt("--to"))) : null;
   if (!root) {
-    if (flags.has("--global") && fsr.globalRoot) root = expand(fsr.globalRoot);
+    if (useGlobal && fsr.globalRoot) root = expand(fsr.globalRoot);
     else if (cfg.installType === "instructions-append") root = process.cwd();
     else root = path.join(process.cwd(), fsr.projectRoot || "");
   }
 
-  console.log(`Installing gutenberg-headless -> ${cfg.displayName}${dry ? " (DRY RUN)" : ""}`);
-  console.log(`Target root: ${root}`);
-  const plan = STRATEGIES[cfg.installType](cfg, root, force, dry);
-  console.log(`  file: ${plan.file}`);
-  console.log(`  size: ${plan.size.toLocaleString()} bytes`);
-  if (plan.sections?.length) console.log(`  sections: ${plan.sections.join(", ")}`);
-  if (plan.embedded?.length) console.log(`  embedded refs: ${plan.embedded.join(", ")}`);
-  if (plan.note) console.log(`  NOTE: ${plan.note}`);
-  console.log(`\n${cfg.loaderBehaviour}`);
-  if (dry) console.log("\n(dry run; nothing written.)");
+  info(`Installing gutenberg-headless → ${cyan(cfg.displayName)}${useGlobal ? dim("（全域）") : ""}${dry ? yellow("（DRY RUN）") : ""}`);
+  info(`Target: ${dim(root)}`);
+  console.log();
+  const plan = await STRATEGIES[cfg.installType](cfg, root, force, dry);
+
+  const lines = [
+    `${bold("平台")}　${cfg.displayName}`,
+    `${bold("檔案")}　${plan.file}`,
+    `${bold("大小")}　${plan.size.toLocaleString()} bytes`,
+  ];
+  if (plan.sections?.length) lines.push(`${bold("內容")}　${plan.sections.join(", ")}`);
+  if (plan.embedded?.length) lines.push(`${bold("內嵌")}　${plan.embedded.join(", ")}`);
+  if (plan.note) lines.push(yellow(`NOTE　${plan.note}`));
+  lines.push("");
+  lines.push(dim("下一步：對你的 AI 助手描述一個頁面，讓它跑 gb.py 查證後動手。"));
+  box(lines, dry ? "  DRY RUN  " : "  完成  ");
+  if (dry) console.log(dim("(dry run; nothing written.)"));
+  console.log(dim(cfg.loaderBehaviour));
 }
 
 main();
