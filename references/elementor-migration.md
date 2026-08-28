@@ -259,6 +259,57 @@ Three earlier bugs, also fixed at the root:
   its stylesheet consumes that, ours does not. Escalations to `style.css` now
   strip the `--` and emit the real property.
 
+## Responsive: the half of the page that was silently missing
+
+The converter originally read only DESKTOP control values. Every Elementor
+control has breakpoint variants (`padding_mobile`, `width_tablet`,
+`typography_font_size_mobile`, …) and all of them were dropped, which no
+desktop screenshot and no validator can see. Measured on the reference page at
+390px before the fix: `h1` stayed 56px where the original renders 36px, and
+containers with a desktop width stayed 1160px wide inside a 390px viewport.
+
+**Why the obvious overflow check missed it.** The theme sets
+`body { overflow-x: hidden }`. That CLIPS the overflow instead of preventing
+it, so `scrollWidth > innerWidth` reported clean while content was cut off.
+`tools/check-rwd.js` therefore compares each element's box against the
+viewport and reports the clip separately from the verdict.
+
+Blocks do have a native per-block state for this in WP 7.1
+(`style["@mobile"]`), but it covers one width and only the properties the
+style engine expresses. Elementor pages use up to six breakpoints, so every
+responsive value goes to the design layer as a media query instead
+(`BREAKPOINTS` in el2blocks.py), where all of them survive and RUCSS cannot
+strip them.
+
+Five things had to be measured rather than assumed, each found by diffing
+computed styles against the live original:
+
+- **`.e-con.e-flex { --width: 100% }` at ≤767px.** Read off Elementor's own
+  stylesheet: every container goes full width at mobile. Applying it to none
+  of them left the hero heading 192px wide in a 346px column; applying it to
+  all of them stacked a 2×2 stat grid four rows deep and made the page 5.6%
+  *taller* than the original. The exemption is exactly one control: an
+  explicit **`width_mobile`**, which Elementor re-declares in the same block.
+- **A breakpoint width must restate `flex`, `max-width` AND `width`.** The
+  desktop rule says `flex:0 0 58%;max-width:58%`; at equal specificity and
+  equal `!important` a bare `width:100%` loses to that `max-width`.
+- **`hide_mobile` is `"hidden-mobile"`, not `"hidden"`.** Guessing the value
+  shape left a 198px decorative SVG visible and pushed the hero 218px taller.
+- **An unlinked gap is two values.** With `isLinked: false`, `size` holds only
+  the column figure — reading it alone gave a 14px row gap where the original
+  renders 18px.
+- **`margin-block: 0`** (the rule that cancels the theme's default block
+  margin) also cancelled margins the SOURCE sets: six sections came out 48px
+  short, exactly the 40px + 8px the original declares. It now neutralises only
+  the sides the source leaves silent.
+
+Result across seven viewports (390/430/768/820/1024/1366/1440), original vs
+converted: **zero overflowing elements on either page**, identical small-text
+and small-target counts, and page heights within 0.5% (1440), 0.4% (820) and
+2.2% (390). Computed-style differences: 10, 10 and 13, of which 8 are the
+`max-width: 100%` vs `none` equivalence on sections already exactly as wide as
+their parent.
+
 ## Canonicalization rules this work surfaced
 
 - A custom `style.typography.fontSize` marks the element `has-custom-font-size`

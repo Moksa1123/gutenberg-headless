@@ -62,7 +62,40 @@ REPORT: list[tuple[str, str, str]] = []
 # max-widths, column flex-basis - therefore goes into ONE design-layer <style>
 # keyed by a stable class written into the markup itself.
 DESIGN_RULES: list[str] = []
+MEDIA_RULES: dict[str, list[str]] = {}
 _SEQ = [0]
+
+# Elementor's default responsive breakpoints, and the media query each control
+# suffix compiles to. Every one of these is a MAX-width query except widescreen:
+# Elementor is mobile-last, so `padding_mobile` means "at 767px and below".
+#
+# Missing this entirely was the single largest fidelity bug found: the converted
+# page carried only DESKTOP values, so at 390px its h1 stayed 56px where the
+# original dropped to 36px, and containers with an explicit desktop width stayed
+# 1160px wide inside a 390px viewport - invisible only because the theme sets
+# `body{overflow-x:hidden}`, which hides overflow instead of preventing it. A
+# scrollbar check passes on that page; it is not a responsive check.
+BREAKPOINTS = {
+    "widescreen": "(min-width:2400px)",
+    # Not a control suffix - only `hide_desktop` reaches it. The leading
+    # underscore keeps it out of split_breakpoint's suffix matching.
+    "_desktop": "(min-width:1025px)",
+    "laptop": "(max-width:1366px)",
+    "tablet_extra": "(max-width:1200px)",
+    "tablet": "(max-width:1024px)",
+    "mobile_extra": "(max-width:880px)",
+    "mobile": "(max-width:767px)",
+}
+# Longest first: `_mobile_extra` must not be read as `_mobile` + "_extra".
+BP_SUFFIXES = sorted(BREAKPOINTS, key=len, reverse=True)
+
+
+def split_breakpoint(ctrl: str) -> tuple[str, str | None]:
+    """`padding_mobile` -> ('padding', 'mobile'); `padding` -> ('padding', None)."""
+    for bp in BP_SUFFIXES:
+        if ctrl.endswith("_" + bp):
+            return ctrl[: -len(bp) - 1], bp
+    return ctrl, None
 
 
 def design_rule(css_body: str) -> str:
@@ -73,11 +106,27 @@ def design_rule(css_body: str) -> str:
     layout to cancel container padding (measured: Blocksy sets
     `margin-left:-22px` on them), which silently defeats a plain
     `margin-left:auto`. Layout the converted page depends on has to win."""
-    _SEQ[0] += 1
-    cls = f"el2b-{_SEQ[0]}"
-    body = ";".join(f"{d.strip()} !important" for d in css_body.split(";") if d.strip())
-    DESIGN_RULES.append(f".{cls}.{cls}{{{body}}}")
+    cls = new_design_class()
+    emit_design_rule(cls, css_body)
     return cls
+
+
+def new_design_class() -> str:
+    _SEQ[0] += 1
+    return f"el2b-{_SEQ[0]}"
+
+
+def emit_design_rule(cls: str, css_body: str, breakpoint: str | None = None):
+    """Write one rule for an already-allocated class, optionally inside a
+    breakpoint's media query."""
+    body = ";".join(f"{d.strip()} !important" for d in css_body.split(";") if d.strip())
+    if not body:
+        return
+    rule = f".{cls}.{cls}{{{body}}}"
+    if breakpoint:
+        MEDIA_RULES.setdefault(breakpoint, []).append(rule)
+    else:
+        DESIGN_RULES.append(rule)
 
 
 def note(level, widget, msg):
@@ -200,6 +249,27 @@ class Style:
     def __init__(self):
         self.style: dict = {}
         self.extra_classes: list[str] = []
+        self.responsive: dict[str, list[str]] = {}
+        self._rwd_class: str | None = None
+
+    def at(self, breakpoint, css_body):
+        """A declaration that applies only below (or above) a breakpoint.
+
+        Blocks have a native per-block state for this in WP 7.1
+        (`style["@mobile"]`), but it covers only ONE width and only the
+        properties the style engine expresses. Elementor pages use up to six
+        breakpoints and set things the engine has no path for, so every
+        responsive value goes to the design layer, where all of them survive
+        and RUCSS cannot strip them."""
+        if css_body:
+            self.responsive.setdefault(breakpoint, []).append(css_body)
+
+    def at_default(self, breakpoint, css_body):
+        """A breakpoint default that any explicit setting must be able to beat.
+        Same specificity and same !important as everything else in the layer, so
+        the only thing that decides is order: defaults go first."""
+        if css_body:
+            self.responsive.setdefault(breakpoint, []).insert(0, css_body)
 
     def layout_css(self, css_body):
         """Layout an optimiser must not be able to strip - goes to the design
@@ -270,7 +340,16 @@ class Style:
                 # which emits fixed sizes. Restating the size in the design
                 # layer (doubled selector, !important) pins it back.
                 self.layout_css(f"font-size:{v}")
-        return self.style, classes + self.extra_classes, ";".join(inline)
+        extra = list(self.extra_classes)
+        if self.responsive:
+            # One class carries every breakpoint for this element, so the
+            # markup gains a single class no matter how many widths are set.
+            cls = new_design_class()
+            for bp in BREAKPOINTS:            # widest query first, narrowest last
+                if bp in self.responsive:
+                    emit_design_rule(cls, ";".join(self.responsive[bp]), bp)
+            extra.append(cls)
+        return self.style, classes + extra, ";".join(inline)
 
 
 def apply_element_width(st: Style, s: dict):
@@ -290,6 +369,98 @@ def apply_element_width(st: Style, s: dict):
         st.layout_css(f"max-width:{w};width:100%")
 
 
+def gap_css(val) -> tuple[str, str]:
+    """(css declarations, the single value to store as blockGap) for a gap.
+
+    An Elementor gap is TWO values when `isLinked` is false - `size` then only
+    holds the column figure. Reading `size` alone gave a 14px row gap where the
+    original renders 18px, on every container that unlinks the two."""
+    if not isinstance(val, dict):
+        return "", ""
+    col, row = val.get("column"), val.get("row")
+    unit = val.get("unit", "px")
+    one = size(val)
+    if not val.get("isLinked", True) and col not in (None, "") and row not in (None, "") and col != row:
+        c = str(col) if unit == "custom" else f"{col}{unit}"
+        r = str(row) if unit == "custom" else f"{row}{unit}"
+        return f"row-gap:{r};column-gap:{c}", r
+    return (f"gap:{one}", one) if one else ("", "")
+
+
+def normalize_value(prop: str, v: str) -> str:
+    """Elementor stores a font as a bare family name and its own font loader
+    appends the generic fallback at render (`"Noto Sans TC", sans-serif`).
+    Copying the bare name across gives the block no fallback at all: measured on
+    13 elements, correct while the webfont loads and wrong the moment it does
+    not."""
+    if prop == "font-family" and "," not in v:
+        # Deliberately UNQUOTED. The value ends up inside `style="..."`, so a
+        # double quote terminates the attribute: quoting it produced 189
+        # validator errors where the inline style simply stopped at the font.
+        # `Noto Sans TC, sans-serif` is valid CSS unquoted, and getComputedStyle
+        # normalises it back to the quoted form anyway.
+        return f"{v}, sans-serif"
+    return v
+
+
+def responsive_css(widget: str, base: str, val, elmap) -> str:
+    """The CSS a breakpoint variant of `base` should emit, as a declaration
+    string. Returns "" when the control has no measured CSS or no value.
+
+    This writes REAL properties, never Elementor's custom properties: on the
+    original page `--gap` works because Elementor's own stylesheet consumes it,
+    and on ours nothing does."""
+    if base in ("padding", "margin") or base.endswith(("_padding", "_margin")):
+        prop = "padding" if "padding" in base else "margin"
+        b = box(val)
+        return ";".join(f"{prop}-{s}:{b[s]}" for s in ("top", "right", "bottom", "left") if s in b)
+
+    if base == "border_width" or base.endswith("_border_width"):
+        b = box(val)
+        if not b:
+            return ""
+        return ";".join(f"border-{s}-width:{b.get(s, '0px')}"
+                        for s in ("top", "right", "bottom", "left"))
+
+    if base == "flex_gap":
+        return gap_css(val)[0]
+
+    v = scalar(val)
+    if v is None:
+        return ""
+
+    # Container width is the most common responsive control on a real page (71
+    # of the 78 on the reference page) and the one a naive `width:100%` fails
+    # to fix: the desktop rule states `flex:0 0 58%;max-width:58%`, and a
+    # max-width at equal specificity and equal !important still wins over a
+    # plain width. Measured: the hero heading rendered 192px wide inside a
+    # 346px column. The breakpoint has to restate all three.
+    if base in ("width", "boxed_width", "content_width"):
+        return f"flex:0 0 {v};max-width:{v};width:{v}"
+    props = elmap.get((widget, base))
+    if not props:
+        # `_element_custom_width` and friends are Advanced-tab controls the
+        # widget sweep never recorded against this widget; they still have a
+        # single obvious property.
+        # `flex_gap` never reaches the measured CSS map because the desktop path
+        # handles it as a layout attribute, so its breakpoint variant found no
+        # property and the container kept its desktop gap at mobile.
+        fallback = {"_element_custom_width": "max-width", "content_width": "max-width",
+                    "width": "width", "min_height": "min-height", "height": "min-height",
+                    "flex_gap": "gap"}
+        prop = fallback.get(base)
+        if not prop:
+            return ""
+        props = [prop]
+    out = []
+    for p in props:
+        p = p[2:] if p.startswith("--") else p
+        if p in ("gap", "row-gap", "column-gap", "content-width"):
+            p = "max-width" if p == "content-width" else p
+        out.append(f"{p}:{v}")
+    return ";".join(out[:1] if len(out) > 2 else out)
+
+
 def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_filter=None):
     """Map every Elementor setting whose measured CSS the block engine can
     express. Anything with a known CSS property but no block path goes to
@@ -297,6 +468,34 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
     for ctrl, val in settings.items():
         if prefix_filter and not ctrl.startswith(prefix_filter):
             continue
+
+        # Responsive variants are handled first and never fall through: a
+        # breakpoint value has to reach the design layer even when the desktop
+        # control is one the block `layout` attribute covers, because `layout`
+        # has no per-breakpoint form.
+        base, bp = split_breakpoint(ctrl)
+        # Elementor's Responsive tab hides an element per device
+        # (`hide_mobile: "hidden"`). There is no CSS map entry for it, so it was
+        # silently dropped and the element showed up on every width.
+        # The value is the device-tagged string `hidden-mobile`, not a bare
+        # "hidden" - guessing the shape cost a 198px decorative SVG that should
+        # have been hidden at 390px and instead pushed the hero 218px taller.
+        if ctrl.startswith("hide_") and isinstance(val, str) and val.startswith("hidden"):
+            device = ctrl[5:]
+            query = BREAKPOINTS.get(device) or ("(min-width:1025px)" if device == "desktop" else None)
+            if query:
+                st.at(device if device in BREAKPOINTS else "_desktop", "display:none")
+            else:
+                note("warn", widget, f"{ctrl}: unknown device, element left visible")
+            continue
+        if bp:
+            if "hover" in ctrl or ctrl.endswith("_focus") or base in UNSUPPORTED:
+                continue
+            css = responsive_css(widget, base, val, elmap)
+            if css:
+                st.at(bp, css)
+            continue
+
         if ctrl in LAYOUT_HANDLED:
             continue          # the block `layout` attribute already carries it
         if "hover" in ctrl or ctrl.endswith("_focus"):
@@ -344,6 +543,7 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
         v = scalar(val)
         if v is None:
             continue
+        v = normalize_value(props[0], v)
         # A control can emit several properties (Elementor's --gap sets
         # row-gap and column-gap too). Take the first one the block engine can
         # express; only escalate to style.css if NONE of them map.
@@ -679,9 +879,42 @@ def convert_element(e, ctx) -> str:
         # measured: the hero lost its 20px rhythm and the page came out 7%
         # SHORT. State the default explicitly, the same as any other value.
         ELEMENTOR_DEFAULT_GAP = "20px"
-        gap = size(s.get("flex_gap")) or ELEMENTOR_DEFAULT_GAP
+        gap_decl, gap = gap_css(s.get("flex_gap"))
+        if not gap:
+            gap_decl, gap = f"gap:{ELEMENTOR_DEFAULT_GAP}", ELEMENTOR_DEFAULT_GAP
         st.set(("spacing", "blockGap"), gap)              # keep it in the attrs
-        st.layout_css(f"gap:{gap};margin-block:0")
+        # Every Elementor container is position:relative (measured on 13 of
+        # them). A block group is static, so any absolutely-positioned
+        # decoration inside one resolves against the page instead of its
+        # section - it does not move until the page scrolls past it, which a
+        # screenshot of the top of the page never shows.
+        # `margin-block:0` cancels the theme's default 24px block margin, but it
+        # must not cancel a margin the ORIGINAL sets: it carries !important, so
+        # a container with margin_top 40px came out at 0. Only neutralise the
+        # sides the source leaves silent.
+        m = (st.style.get("spacing") or {}).get("margin") or {}
+        neutral = ";".join(f"margin-{side}:0" for side in ("top", "bottom") if side not in m)
+        st.layout_css(";".join(x for x in (gap_decl, neutral, "position:relative") if x))
+
+        # Elementor's OWN stylesheet, read off the rendered original rather than
+        # assumed:
+        #     @media (max-width:767px) .e-con.e-flex {
+        #         --width: 100%; --flex-wrap: var(--flex-wrap-mobile) }
+        # Every flex container goes full width and starts wrapping at mobile,
+        # whether or not the page sets anything. Without this a container with a
+        # 58% desktop width stays 58% at 390px and its neighbours are squeezed
+        # into whatever is left - seven containers on the reference page, and
+        # the reason the hero heading rendered 192px wide in a 346px column.
+        # ...and the exemption is narrow: only an explicit `width_mobile`
+        # survives, because Elementor re-declares `--width` for that container
+        # inside the SAME mobile block. A desktop width does not - measured on
+        # both pages at 390px: a container 58% wide on desktop renders 331px
+        # (full) in the original, while a 22% stat cell that also sets
+        # width_mobile:46% keeps its 2x2 grid. Exempting desktop widths too
+        # left the hero heading in a 192px column; exempting nothing stacked
+        # the stat grid four rows deep. Only width_mobile.
+        st.at_default("mobile", "flex-wrap:wrap" if size(s.get("width_mobile"))
+                      else "width:100%;max-width:100%;flex-basis:100%;flex-wrap:wrap")
 
         # Width is layout INTENT, and the block `layout` attribute cannot carry
         # it on a classic theme: layout.type "constrained" resolves against
@@ -785,12 +1018,27 @@ def main():
     body = "\n\n".join(x for x in (convert_element(e, ctx) for e in tree) if x)
     # The design layer goes FIRST and carries the layout rules an optimiser
     # must not be able to strip (see DESIGN_RULES).
-    if DESIGN_RULES:
-        layer = ("<!-- wp:html -->\n<style>\n" + "\n".join(DESIGN_RULES) +
+    if DESIGN_RULES or MEDIA_RULES:
+        css = list(DESIGN_RULES)
+        # Media queries come after every base rule and in breakpoint order,
+        # widest query first: they carry the same specificity and the same
+        # !important, so the narrowest matching query must be the last one able
+        # to win.
+        n_media = 0
+        for bp, query in BREAKPOINTS.items():
+            rules = MEDIA_RULES.get(bp)
+            if rules:
+                css.append(f"@media {query}{{{''.join(rules)}}}")
+                n_media += len(rules)
+        layer = ("<!-- wp:html -->\n<style>\n" + "\n".join(css) +
                  "\n</style>\n<!-- /wp:html -->")
         body = layer + "\n\n" + body
         note("info", "-", f"{len(DESIGN_RULES)} layout rules in a design-layer <style> "
                           f"(survives remove-unused-CSS plugins; per-block style.css does not)")
+        if n_media:
+            note("info", "-", f"{n_media} responsive rules across "
+                              f"{len([b for b in MEDIA_RULES if MEDIA_RULES[b]])} breakpoints "
+                              f"(Elementor _tablet/_mobile variants)")
     markup = body + "\n"
 
     if a.report:

@@ -59,6 +59,16 @@ IGNORE = {"key", "tag"}
 # on same-tag pairs every one of them is still compared.
 STRUCTURAL = {"display", "paddingLeft", "paddingRight", "paddingTop", "paddingBottom"}
 
+# Same idea, one level further: when Elementor's text node is a <span> inside
+# the real control and the block puts the control itself under that text, the
+# pair is a LABEL against its BUTTON. Comparing the label's (absent) radius,
+# alignment and min-height against the button's is meaningless - it produced 28
+# of the 47 "differences" on the reference page. Excluded across a tag mismatch
+# only; --strict shows them, and same-tag pairs are always compared.
+STRUCTURAL |= {"borderRadius", "justifyContent", "alignItems", "minHeight",
+               "borderTopWidth", "borderRightWidth", "borderBottomWidth",
+               "borderLeftWidth", "borderTopColor", "backgroundColor"}
+
 EQUIVALENT = [
     {"start", "left"}, {"end", "right"},
     {"0px", "auto"},                    # minHeight
@@ -74,7 +84,10 @@ def equivalent(prop, a, b):
             return True
     if prop in GEOMETRY:
         try:
-            return abs(int(float(a)) - int(float(b))) <= 3
+            # 3px was too generous: it hid a whole column being 2px narrow on
+            # every row. 1px is sub-pixel rounding; anything more is a real
+            # layout difference.
+            return abs(float(a) - float(b)) <= 1
         except (TypeError, ValueError):
             return False
     return False
@@ -110,6 +123,9 @@ def main():
     ap.add_argument("original")
     ap.add_argument("converted")
     ap.add_argument("--all", action="store_true", help="list every differing element, not a summary")
+    ap.add_argument("--strict", action="store_true",
+                    help="also report cross-tag structural properties (display/padding) - "
+                         "use to prove an equivalence rather than assume it")
     a = ap.parse_args()
 
     A_list, A_meta = load(a.original)
@@ -145,18 +161,20 @@ def main():
                 continue
             if cross_tag and p not in BOX_PROPS:
                 continue          # typography across a tag mismatch is meaningless
-            if cross_tag and p in STRUCTURAL:
+            if cross_tag and p in STRUCTURAL and not a.strict:
                 continue          # see STRUCTURAL: different element, same result
             va, vb = str(ra.get(p)), str(rb.get(p))
             if not equivalent(p, va, vb):
                 diffs[p].append((k, va, vb))
 
-    y_shifts = len(diffs.pop("y", []))
+    y_rows = diffs.pop("y", [])
+    y_shifts = len(y_rows)
+    y_max = max((abs(float(vb) - float(va)) for _, va, vb in y_rows), default=0)
     total = sum(len(v) for v in diffs.values())
     comparable = sum(1 for k in common if A[k]["tag"] == B[k]["tag"])
     print(f"comparable pairs: {comparable} same-tag, {len(common) - comparable} cross-tag (box-only)")
     print(f"REAL DIFFERENCES: {total}"
-          + (f"   (+{y_shifts} y-position shifts, downstream of the above)" if y_shifts else ""))
+          + (f"   (+{y_shifts} y-position shifts, max drift {y_max:.0f}px)" if y_shifts else ""))
     print("=" * 88)
     for p, rows in sorted(diffs.items(), key=lambda x: -len(x[1])):
         print(f"\n{p}  ({len(rows)})")

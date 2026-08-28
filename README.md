@@ -170,7 +170,10 @@ this loop:
 6. ask the editor itself  (browser console)  every block isValid, and
                                              serialize(getBlocks()) === stored content
 7. audit the design       audit-contrast.js  WCAG contrast, zero failures required
-                          + the RWD checklist  at the theme.json breakpoints
+8. audit the layout       check-rwd.js       every breakpoint, real overflow not
+                                             the scrollbar (themes clip it)
+9. compare against a      collect-fingerprint.js  35 computed properties per element,
+   reference page         + diff-fingerprints.py  paired and diffed
 ```
 
 The queries the agent leans on — each answers completely in a few hundred tokens:
@@ -405,6 +408,9 @@ tools/
   verify-live.py             the public URL, through the cache, fluid-aware
   el2blocks.py               Elementor -> blocks, driven by elementor-headless's measured CSS map
   audit-contrast.js          in-page WCAG contrast audit (gradients, cover dims, symbols)
+  check-rwd.js               per-breakpoint overflow/type/target audit, clip-aware
+  collect-fingerprint.js     35 computed properties per element, for a real diff
+  diff-fingerprints.py       pair two fingerprints, report only real differences
   extract-block-schema.php   dump a live site's full surface
   sweep-render.php           render all blocks, record who shows nothing
   build-indexes.py           dumps + sweeps -> shipped data
