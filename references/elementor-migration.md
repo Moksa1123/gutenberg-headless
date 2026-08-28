@@ -138,8 +138,33 @@ the height difference fell from +23% to **+12%** — the remainder is
 per-element text rhythm (`p` 18px, `h2` 14px top margins the theme applies to
 typography), which is a theme-styling decision rather than a conversion error.
 
+### Two more, found only by measuring every text node
+
+Eyeballing screenshots is necessary and still not sufficient. Fingerprinting
+**every** rendered text node on both pages (font-size, line-height, weight,
+colour, y-position) turned up two systematic faults that a screenshot glance
+reads as "close enough":
+
+- **The whole type scale was shrunk.** theme.json's `typography.fluid` rewrites
+  a plain inline `font-size:56px` into `clamp(31.6px, …, 56px)`, which resolves
+  to **44.6px** at a 1440px viewport. Every heading and every paragraph was a
+  step small: 56→44.6, 16.5→15.3, 34→34.06 with fractional values that give it
+  away. Elementor emits fixed sizes, so a faithful conversion must opt out —
+  each font-size is now restated in the design layer, where the doubled
+  `!important` selector pins it. After the fix all four checkpoints match
+  exactly: 56/70, 40/48, 20/28, 16.5/32.175.
+- **195px of dead space above the hero.** The theme's page wrapper
+  (`.ct-container-full`) applies `padding-top:120px` to ordinary pages; the
+  Elementor original avoided it by using the `elementor_header_footer` page
+  template. Converting the tree does not convert the template — set
+  `_wp_page_template` to whatever the original used, or the converted page
+  starts with a band of nothing.
+
+Method note: `getComputedStyle` on every text node of both pages, compared as
+data, is what found these. "Looks about right" would not have.
+
 After all of it the converted page matches the original's structure, widths,
-colours, CTA styling and section rhythm.
+type scale, colours, CTA styling and section rhythm.
 
 Three earlier bugs, also fixed at the root:
 

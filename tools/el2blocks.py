@@ -259,7 +259,18 @@ class Style:
     def resolve(self, block=None):
         self.normalize(block)
         rules, classes, _ = gblib.style_expectations(self.style, block)
-        return self.style, classes + self.extra_classes, ";".join(f"{p}:{v}" for p, v in rules)
+        inline = []
+        for p, v in rules:
+            inline.append(f"{p}:{v}")
+            if p == "font-size":
+                # theme.json `typography.fluid` rewrites a plain inline
+                # font-size into clamp(min, formula, MAX) at render: a 56px
+                # heading resolves to 44.6px at 1440px, and the whole page
+                # reads a type scale smaller than the Elementor original,
+                # which emits fixed sizes. Restating the size in the design
+                # layer (doubled selector, !important) pins it back.
+                self.layout_css(f"font-size:{v}")
+        return self.style, classes + self.extra_classes, ";".join(inline)
 
 
 def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_filter=None):
