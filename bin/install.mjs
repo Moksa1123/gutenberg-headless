@@ -110,7 +110,7 @@ function select(message, choices) {
   return new Promise((resolve) => {
     let idx = 0;
     const render = (first) => {
-      if (!first) process.stdout.write(`\x1b[${choices.length + 1}A`);
+      if (!first) process.stdout.write(`\x1b[${choices.length + 1}A\x1b[J`);
       console.log(bold(message) + dim("（↑↓ 選擇，Enter 確定）"));
       choices.forEach((c, i) => {
         console.log(i === idx ? cyan(`  ❯ ${c.title}`) : `    ${c.title}`);
@@ -137,10 +137,9 @@ function select(message, choices) {
 }
 
 function toggle(message, initial = false) {
-  return select(message, [
-    { title: initial ? "要（預設）" : "要", value: true },
-    { title: initial ? "不要" : "不要（預設）", value: false },
-  ].sort((a) => (initial === a.value ? -1 : 1)));
+  const yes = { title: initial ? "要（預設）" : "要", value: true };
+  const no = { title: initial ? "不要" : "不要（預設）", value: false };
+  return select(message, initial ? [yes, no] : [no, yes]);
 }
 
 // ---------- platform config ------------------------------------------------
