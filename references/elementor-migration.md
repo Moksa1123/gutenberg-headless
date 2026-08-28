@@ -115,9 +115,31 @@ Also measured: `rgba(0,0,0,0)` is a **deliberate** transparent (ghost buttons
 depend on it), not an absence — treating it as empty makes the block inherit a
 solid colour it never had.
 
-After those four fixes the converted page matches the original's structure,
-widths, colours and CTA styling; what remains different is height (+23%, mostly
-looser vertical rhythm where Elementor's negative margins are gone).
+### Vertical rhythm: the theme fills every silence
+
+After the layout fixes the page still ran **+23% taller** than the original, and
+that gap is entirely spacing the converted markup never asked for. Measured on
+the delivered page:
+
+- the theme gives **every** `.wp-block-group` a `margin-bottom: 24px` when the
+  block does not say otherwise — 10 of them on this page
+- and a `row-gap: 24px` to any group whose block does not set `blockGap`
+- `blockGap` is **render-time** CSS (`wp-container-*`), so a theme rule at equal
+  or higher specificity simply outranks it
+
+Elementor never has this problem: its own reset zeroes widget margins, so an
+Elementor tree records only the spacing the designer *added*. Converted markup
+inherits a theme's opinions in every gap the tree left silent.
+
+The fix is to state the silence: every container now emits
+`gap:<its own value or 0>; margin-block:0` into the design layer, where the
+doubled `!important` selector wins. Stray section margins went to **zero** and
+the height difference fell from +23% to **+12%** — the remainder is
+per-element text rhythm (`p` 18px, `h2` 14px top margins the theme applies to
+typography), which is a theme-styling decision rather than a conversion error.
+
+After all of it the converted page matches the original's structure, widths,
+colours, CTA styling and section rhythm.
 
 Three earlier bugs, also fixed at the root:
 

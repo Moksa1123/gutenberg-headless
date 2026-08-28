@@ -563,9 +563,17 @@ def convert_element(e, ctx) -> str:
                    {"url": s["background_image"]["url"], "source": "file"})
             st.set(("background", "backgroundSize"), s.get("background_size") or "cover")
             note("info", "container", "background image -> style.background (render-time)")
+        # Vertical rhythm is the difference between "converted" and "looks
+        # converted". Measured on moksaweb.com: the theme gives every group a
+        # 24px bottom margin and a 24px row-gap when the block does not say
+        # otherwise, and blockGap is RENDER-time CSS that the theme's own rules
+        # outrank - the page came out 23% taller than the Elementor original
+        # from stacked default spacing alone. So every container states its
+        # gap AND its margin explicitly, in the design layer, where it wins.
         gap = size(s.get("flex_gap"))
         if gap:
-            st.set(("spacing", "blockGap"), gap)
+            st.set(("spacing", "blockGap"), gap)          # keep it in the attrs
+        st.layout_css(f"gap:{gap or '0px'};margin-block:0")
 
         # Width is layout INTENT, and the block `layout` attribute cannot carry
         # it on a classic theme: layout.type "constrained" resolves against
