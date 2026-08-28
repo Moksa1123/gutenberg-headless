@@ -25,6 +25,10 @@ import json
 import sys
 from pathlib import Path
 
+# csv.writer defaults to CRLF. This repo is LF-only (.gitattributes), so the
+# default makes every rebuild report the whole data/ directory as modified.
+LF = "\n"
+
 
 def flatten(prefix, val, out):
     if isinstance(val, dict):
@@ -79,7 +83,7 @@ def main():
             verdicts[name] = {"block": name, "verdict": v.get("verdict", ""), "note": v.get("note", "")}
         vp = out / "render-verification.csv"
         with open(vp, "w", newline="", encoding="utf-8") as f:
-            w = csv.writer(f)
+            w = csv.writer(f, lineterminator=LF)
             w.writerow(["block", "verdict", "note"])
             for name in sorted(verdicts):
                 w.writerow([name, verdicts[name]["verdict"], verdicts[name]["note"]])
@@ -90,7 +94,7 @@ def main():
 
     # ---- blocks.csv --------------------------------------------------------
     with open(out / "blocks.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["name", "title", "category", "dynamic", "api_version", "parent",
                     "ancestor", "attrs", "variations", "styles", "namespace", "render_verdict"])
         for name, b in sorted(d["blocks"].items()):
@@ -106,7 +110,7 @@ def main():
 
     # ---- attributes.csv ----------------------------------------------------
     with open(out / "attributes.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["block", "attribute", "type", "source", "selector", "enum", "default", "role"])
         for name, b in sorted(d["blocks"].items()):
             for an, a in (b.get("attributes") or {}).items():
@@ -121,7 +125,7 @@ def main():
 
     # ---- supports.csv ------------------------------------------------------
     with open(out / "supports.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["block", "support", "value"])
         for name, b in sorted(d["blocks"].items()):
             rows = []
@@ -131,14 +135,14 @@ def main():
 
     # ---- presets.csv -------------------------------------------------------
     with open(out / "presets.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["kind", "slug", "value", "name", "origin", "css_var"])
         for row in preset_rows(d.get("global_settings", {})):
             w.writerow(row)
 
     # ---- styles.csv --------------------------------------------------------
     with open(out / "styles.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["block", "style", "label", "is_default", "class"])
         for name, b in sorted(d["blocks"].items()):
             for s in b.get("styles", []):
@@ -147,7 +151,7 @@ def main():
 
     # ---- patterns.csv ------------------------------------------------------
     with open(out / "patterns.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["name", "title", "categories", "inserter", "bytes"])
         for p in d.get("patterns", []):
             w.writerow([p["name"], p["title"], "|".join(p.get("categories") or []),
@@ -155,7 +159,7 @@ def main():
 
     # ---- block-categories.csv ---------------------------------------------
     with open(out / "block-categories.csv", "w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator=LF)
         w.writerow(["slug", "title"])
         for c in d.get("block_categories", []):
             w.writerow([c["slug"], c["title"]])
