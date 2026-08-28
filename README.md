@@ -419,12 +419,13 @@ tools/
   collect-fingerprint.js     35 computed properties per element, for a real diff
   diff-fingerprints.py       pair two fingerprints, report only real differences
   extract-block-schema.php   dump a live site's full surface
+  extract-editor-surface.js  run IN the editor: variations, transforms, deprecations, save() shape
   sweep-render.php           render all blocks, record who shows nothing
   build-indexes.py           dumps + sweeps -> shipped data
 
 references/  data-model · supports-and-styles · dynamic-blocks · canonicalization
              wp71-new-surface · woo-onepage · fidelity · extraction-traps
-             custom-css-js · elementor-migration
+             custom-css-js · elementor-migration · editor-surface
 examples/    demo-page.html          the first proof page (editor byte-identical)
              wp71-features.html      WP 7.1's new surface, exercised and verified
              fidelity-target.html    a hand-designed HTML/CSS/JS/SVG page...

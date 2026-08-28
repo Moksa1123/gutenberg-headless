@@ -67,6 +67,17 @@ foreach ( $registry->get_all_registered() as $name => $bt ) {
 		'uses_context'     => $bt->uses_context,
 		'provides_context' => $bt->provides_context,
 		'is_dynamic'       => $bt->is_dynamic(),
+		// `selectors` says WHICH element inside the block each style group is
+		// applied to. Without it the style engine's output is guesswork for
+		// any block that is not a single element - 18 blocks here.
+		'selectors'        => ( isset( $bt->selectors ) && $bt->selectors ) ? $bt->selectors : null,
+		// Hooked blocks insert themselves next to other blocks at render time,
+		// so a page can contain markup nobody wrote.
+		'block_hooks'      => ( isset( $bt->block_hooks ) && $bt->block_hooks ) ? $bt->block_hooks : null,
+		'has_example'      => ! empty( $bt->example ),
+		// A variation_callback means the PHP `variations` array is empty until
+		// it runs - reading the property alone under-reports.
+		'variation_callback' => isset( $bt->variation_callback ) && $bt->variation_callback ? true : false,
 	);
 }
 
@@ -85,6 +96,50 @@ if ( class_exists( 'WP_Block_Patterns_Registry' ) ) {
 			'inserter'   => ! isset( $p['inserter'] ) || $p['inserter'],
 			'source'     => isset( $p['source'] ) ? $p['source'] : '',
 			'bytes'      => isset( $p['content'] ) ? strlen( $p['content'] ) : 0,
+		);
+	}
+}
+
+// ---- block bindings sources -------------------------------------------------
+// What a `metadata.bindings` entry is allowed to name. core/pattern-overrides
+// is the one that turns a synced pattern into a template with editable slots;
+// acf/field and core/post-meta bind a block to stored data. Nothing about any
+// of this is visible in the block registry.
+$binding_sources = array();
+if ( function_exists( 'get_all_registered_block_bindings_sources' ) ) {
+	foreach ( get_all_registered_block_bindings_sources() as $name => $src ) {
+		$binding_sources[] = array(
+			'name'             => $name,
+			'label'            => isset( $src->label ) ? (string) $src->label : '',
+			'uses_context'     => isset( $src->uses_context ) ? $src->uses_context : array(),
+			'has_get_value'    => isset( $src->get_value_callback ) && $src->get_value_callback ? true : false,
+		);
+	}
+}
+
+// ---- templates -------------------------------------------------------------
+// Two unrelated things both called "template", and which of them exists is a
+// property of the THEME: wp_template/wp_template_part are block-theme only,
+// while a post type's own `template` works on any theme.
+$templates = array(
+	'is_block_theme'   => function_exists( 'wp_is_block_theme' ) ? wp_is_block_theme() : false,
+	'wp_template'      => 0,
+	'wp_template_part' => 0,
+	'post_type_templates' => array(),
+	'synced_patterns'  => 0,
+);
+foreach ( array( 'wp_template', 'wp_template_part' ) as $pt ) {
+	$c = wp_count_posts( $pt );
+	$templates[ $pt ] = $c ? (int) array_sum( (array) $c ) : 0;
+}
+$wpb = wp_count_posts( 'wp_block' );
+$templates['synced_patterns'] = $wpb ? (int) array_sum( (array) $wpb ) : 0;
+foreach ( get_post_types( array(), 'objects' ) as $pt ) {
+	if ( ! empty( $pt->template ) ) {
+		$templates['post_type_templates'][] = array(
+			'post_type'     => $pt->name,
+			'template_lock' => isset( $pt->template_lock ) ? $pt->template_lock : false,
+			'blocks'        => wp_list_pluck( $pt->template, 0 ),
 		);
 	}
 }
@@ -131,6 +186,8 @@ $out = array(
 	'global_styles'      => $global_styles,
 	'patterns'           => $patterns,
 	'pattern_categories' => $pattern_categories,
+	'binding_sources'    => $binding_sources,
+	'templates'          => $templates,
 );
 
 echo wp_json_encode( $out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );

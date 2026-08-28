@@ -33,6 +33,12 @@ Warnings:
   W-DYNHTML   inner HTML on a core pure-dynamic block (the callback regenerates it)
   W-CLASSNAME className/anchor in comment but not in the HTML
   W-WRAPPER   first element lacks the wp-block-* class this block normally carries
+  W-EDITOR    block the SERVER registers but the editor's registry does not -
+              the page renders and the editor cannot read or place it
+  W-ORDER     class or inline-CSS order differs from what this block's save()
+              writes. Legal, and the editor accepts it; what it does not survive
+              is the editor's own next save, which regenerates the page and
+              reshuffles it (measured: 5,465 bytes of drift on a 180-block page)
 """
 import argparse
 import json
@@ -80,6 +86,15 @@ def inline_style(html):
     return ";".join(re.findall(r'style="([^"]*)"', html or ""))
 
 
+def first_style(html):
+    """Only the FIRST element's style attribute - the one save() composes."""
+    tags = re.findall(r"<[a-zA-Z][^>]*>", html or "")
+    if not tags:
+        return ""
+    m = re.search(r'style="([^"]*)"', tags[0])
+    return m.group(1) if m else ""
+
+
 class Report:
     def __init__(self):
         self.errors, self.warnings = [], []
@@ -97,6 +112,92 @@ def check_type(val, spec):
         return True
     types = t if isinstance(t, list) else [t]
     return any(isinstance(val, JSON_TYPES[x]) for x in types if x in JSON_TYPES) or not types
+
+
+_SURFACE = [None]
+
+
+def editor_surface():
+    """Per-block save() shape, measured in the editor (data/editor-surface.json).
+
+    Everything below it checks is legal markup - the editor accepts it. What it
+    does NOT survive is the editor's own next save, which regenerates the page
+    from save() and reshuffles anything written in a different order. Measured
+    on a 180-block page: 5,465 bytes of drift from class order, declaration
+    order and one undeclared className."""
+    if _SURFACE[0] is None:
+        p = Path(__file__).resolve().parent.parent / "data" / "editor-surface.json"
+        try:
+            _SURFACE[0] = json.loads(p.read_text(encoding="utf-8"))["blocks"]
+        except Exception:
+            _SURFACE[0] = {}
+    return _SURFACE[0]
+
+
+def _constraints(variants, key):
+    """Orderings that hold in EVERY probe of this block.
+
+    A block's class order is not a fixed list. core/separator emits
+    `has-text-color has-alpha-channel-opacity` when a background is also set
+    and the reverse when it is not - so treating one probe's output as THE
+    order reports canonical markup as wrong (measured: four false positives on
+    a page the editor itself confirmed byte-identical). Only a pair whose order
+    never flips across the probes is a rule."""
+    lists = [v.get(key) or [] for v in variants]
+    lists = [[x for x in l if not x.startswith("ZZPROBE")] for l in lists if l]
+    if not lists:
+        return set()
+    before, conflicting = set(), set()
+    for lst in lists:
+        idx = {x: i for i, x in enumerate(lst)}
+        for a in lst:
+            for b in lst:
+                if a == b:
+                    continue
+                if idx[a] < idx[b]:
+                    if (b, a) in before:
+                        conflicting.add((a, b))
+                        conflicting.add((b, a))
+                    before.add((a, b))
+    return before - conflicting
+
+
+def _violation(before, actual):
+    """The first pair the markup writes against a stable constraint."""
+    for i in range(len(actual)):
+        for k in range(i + 1, len(actual)):
+            if (actual[k], actual[i]) in before:
+                return actual[i], actual[k]
+    return None
+
+
+def canon_order(rep, where, srec, classes, first_style):
+    save = srec.get("save") or {}
+    variants = save.get("variants") or []
+    if not variants:
+        return
+
+    tokens = classes.split()
+    if tokens:
+        bad = _violation(_constraints(variants, "classes"), tokens)
+        if bad:
+            rep.warn("W-ORDER", where,
+                     f"class order: '{bad[0]}' is written before '{bad[1]}', "
+                     f"save() always puts them the other way - valid, but the "
+                     f"editor's next save rewrites it")
+
+    # Only the FIRST element's own style attribute. The concatenation of every
+    # style in the block is right for asking "does the block carry this
+    # declaration" and meaningless for asking about ORDER - it reported a
+    # heading's line-height as preceding a background-color that belongs to a
+    # different element.
+    if first_style:
+        props = [d.split(":")[0].strip() for d in first_style.split(";") if ":" in d]
+        bad = _violation(_constraints(variants, "css"), props)
+        if bad:
+            rep.warn("W-ORDER", where,
+                     f"inline CSS order: '{bad[0]}' is written before '{bad[1]}', "
+                     f"save() always puts them the other way")
 
 
 def validate(tree, schema, rep):
@@ -121,6 +222,14 @@ def validate(tree, schema, rep):
         html = node.get("innerHTML", "")
         _tag, wrapper_classes, class_set = first_tag_classes(html)
         style_str = inline_style(html)
+
+        srec = editor_surface().get(name)
+        if srec is None and editor_surface():
+            rep.warn("W-EDITOR", where,
+                     "registered on the SERVER but not in the editor's block registry - "
+                     "the page renders, and the editor cannot read or place this block")
+        elif srec:
+            canon_order(rep, where, srec, wrapper_classes, first_style(html))
 
         # parent / ancestor
         if bdef.get("parent"):

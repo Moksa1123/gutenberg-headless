@@ -32,6 +32,23 @@ def j(x):
     return json.dumps(x, ensure_ascii=False)
 
 
+_SURFACE = [None]
+
+
+def surface():
+    """The half of the truth the PHP registry does not hold.
+
+    Variations, transforms, deprecations and the exact shape each block's
+    save() writes all live in JavaScript. Measured on the target site: the
+    server reports 3 variations and no transforms or deprecations; the editor
+    has 173, 168 and 192. Extracted by tools/extract-editor-surface.js."""
+    if _SURFACE[0] is None:
+        from pathlib import Path
+        p = Path(__file__).resolve().parent.parent / "data" / "editor-surface.json"
+        _SURFACE[0] = json.loads(p.read_text(encoding="utf-8")) if p.exists() else {"blocks": {}}
+    return _SURFACE[0]
+
+
 def cmd_stats(s, a):
     blocks = s["blocks"]
     dyn = sum(1 for b in blocks.values() if b["is_dynamic"])
@@ -48,6 +65,30 @@ def cmd_stats(s, a):
     pres = gblib.presets(s)
     print("presets     : " + "  ".join(f"{k}:{len(v)}" for k, v in pres.items() if v))
     print(f"patterns    : {len(s.get('patterns', []))}   plugins: {', '.join(s.get('active_plugins', []))}")
+
+    sf = surface()["blocks"]
+    if sf:
+        tot = lambda k: sum(len(b.get(k) or []) for b in sf.values())  # noqa: E731
+        trans = sum(len(b["transforms"]["from"]) + len(b["transforms"]["to"])
+                    for b in sf.values() if b.get("transforms"))
+        only_server = sorted(set(blocks) - set(sf))
+        print(f"editor      : {len(sf)} block types in the EDITOR registry"
+              + (f"  ({len(only_server)} registered server-side only - "
+                 f"they render, but the editor cannot place or read them)" if only_server else ""))
+        print(f"  variations: {tot('variations')}   transforms: {trans}   "
+              f"deprecations: {tot('deprecated')}")
+    t = s.get("templates") or {}
+    if t:
+        kind = ("block theme - wp_template/wp_template_part available"
+                if t.get("is_block_theme") else
+                "classic theme - NO wp_template; patterns and post-type templates only")
+        print(f"templates   : {kind}")
+        print(f"  synced patterns (wp_block): {t.get('synced_patterns', 0)}   "
+              f"wp_template: {t.get('wp_template', 0)}   "
+              f"post-type templates: {len(t.get('post_type_templates') or [])}")
+    bs = s.get("binding_sources") or []
+    if bs:
+        print("bindings    : " + "  ".join(b["name"] for b in bs))
 
 
 def cmd_blocks(s, a):
@@ -230,6 +271,158 @@ SKELETON = '''<!-- wp:group {"layout":{"type":"constrained"}} -->
 <!-- /wp:group -->'''
 
 
+def _sf(name):
+    full = gblib.full_name(name)
+    rec = surface()["blocks"].get(full)
+    if rec is None:
+        print(f"'{full}' is not in the EDITOR registry "
+              f"(it may still be registered server-side - see `gb.py stats`)")
+    return full, rec
+
+
+def cmd_variations(s, a):
+    """A variation is a block wearing a different face: same block name,
+    different preset attributes. core/group IS Row, Stack and Grid; core/embed
+    IS 33 providers. None of it is visible server-side."""
+    if a.block:
+        full, rec = _sf(a.block)
+        if not rec:
+            return
+        for v in rec.get("variations") or []:
+            flag = " (default)" if v["isDefault"] else ""
+            scope = f"  scope:{','.join(v['scope'])}" if v.get("scope") else ""
+            print(f"{v['name']:28} {v['title']}{flag}{scope}")
+            if v.get("attributes"):
+                print(f"    attributes: {j(v['attributes'])[:150]}")
+            if v.get("innerBlocks"):
+                print(f"    innerBlocks: {', '.join(x for x in v['innerBlocks'] if x)}")
+        if not rec.get("variations"):
+            print(f"{full}: no variations")
+        return
+    rows = [(n, len(b["variations"])) for n, b in surface()["blocks"].items() if b.get("variations")]
+    for n, c in sorted(rows, key=lambda x: -x[1]):
+        if a.grep and a.grep not in n:
+            continue
+        print(f"{c:4}  {n}")
+    print(f"-- {sum(c for _, c in rows)} variations across {len(rows)} blocks")
+
+
+def cmd_transforms(s, a):
+    """What a block can be turned into, and what turns into it. Matters when
+    writing markup because a transform is also how the editor may REWRITE a
+    block the user touches."""
+    full, rec = _sf(a.block)
+    if not rec:
+        return
+    tr = rec.get("transforms")
+    if not tr:
+        print(f"{full}: no transforms")
+        return
+    for side in ("from", "to"):
+        for t in tr[side]:
+            target = ", ".join(t["blocks"] or []) or (t["tag"] or "?")
+            extra = "  isMatch()" if t["isMatch"] else ""
+            print(f"{side:5} {t['type']:10} {target}{extra}")
+
+
+def cmd_deprecated(s, a):
+    """Deprecations are why "the editor accepted it" is not the same as "it is
+    stable". A block whose markup matches an OLD save() is accepted through its
+    deprecation chain - and a deprecation with migrate() rewrites the
+    attributes the next time the block is touched."""
+    if a.block:
+        full, rec = _sf(a.block)
+        if not rec:
+            return
+        deps = rec.get("deprecated") or []
+        if not deps:
+            print(f"{full}: no deprecations - its save() is the only accepted form")
+            return
+        print(f"{full}: {len(deps)} deprecated form(s)")
+        for d in deps:
+            bits = []
+            if d["hasMigrate"]:
+                bits.append("migrate() REWRITES attributes")
+            if d["hasIsEligible"]:
+                bits.append("isEligible()")
+            if d["changedAttributes"]:
+                bits.append("attrs: " + ", ".join(d["changedAttributes"][:8]))
+            if d["changedSupports"]:
+                bits.append("supports: " + ", ".join(d["changedSupports"][:6]))
+            print(f"  [{d['index']}] " + ("  ".join(bits) or "same attributes, different markup"))
+        return
+    rows = [(n, len(b["deprecated"]),
+             sum(1 for d in b["deprecated"] if d["hasMigrate"]))
+            for n, b in surface()["blocks"].items() if b.get("deprecated")]
+    for n, c, m in sorted(rows, key=lambda x: -x[1]):
+        if a.grep and a.grep not in n:
+            continue
+        print(f"{c:3} forms ({m} migrating)  {n}")
+    print(f"-- {sum(c for _, c, _ in rows)} deprecated forms across {len(rows)} blocks")
+
+
+def cmd_save(s, a):
+    """The exact shape this block's save() writes: element order, the class
+    list in ITS order, the inline CSS declaration order, and which element
+    carries `className`.
+
+    This is the canonical form. Markup that differs is not necessarily invalid
+    - the validator compares class tokens as a set - but the editor's next save
+    rewrites it, so a page built the wrong way is one manual edit from being
+    reshuffled end to end."""
+    full, rec = _sf(a.block)
+    if not rec:
+        return
+    sv = rec.get("save") or {}
+    if sv.get("dynamic"):
+        print(f"{full}: DYNAMIC - save() writes nothing; the server renders it. "
+              f"Serialize as a void comment.")
+        return
+    if sv.get("error") or not sv.get("elements"):
+        print(f"{full}: save() could not be probed ({sv.get('error', 'no output')})")
+        return
+    for i, el in enumerate(sv["elements"]):
+        where = "  <- className lands here" if i == sv.get("classNameOn") else ""
+        print(f"[{i}] <{el['tag']}>{where}")
+        if el["attrs"]:
+            print("    attribute order: " + " ".join(el["attrs"]))
+        if el["classes"]:
+            print("    class order    : " + " ".join(el["classes"]))
+        if el["css"]:
+            print("    inline CSS     : " + " ".join(el["css"]))
+    if rec.get("contentAttributes"):
+        print("bindable (role:content): " + ", ".join(rec["contentAttributes"]))
+
+
+def cmd_bindings(s, a):
+    """Sources a `metadata.bindings` entry may name. core/pattern-overrides is
+    what turns a synced pattern into a template with editable slots."""
+    for b in s.get("binding_sources") or []:
+        ctx = f"  uses_context: {', '.join(b['uses_context'])}" if b.get("uses_context") else ""
+        print(f"{b['name']:26} {b['label']}{ctx}")
+    if not s.get("binding_sources"):
+        print("no binding sources registered on this site")
+
+
+def cmd_templates(s, a):
+    """The four different things called a "template", and which exist here."""
+    t = s.get("templates") or {}
+    block_theme = t.get("is_block_theme")
+    print(f"theme            : {'BLOCK theme' if block_theme else 'CLASSIC theme'}")
+    print(f"wp_template      : {t.get('wp_template', 0)}"
+          + ("" if block_theme else "   (not available - classic themes have no Site Editor templates)"))
+    print(f"wp_template_part : {t.get('wp_template_part', 0)}")
+    print(f"synced patterns  : {t.get('synced_patterns', 0)}   (wp_block post type - edit once, changes everywhere)")
+    print(f"registered patterns: {len(s.get('patterns', []))}   (inserted as a COPY, then independent)")
+    pts = t.get("post_type_templates") or []
+    print(f"post-type templates: {len(pts)}   (a starting block structure for new posts; works on any theme)")
+    for p in pts:
+        print(f"    {p['post_type']:16} lock:{p['template_lock'] or 'none'}  {', '.join(p['blocks'][:6])}")
+    overrides = any(b["name"] == "core/pattern-overrides" for b in (s.get("binding_sources") or []))
+    print(f"pattern overrides: {'available' if overrides else 'NOT registered'}"
+          f"   (a synced pattern with per-instance editable slots, bound to attributes marked role:content)")
+
+
 def cmd_skeleton(s, a):
     print(SKELETON)
 
@@ -308,6 +501,20 @@ def main():
     p.add_argument("ref")
     sub.add_parser("skeleton")
     sub.add_parser("grammar")
+
+    # --- the editor-side surface (data/editor-surface.json) ---
+    p = sub.add_parser("variations")
+    p.add_argument("block", nargs="?")
+    p.add_argument("--grep")
+    p = sub.add_parser("transforms")
+    p.add_argument("block")
+    p = sub.add_parser("deprecated")
+    p.add_argument("block", nargs="?")
+    p.add_argument("--grep")
+    p = sub.add_parser("save")
+    p.add_argument("block")
+    sub.add_parser("bindings")
+    sub.add_parser("templates")
 
     for _, sp in sub.choices.items():
         sp.add_argument("--json", action="store_true")

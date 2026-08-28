@@ -114,7 +114,18 @@ python tools/gb.py patterns --grep hero           # registered patterns
 python tools/gb.py var "var:preset|color|x"       # expand a preset ref, check it exists
 python tools/gb.py skeleton                       # a minimal valid page
 python tools/gb.py grammar                        # the serialization cheat sheet
+python tools/gb.py variations core/group          # Row/Stack/Grid - 173 the server cannot see
+python tools/gb.py transforms core/paragraph      # what it becomes, what becomes it
+python tools/gb.py deprecated core/image          # why "valid" is not "stable" (192 old forms)
+python tools/gb.py save core/button               # the exact shape save() writes - canonical order
+python tools/gb.py bindings                       # what metadata.bindings may name
+python tools/gb.py templates                      # the four different things called "template"
 ```
+
+The last six read `data/editor-surface.json`, extracted from the EDITOR rather
+than the PHP registry - see references/editor-surface.md. The server reports 3
+variations, no transforms and no deprecations; the editor has 173, 168 and 192,
+and 22 of the 302 registered blocks do not exist in it at all.
 
 Add `--json` to any of them. **Never read `data/block-schema.json` into
 context** - it is the database; `gb.py` is the query. `data/*.csv` are there
@@ -200,5 +211,6 @@ python tools/build-indexes.py mine.json --out data/ \
 | `check-rwd.js` | per-breakpoint layout audit: real overflow (a theme's `overflow-x:hidden` hides it from the scrollbar), tiny type, small targets |
 | `collect-fingerprint.js` + `diff-fingerprints.py` | 35 computed properties per element on two pages, paired and diffed - the only honest answer to "does it match the original" |
 | `extract-block-schema.php` | dump a live site's full block surface + theme.json |
+| `extract-editor-surface.js` | run IN the editor: variations, transforms, deprecations, and the exact shape each block's save() writes |
 | `sweep-render.php` | render all blocks through do_blocks(), record who shows nothing |
 | `build-indexes.py` | turn dump + sweep into the shipped data files |
