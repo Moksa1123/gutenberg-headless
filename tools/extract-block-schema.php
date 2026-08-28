@@ -54,18 +54,32 @@ if ( ! empty( $args[0] ) ) {
 		WP_Theme_JSON_Resolver::clean_cached_data();
 	}
 	wp_clean_themes_cache();
-	// What this CANNOT do, measured by diffing the two extractions: it does not
-	// re-run the real theme's PHP. `add_theme_support()` calls fired at
-	// after_setup_theme long before these filters, so `theme_supports` below
-	// still describes the ACTIVE theme. Everything theme.json declares -
-	// presets, layout sizes, viewport, templates, parts, style variations -
-	// is read fresh and is correct.
+	// What this CANNOT do. The first version of this comment claimed far too
+	// much; the limits below were established by actually activating the theme
+	// and diffing the two extractions.
+	//
+	// Nothing here re-runs BOOT. Themes and plugins register at
+	// after_setup_theme / init, long before a CLI script can filter anything,
+	// and much of what they register is conditional on which theme is active.
+	// Measured on this site, activating twentytwentyfive for real:
+	//   - 13 blocksy/* blocks DISAPPEARED (they register only when Blocksy runs)
+	//   - 10+ woocommerce/add-to-cart-with-options* blocks APPEARED (WooCommerce
+	//     registers them only on a block theme)
+	//   - patterns went 86 -> 162, templates 8 -> 16, parts 7 -> 14, because
+	//     WooCommerce and the theme contribute their own once active
+	//   - gradients stayed Blocksy's: they come from add_theme_support(), not
+	//     theme.json
 	$pretending = array(
 		'theme'  => $as_theme,
-		'faithful_for' => 'theme.json settings and styles, templates, template parts, '
-						. 'style variations, customTemplates, templateParts',
-		'stale_for'    => 'theme_supports (registered by the ACTIVE theme at after_setup_theme, '
-						. 'before this process could intervene)',
+		'faithful_for' => "what theme.json DECLARES (settings, presets that come from it, "
+						. "layout, viewport, styles) and the theme's own files (templates, "
+						. "template parts, style variations, customTemplates, templateParts)",
+		'stale_for'    => "anything registered at BOOT and conditional on the active theme: "
+						. "theme_supports and the presets it carries (gradients here), "
+						. "registered patterns, the block registry itself, and templates or "
+						. "parts contributed by plugins",
+		'measured'     => "activating the theme for real changed: blocks 302->299 (-13 theme "
+						. "blocks, +10 WooCommerce), patterns 86->162, templates 8->16, parts 7->14",
 	);
 }
 

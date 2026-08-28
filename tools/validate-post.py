@@ -273,9 +273,16 @@ def validate(tree, schema, rep, pattern=False):
 
         srec = editor_surface().get(name)
         if srec is None and editor_surface():
+            # data/editor-surface.json is probed in the POST editor, and that is
+            # not the only editor. Measured by activating a block theme and
+            # probing both screens on the same site: 18 of these exist in the
+            # SITE editor and not the post editor - the order-confirmation and
+            # catalog blocks, which belong in a template, not in a page. So the
+            # honest claim is about the screen this markup is destined for.
             rep.warn("W-EDITOR", where,
-                     "registered on the SERVER but not in the editor's block registry - "
-                     "the page renders, and the editor cannot read or place this block")
+                     "registered on the SERVER but absent from the POST editor's registry. "
+                     "It renders for visitors; in a page it is unreadable content. Several "
+                     "such blocks exist only in the SITE editor and are correct in a template")
         elif srec:
             if html_is_authoritative:
                 canon_order(rep, where, srec, wrapper_classes, first_style(html))

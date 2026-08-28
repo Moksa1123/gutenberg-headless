@@ -73,8 +73,8 @@ def cmd_stats(s, a):
                     for b in sf.values() if b.get("transforms"))
         only_server = sorted(set(blocks) - set(sf))
         print(f"editor      : {len(sf)} block types in the EDITOR registry"
-              + (f"  ({len(only_server)} registered server-side only - "
-                 f"they render, but the editor cannot place or read them)" if only_server else ""))
+              + (f"  ({len(only_server)} absent from THIS editor - measured in the post "
+                 f"editor; several of them exist in the SITE editor instead)" if only_server else ""))
         print(f"  variations: {tot('variations')}   transforms: {trans}   "
               f"deprecations: {tot('deprecated')}")
     t = s.get("templates") or {}
@@ -585,6 +585,8 @@ def cmd_templates(s, a):
         print(f"\n[ describing the site AS IF '{pre['theme']}' were active - nothing was changed ]")
         print(f"  faithful for: {pre['faithful_for']}")
         print(f"  STALE for   : {pre['stale_for']}")
+        if pre.get("measured"):
+            print(f"  measured    : {pre['measured']}")
 
     # --- the Site Editor ---
     res = t.get("resolved") or {}

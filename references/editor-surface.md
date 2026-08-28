@@ -27,14 +27,29 @@ python tools/gb.py templates                  # the four things called "template
 python tools/gb.py settings                   # what the editor ALLOWS here
 ```
 
-## 22 blocks the editor cannot read
+## 22 blocks the POST editor cannot read - and where they actually live
 
 The two registries are not the same set. 302 blocks are registered server-side;
-280 exist in the editor. The 22 that are not - `woocommerce/breadcrumbs`,
-`woocommerce/catalog-sorting`, `core/post-comments` and friends - render
-perfectly on the front end and appear in the editor as unrecognised content.
-Write one into a page and you have made something that works for visitors and
-cannot be edited. `validate-post.py` reports it as **W-EDITOR**.
+280 exist in the post editor. The 22 that do not - `woocommerce/breadcrumbs`,
+`woocommerce/catalog-sorting`, the whole `order-confirmation-*` family - render
+perfectly on the front end and appear in a page as unrecognised content.
+`validate-post.py` reports it as **W-EDITOR**.
+
+But "the editor" was doing too much work in that sentence. Probing BOTH editor
+screens on the same site with a block theme active:
+
+```
+SITE EDITOR 295 blocks   POST EDITOR 278 blocks
+only in the site editor (18): woocommerce/breadcrumbs, catalog-sorting,
+                              order-confirmation-* (14 of them),
+                              product-image-gallery, product-results-count
+only in the post editor  (1): core/freeform          (the Classic block)
+```
+
+So most of those blocks are not unreadable anywhere - they are template blocks,
+and the Site Editor is where they belong. In a PAGE they are still a mistake,
+which is what the warning is for; in a template they are correct. The editor
+settings differ too: 76 keys in the post editor, 26 in the Site Editor.
 
 (The count is a property of the SCREEN, not just the site: on a freshly opened
 post editor the registry starts at ~109 and finishes at 280 as the editor
@@ -290,22 +305,33 @@ inside one CLI process, the theme.json caches are dropped, and the process
 exits. Verified afterwards - `wp theme list --status=active` still says
 `blocksy`.
 
-**What that is faithful for, and what it is not**, established by diffing the
-two extractions rather than assumed:
+**What that is faithful for, and what it is not.** The first version of this
+section claimed far too much. The limits below come from actually activating
+the theme on the test site and diffing the two extractions - which is the only
+way this could have been settled:
 
-| | as-if extraction |
-|---|---|
-| theme.json settings, presets, layout, viewport | **correct** - the palette changes from `palette-color-*` to `accent-1..6`/`base` |
-| templates, template parts, style variations, customTemplates | **correct** - 8 / 7 / 23 / 1 |
-| `theme_supports` | **stale** - still the ACTIVE theme's |
+| | as-if | real |
+|---|---|---|
+| theme.json settings, presets from it, layout, viewport | **correct** | same |
+| the theme's own templates / parts / style variations | **correct** | same |
+| gradients | Blocksy's 56 | **TT5's** - they come from `add_theme_support`, not theme.json |
+| `theme_supports` | Blocksy's | the real theme's |
+| registered patterns | 86 | **162** |
+| block registry | 302 | **299** - 13 `blocksy/*` gone, 10+ `woocommerce/add-to-cart-with-options*` appeared |
+| templates / parts | 8 / 7 | **16 / 14** - WooCommerce contributes its own on a block theme |
 
-The stale row has a reason: `add_theme_support()` runs at `after_setup_theme`,
-long before a CLI script can filter anything. The output carries a
-`pretending` block saying so, and `gb.py templates` prints it.
+The rule behind every wrong row is the same: **nothing re-runs boot.** Themes
+and plugins register at `after_setup_theme` and `init`, much of it conditional
+on which theme is active, and a CLI filter arrives far too late. So the as-if
+extraction answers "what does this theme.json and this theme's files say",
+which is worth having, and it does not answer "what would this site be".
 
-(One near-miss worth recording: the preset COUNTS matched between the two
-themes - 20 colours each - which read like the swap had not worked. The slugs
-were completely different. A count is not a comparison.)
+The output carries a `pretending` block stating both, and `gb.py templates`
+prints it.
+
+(A near-miss worth recording: the preset COUNTS matched between the two themes -
+20 colours each - which read like the swap had not worked at all. The slugs were
+completely different. A count is not a comparison.)
 
 ## What a block theme adds
 
@@ -338,3 +364,33 @@ reference site's own pages exercise.
 
 **15 of 15 clean, zero findings.** The rules built on a classic-theme site
 describe a block theme's markup correctly.
+
+## The render sweep is a property of the theme too
+
+The sweep was re-run with a block theme actually active:
+
+```
+classic theme (Blocksy)       empty 205   renders 69   content-block 28   (302 blocks)
+block theme (TT5)             empty 209   renders 62   content-block 28   (299 blocks)
+```
+
+The registries differ, so the totals are not directly comparable - but the
+verdict for a given block can change with the theme, because a block that finds
+its context in a template renders and the same block on a bare page does not.
+Re-run `sweep-render.php` after a theme change; do not carry a verdict across
+one.
+
+## What switching cost, and how it was put back
+
+Activating a theme is not free even when it is reversible. Recorded before,
+diffed after:
+
+- `theme_mods_*` are per-theme, so nav menu locations came back untouched.
+- `sidebars_widgets` did NOT: WordPress remapped two widgets out of
+  `wp_inactive_widgets` into `sidebar-1`. Restored from a snapshot taken
+  beforehand, then verified equal.
+- Posts, pages and the published Woo one-pager were unaffected (HTTP 200,
+  41 pages).
+
+Snapshot `sidebars_widgets` and `theme_mods_<stylesheet>` before switching a
+theme you intend to switch back.
