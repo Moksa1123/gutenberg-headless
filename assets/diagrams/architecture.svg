@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 700" width="1120" height="700" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+  <style>
+    .bg    { fill: #ffffff; }
+    .band  { fill: none; stroke: #9ca3af; stroke-width: 1; stroke-dasharray: 4 3; }
+    .box   { fill: #f9fafb; stroke: #1f2937; stroke-width: 1.4; }
+    .boxy  { fill: #fef9c3; stroke: #1f2937; stroke-width: 1.4; }
+    .t     { fill: #111827; font-size: 12px; }
+    .tb    { fill: #111827; font-size: 12px; font-weight: 700; }
+    .ts    { fill: #6b7280; font-size: 10.5px; }
+    .tn    { fill: #b91c1c; font-size: 10.5px; }
+    .lbl   { fill: #374151; font-size: 10.5px; }
+    .arrow { fill: none; stroke: #1f2937; stroke-width: 1.4; marker-end: url(#a); }
+    .arrowg{ fill: none; stroke: #9ca3af; stroke-width: 1.1; marker-end: url(#ag); stroke-dasharray: 4 3; }
+    @media (prefers-color-scheme: dark) {
+      .bg    { fill: #0b0f16; }
+      .box   { fill: #111827; stroke: #e5e7eb; }
+      .boxy  { fill: #3d3406; stroke: #e5e7eb; }
+      .t, .tb{ fill: #f3f4f6; }
+      .ts    { fill: #9ca3af; }
+      .tn    { fill: #fca5a5; }
+      .lbl   { fill: #d1d5db; }
+      .arrow { stroke: #e5e7eb; marker-end: url(#ad); }
+    }
+  </style>
+  <defs>
+    <marker id="a"  markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#1f2937"/></marker>
+    <marker id="ad" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#e5e7eb"/></marker>
+    <marker id="ag" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 z" fill="#9ca3af"/></marker>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1120" height="700"/>
+
+  <!-- ============ PHASE 1: EXTRACTION ============ -->
+  <rect class="band" x="20" y="20" width="330" height="300" rx="8"/>
+  <text class="tb" x="36" y="44">EXTRACTION</text>
+  <text class="ts" x="36" y="60">once per site, over WP-CLI</text>
+
+  <rect class="box" x="36" y="76" width="298" height="58" rx="6"/>
+  <text class="tb" x="48" y="96">extract-block-schema.php</text>
+  <text class="ts" x="48" y="111">block registry · merged theme.json</text>
+  <text class="ts" x="48" y="124">patterns · viewport breakpoints</text>
+
+  <rect class="box" x="36" y="146" width="298" height="44" rx="6"/>
+  <text class="tb" x="48" y="164">style-surface dump</text>
+  <text class="ts" x="48" y="179">WP_Style_Engine property→CSS→class</text>
+
+  <rect class="box" x="36" y="202" width="298" height="44" rx="6"/>
+  <text class="tb" x="48" y="220">sweep-render.php</text>
+  <text class="ts" x="48" y="235">all 302 blocks through do_blocks()</text>
+
+  <rect class="box" x="36" y="258" width="298" height="44" rx="6"/>
+  <text class="tb" x="48" y="276">build-indexes.py</text>
+  <text class="ts" x="48" y="291">dumps + verdicts → data/ (queried, never loaded)</text>
+
+  <path class="arrow" d="M185,134 L185,146"/>
+  <path class="arrow" d="M185,190 L185,202"/>
+  <path class="arrow" d="M185,246 L185,258"/>
+
+  <!-- ============ PHASE 2: THE DATA ============ -->
+  <rect class="band" x="20" y="344" width="330" height="150" rx="8"/>
+  <text class="tb" x="36" y="368">THE DATA</text>
+  <rect class="boxy" x="36" y="380" width="298" height="100" rx="6"/>
+  <text class="tb" x="48" y="400">data/block-schema.json  (425 KB)</text>
+  <text class="ts" x="48" y="416">302 blocks · 3,188 attrs · 4,141 supports</text>
+  <text class="ts" x="48" y="430">105 presets · 37 style props · render verdicts</text>
+  <text class="tn" x="48" y="448">205/302 render NOTHING without context</text>
+  <text class="ts" x="48" y="466">+ greppable CSVs for every axis</text>
+
+  <path class="arrow" d="M185,302 L185,344"/>
+
+  <!-- ============ PHASE 3: BUILD LOOP ============ -->
+  <rect class="band" x="390" y="20" width="710" height="474" rx="8"/>
+  <text class="tb" x="406" y="44">BUILD LOOP</text>
+  <text class="ts" x="406" y="60">what the agent does per page</text>
+
+  <rect class="box" x="406" y="76" width="320" height="52" rx="6"/>
+  <text class="tb" x="418" y="96">1 · gb.py  (query)</text>
+  <text class="ts" x="418" y="111">block families · attrs · presets · verdicts</text>
+  <text class="ts" x="418" y="124">a few hundred tokens per complete answer</text>
+
+  <rect class="box" x="406" y="142" width="320" height="44" rx="6"/>
+  <text class="tb" x="418" y="160">2 · write both halves</text>
+  <text class="ts" x="418" y="175">comment JSON + saved HTML, from the schema</text>
+
+  <rect class="box" x="406" y="200" width="320" height="52" rx="6"/>
+  <text class="tb" x="418" y="220">3 · validate-post.py</text>
+  <text class="ts" x="418" y="235">11 error classes WordPress never raises —</text>
+  <text class="ts" x="418" y="248">before anything touches the database</text>
+
+  <rect class="box" x="406" y="266" width="320" height="52" rx="6"/>
+  <text class="tb" x="418" y="286">4 · apply-post.php</text>
+  <text class="ts" x="418" y="301">past kses · slashing · style.css strip;</text>
+  <text class="ts" x="418" y="314">byte-verifies the stored row; purges caches</text>
+
+  <path class="arrow" d="M566,128 L566,142"/>
+  <path class="arrow" d="M566,186 L566,200"/>
+  <path class="arrow" d="M566,252 L566,266"/>
+
+  <!-- verify column -->
+  <rect class="box" x="764" y="76" width="320" height="52" rx="6"/>
+  <text class="tb" x="776" y="96">5 · verify-live.py</text>
+  <text class="ts" x="776" y="111">the PUBLIC page, through the cache/CDN:</text>
+  <text class="ts" x="776" y="124">text · classes · inline CSS · preset vars</text>
+
+  <rect class="box" x="764" y="142" width="320" height="52" rx="6"/>
+  <text class="tb" x="776" y="162">6 · the editor oracle  (browser)</text>
+  <text class="ts" x="776" y="177">every block isValid, and resave ===</text>
+  <text class="ts" x="776" y="190">stored content, byte for byte</text>
+
+  <rect class="box" x="764" y="208" width="320" height="52" rx="6"/>
+  <text class="tb" x="776" y="228">7 · design audit</text>
+  <text class="ts" x="776" y="243">audit-contrast.js: WCAG zero failures</text>
+  <text class="ts" x="776" y="256">RWD at the theme.json breakpoints</text>
+
+  <path class="arrow" d="M726,292 L745,292 L745,102 L764,102"/>
+  <path class="arrow" d="M924,128 L924,142"/>
+  <path class="arrow" d="M924,194 L924,208"/>
+
+  <!-- loop-back -->
+  <path class="arrowg" d="M924,260 L924,344 L566,344 L566,324"/>
+  <text class="lbl" x="640" y="362">any red → fix the file, apply again, re-verify</text>
+
+  <!-- data feeds -->
+  <path class="arrow" d="M334,430 L370,430 L370,102 L406,102"/>
+  <text class="lbl" x="342" y="416">queried</text>
+
+  <!-- ============ PROOF STRIP ============ -->
+  <rect class="band" x="390" y="518" width="710" height="162" rx="8"/>
+  <text class="tb" x="406" y="542">SHIPPED PROOF (all held simultaneously)</text>
+  <text class="t" x="406" y="566">· parser round-trip vs serialize_blocks(): byte-identical on real posts</text>
+  <text class="t" x="406" y="586">· one-page WooCommerce funnel, 169 blocks: took a REAL order from the public page</text>
+  <text class="t" x="406" y="606">· hand-designed HTML/CSS/JS/SVG page rebuilt as 48 blocks to visual parity</text>
+  <text class="t" x="406" y="626">· editor resave byte-identical on every shipped example</text>
+  <text class="t" x="406" y="646">· 85.1% fewer tokens than reading source, 93.4% fewer than loading the schema</text>
+  <text class="ts" x="406" y="666">(benchmark-tokens.py regenerates the last line; the rest re-run against your install)</text>
+
+  <path class="arrowg" d="M745,494 L745,518"/>
+</svg>

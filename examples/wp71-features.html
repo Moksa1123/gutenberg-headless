@@ -1,0 +1,63 @@
+<!-- wp:heading {"style":{"@mobile":{"typography":{"fontSize":"18px"}}}} -->
+<h2 class="wp-block-heading">WP 7.1 新能力驗證頁</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>這一頁驗證 7.1 的新區塊與新屬性：分頁、手風琴、數學式、FitText、區塊層級的 hover 狀態、響應式樣式覆寫、以及依裝置隱藏。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"metadata":{"blockVisibility":{"viewport":{"mobile":false}}}} -->
+<p>這一段手機上看不到（metadata.blockVisibility.viewport.mobile = false）。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"css":"border-left:4px solid #ffd800; padding-left:1em; & a{color:#c0392b;text-decoration:underline} &:hover{background:#fdf6e3}"}} -->
+<p class="has-custom-css">這一段帶著自己的 custom CSS（style.css）：左邊框、<a href="https://booking.moksaweb.com/">連結變紅</a>、滑過整段變底色 — 巢狀 &amp; 語法，全部只作用在這一個區塊。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3,"fitText":true} -->
+<h3 class="wp-block-heading has-fit-text">FitText 滿寬標題</h3>
+<!-- /wp:heading -->
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button {"backgroundColor":"palette-color-1","style":{":hover":{"color":{"background":"var:preset|color|palette-color-3"}}}} -->
+<div class="wp-block-button"><a class="wp-block-button__link has-palette-color-1-background-color has-background wp-element-button">滑過我會變色</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:tabs -->
+<div class="wp-block-tabs"><!-- wp:tab-list -->
+<div role="tablist" class="wp-block-tab-list"><button type="button" role="tab">規格</button><button type="button" role="tab">評價</button></div>
+<!-- /wp:tab-list -->
+
+<!-- wp:tab-panels -->
+<div class="wp-block-tab-panels"><!-- wp:tab-panel {"label":"規格"} -->
+<section role="tabpanel" tabindex="0" class="wp-block-tab-panel"><!-- wp:paragraph -->
+<p>這是第一個分頁的內容。</p>
+<!-- /wp:paragraph --></section>
+<!-- /wp:tab-panel -->
+
+<!-- wp:tab-panel {"label":"評價"} -->
+<section role="tabpanel" tabindex="0" class="wp-block-tab-panel"><!-- wp:paragraph -->
+<p>這是第二個分頁的內容。</p>
+<!-- /wp:paragraph --></section>
+<!-- /wp:tab-panel --></div>
+<!-- /wp:tab-panels --></div>
+<!-- /wp:tabs -->
+
+<!-- wp:accordion -->
+<div role="group" class="wp-block-accordion"><!-- wp:accordion-item -->
+<div class="wp-block-accordion-item"><!-- wp:accordion-heading -->
+<h3 class="wp-block-accordion-heading has-icon has-icon-right"><button type="button" class="wp-block-accordion-heading__toggle"><span class="wp-block-accordion-heading__toggle-title">可以退貨嗎？</span><span class="wp-block-accordion-heading__toggle-icon" aria-hidden="true">+</span></button></h3>
+<!-- /wp:accordion-heading -->
+
+<!-- wp:accordion-panel -->
+<div role="region" class="wp-block-accordion-panel"><!-- wp:paragraph -->
+<p>七天內可退貨，詳見退貨政策。</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:accordion-panel --></div>
+<!-- /wp:accordion-item --></div>
+<!-- /wp:accordion -->
+
+<!-- wp:math {"latex":"E = mc^2"} -->
+<div class="wp-block-math"><math display="block"><semantics><mrow><mi>E</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">E = mc^2</annotation></semantics></math></div>
+<!-- /wp:math -->

@@ -1,0 +1,87 @@
+name,title,categories,inserter,bytes
+core/query-standard-posts,標準,query,yes,576
+core/query-medium-posts,圖片位於左側,query,yes,812
+core/query-small-posts,小型圖片及標題,query,yes,919
+core/query-grid-posts,格狀顯示,query,yes,749
+core/query-large-title-posts,大型標題,query,yes,1750
+core/query-offset-posts,交錯,query,yes,1777
+core/navigation-overlay,Navigation Overlay,navigation,yes,1073
+core/navigation-overlay-black-bg,Overlay with black background,navigation,yes,1656
+core/navigation-overlay-accent-bg,Overlay with orange background,navigation,yes,1926
+core/navigation-overlay-centered,Overlay with centered navigation,navigation,yes,1322
+core/navigation-overlay-centered-with-extras,Overlay with site info and CTA,navigation,yes,2930
+woocommerce-blocks/banner,Banner,woo-commerce|featured-selling,yes,4307
+woocommerce/coming-soon-entire-site,Coming Soon Entire Site,woo-commerce,no,5167
+woocommerce/coming-soon-store-only,Coming Soon Store Only,woo-commerce,no,1182
+woocommerce/coming-soon,Coming Soon,woo-commerce,no,68
+woocommerce-blocks/content-right-with-image-left,Content Right with Image Left,woo-commerce|about,yes,3620
+woocommerce-blocks/featured-category-cover-image,Featured Category Cover Image,woo-commerce|intro,yes,3888
+woocommerce-blocks/featured-category-triple,Featured Category Triple,woo-commerce|featured-selling,yes,8241
+woocommerce-blocks/footer-large,Large Footer,woo-commerce,yes,3729
+woocommerce-blocks/footer-simple-menu,Footer with Simple Menu,woo-commerce,yes,2285
+woocommerce-blocks/footer-with-3-menus,Footer with 3 Menus,woo-commerce,yes,2848
+woocommerce-blocks/four-image-grid-content-left,Four Image Grid Content Left,woo-commerce|about,yes,5275
+woocommerce-blocks/header-centered-menu,Centered Header Menu,woo-commerce,yes,2540
+woocommerce-blocks/header-distraction-free,Distraction Free Header,woo-commerce,yes,708
+woocommerce-blocks/header-essential,Essential Header,woo-commerce,yes,1422
+woocommerce-blocks/header-large,Large Header,woo-commerce,yes,2614
+woocommerce-blocks/header-minimal,Minimal Header,woo-commerce,yes,1628
+woocommerce-blocks/heading-with-three-columns-of-content-with-link,Heading with Three Columns of Content and Link,woo-commerce|services,yes,5222
+woocommerce-blocks/hero-product-3-split,Hero Product 3 Split,woo-commerce|featured-selling,yes,6566
+woocommerce-blocks/hero-product-chessboard,Hero Product Chessboard,woo-commerce|featured-selling,yes,8389
+woocommerce-blocks/hero-product-split,Hero Product Split,woo-commerce|intro,yes,3243
+woocommerce-blocks/centered-content-with-image-below,Centered Content with Image Below,woo-commerce|intro,yes,3583
+woocommerce-blocks/just-arrived-full-hero,Just Arrived Full Hero,woo-commerce|intro,yes,1740
+woocommerce/no-products-found-clear-filters,No Products Found - Clear Filters,woo-commerce,no,356
+woocommerce/no-products-found,No Products Found,woo-commerce,no,88
+woocommerce/page-coming-soon-default,Default Coming Soon,woo-commerce,no,5159
+woocommerce/page-coming-soon-image-gallery,Coming Soon Image Gallery,woo-commerce,no,12102
+woocommerce/page-coming-soon-minimal-left-image,Coming Soon Minimal Left Image,woo-commerce,no,6792
+woocommerce/page-coming-soon-modern-black,Coming Soon Modern Black,woo-commerce,no,4606
+woocommerce/page-coming-soon-split-right-image,Coming Soon Split Right Image,woo-commerce,no,6192
+woocommerce/page-coming-soon-with-header-footer,Coming Soon with Header and Footer,woo-commerce,no,1225
+woocommerce-blocks/product-collection-3-columns,Product Collection 3 Columns,woo-commerce,yes,1839
+woocommerce-blocks/product-collection-4-columns,Product Collection 4 Columns,woo-commerce|featured-selling,yes,3825
+woocommerce-blocks/product-collection-5-columns,Product Collection 5 Columns,woo-commerce|featured-selling,yes,3790
+woocommerce-blocks/product-collection-featured-products-5-columns,Product Collection: Featured Products 5 Columns,woo-commerce|featured-selling,yes,4422
+woocommerce-blocks/product-query-product-gallery,Product Gallery,woo-commerce|featured-selling,yes,3897
+woocommerce/product-search-form,Product Search,woo-commerce,no,127
+woocommerce-blocks/related-products,Related Products,woo-commerce,no,1930
+woocommerce-blocks/social-follow-us-in-social-media,Social: Follow Us on Social Media,woo-commerce|social-media,yes,5914
+woocommerce-blocks/testimonials-3-columns,Testimonials 3 Columns,woo-commerce|reviews,yes,3999
+woocommerce-blocks/testimonials-single,Testimonial Single,woo-commerce|reviews,yes,3555
+woocommerce-blocks/three-columns-with-images-and-content,Three Columns with Images and Content,woo-commerce|services,yes,6777
+blocksy/pattern-1,Blocksy - 主視覺區塊,intro|blocksy,yes,9094
+blocksy/pattern-2,Blocksy - 價格表,call-to-action|blocksy,yes,13883
+blocksy/pattern-3,Blocksy - 文字卡片,services|blocksy,yes,8128
+blocksy/pattern-4,Blocksy - 主視覺區塊,intro|blocksy,yes,12739
+blocksy/pattern-5,Blocksy - 團隊成員,about|blocksy,yes,18922
+blocksy/pattern-6,Blocksy - 主視覺區塊,intro|blocksy,yes,7173
+blocksy/pattern-7,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,9936
+blocksy/pattern-8,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,8858
+blocksy/pattern-9,Blocksy - 主視覺區塊,about|blocksy,yes,4897
+blocksy/pattern-10,Blocksy - 見證,reviews|blocksy,yes,4286
+blocksy/pattern-11,Blocksy - 價格方案,call-to-action|blocksy,yes,16530
+blocksy/pattern-12,Blocksy - 行動號召,call-to-action|blocksy,yes,6708
+blocksy/posts-layout-1,文章 - 版面配置 1,blocksy,yes,1029
+blocksy/posts-layout-2,文章 - 版面配置 2,blocksy,yes,1321
+blocksy/posts-layout-3,文章 - 版面配置 3,blocksy,yes,1667
+blocksy/posts-layout-4,文章 - 版面配置 4,blocksy,yes,2099
+blocksy/posts-layout-5,文章 - 版面配置 5,blocksy,yes,1146
+blocksy/tax-layout-1,分類法 - 版面配置 1,blocksy,yes,613
+blocksy/tax-layout-2,分類法 - 版面配置 2,blocksy,yes,1203
+blocksy/tax-layout-3,分類法 - 版面配置 3,blocksy,yes,1175
+blocksy/tax-layout-4,分類法 - 版面配置 4,blocksy,yes,675
+blocksy/tax-layout-5,分類法 - 版面配置 5,blocksy,yes,1089
+woocommerce/order-confirmation-totals-heading,,,no,169
+woocommerce/order-confirmation-downloads-heading,,,no,163
+woocommerce/order-confirmation-shipping-heading,,,no,163
+woocommerce/order-confirmation-billing-heading,,,no,163
+woocommerce/order-confirmation-additional-fields-heading,,,no,163
+woocommerce/mini-cart-empty-cart-message,迷你購物車中空無一物的訊息,,no,149
+woocommerce/default-attribute-filter,,,no,717
+woocommerce/cart-heading,,,no,119
+woocommerce/cart-cross-sells-message,,,no,150
+woocommerce/cart-empty-message,,,no,450
+woocommerce/cart-new-in-store-message,,,no,130
+woocommerce/checkout-heading,,,no,116

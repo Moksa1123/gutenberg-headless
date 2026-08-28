@@ -1,0 +1,35 @@
+{
+  "platform": "cursor",
+  "displayName": "Cursor",
+  "installType": "rule",
+  "folderStructure": {
+    "projectRoot": ".cursor",
+    "globalRoot": "~/.cursor",
+    "skillPath": "rules",
+    "filename": "gutenberg-headless.mdc"
+  },
+  "sections": {
+    "skill": true,
+    "references": false,
+    "tools": false,
+    "data": false,
+    "examples": false
+  },
+  "frontmatter": {
+    "description": "Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree.",
+    "globs": [
+      "**/*.php",
+      "**/wp-content/**",
+      "**/*.json"
+    ],
+    "alwaysApply": false
+  },
+  "loaderBehaviour": "Cursor reads .cursor/rules/*.mdc as Project Rules. Set alwaysApply: true to auto-attach to every chat, or leave false to attach when filename globs match. Cursor does NOT load referenced files automatically - embed key content inline; keep the rule under ~6KB. Subdirectories are supported (.cursor/rules/wp/x.mdc) if you want to split this up further.",
+  "embedReferences": [
+    "data-model.md",
+    "supports-and-styles.md",
+    "canonicalization.md"
+  ],
+  "verified": true,
+  "verifiedAsOf": "2026-07-11"
+}

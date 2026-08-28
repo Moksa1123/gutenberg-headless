@@ -1,0 +1,48 @@
+{
+  "name": "gutenberg-headless",
+  "version": "1.0.0",
+  "description": "AI-agent skill: build WordPress block-editor (Gutenberg) pages by writing the serialized markup directly - queryable block surface of a live site, silent-failure validator, and a verification pipeline that ends at the delivered bytes. Installs into Claude Code, Cursor, Codex CLI, Gemini CLI, Copilot, Continue, Windsurf and Claude.ai.",
+  "keywords": [
+    "wordpress",
+    "gutenberg",
+    "block-editor",
+    "claude-code",
+    "agent-skill",
+    "ai-agent",
+    "headless",
+    "woocommerce",
+    "wp-cli"
+  ],
+  "homepage": "https://github.com/Moksa1123/gutenberg-headless#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moksa1123/gutenberg-headless.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Moksa1123/gutenberg-headless/issues"
+  },
+  "license": "MIT",
+  "author": "moksa (https://moksaweb.com)",
+  "type": "module",
+  "bin": {
+    "gutenberg-headless": "bin/install.mjs"
+  },
+  "files": [
+    "bin/",
+    "SKILL.md",
+    "README.md",
+    "README.zh-TW.md",
+    "LICENSE",
+    "assets/",
+    "data/",
+    "examples/",
+    "references/",
+    "tools/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "install-skill": "node bin/install.mjs"
+  }
+}

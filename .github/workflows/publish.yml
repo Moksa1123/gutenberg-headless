@@ -1,0 +1,60 @@
+name: Publish to npm
+
+# Release flow: bump + tag locally, push the tag, this workflow publishes.
+#
+#   npm version patch          # or minor / major - bumps package.json, commits, tags vX.Y.Z
+#   git push --follow-tags     # the tag triggers this workflow
+#
+# Requires the NPM_TOKEN repository secret (npmjs.com -> Access Tokens ->
+# Generate New Token -> Automation), added under Settings -> Secrets and
+# variables -> Actions.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write # npm provenance attestation
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Tag must match package.json version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "Tag v$TAG != package.json $PKG - bump with 'npm version', don't hand-edit tags."
+            exit 1
+          fi
+
+      - name: Smoke-test the installer (all strategies, dry paths)
+        run: |
+          node bin/install.mjs --list
+          node bin/install.mjs --dry-run claude-code
+          node bin/install.mjs claude-code --to /tmp/skill-e2e --force
+          test -f /tmp/skill-e2e/skills/gutenberg-headless/SKILL.md
+          test -f /tmp/skill-e2e/skills/gutenberg-headless/data/block-schema.json
+          node bin/install.mjs cursor --to /tmp/rule-e2e --force
+          test -f /tmp/rule-e2e/rules/gutenberg-headless.mdc
+
+      - name: Validate the shipped example pages against the shipped schema
+        run: |
+          python3 tools/validate-post.py examples/demo-page.html
+          python3 tools/validate-post.py examples/fidelity-blocks.html
+          python3 tools/validate-post.py examples/onepage-woo.html
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

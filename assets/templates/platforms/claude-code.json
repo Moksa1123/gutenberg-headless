@@ -1,0 +1,28 @@
+{
+  "platform": "claude-code",
+  "displayName": "Claude Code",
+  "installType": "full",
+  "folderStructure": {
+    "projectRoot": ".claude",
+    "globalRoot": "~/.claude",
+    "skillPath": "skills/gutenberg-headless",
+    "filename": "SKILL.md"
+  },
+  "sections": {
+    "skill": true,
+    "references": true,
+    "tools": true,
+    "data": true,
+    "examples": true
+  },
+  "frontmatter": {
+    "name": "gutenberg-headless",
+    "description": "Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree.",
+    "license": "MIT",
+    "author": "moksa (https://moksaweb.com)",
+    "version": "1.0.0"
+  },
+  "loaderBehaviour": "Auto-loads on session start when SKILL.md frontmatter parses successfully.",
+  "verified": true,
+  "verifiedAsOf": "2026-07-11"
+}

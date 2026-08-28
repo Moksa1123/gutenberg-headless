@@ -1,0 +1,6 @@
+task,commands,tokens_read_source,tokens_load_schema,tokens_query,saving_vs_source_pct,saving_vs_schema_pct
+"Build a group section (layout, background, spacing presets)",gb.py block core/group ; gb.py var var:preset|spacing|60,19036,102812,627,96.7,99.39
+"Color + typography on a heading, with valid preset slugs",gb.py block core/heading ; gb.py presets color,13855,102812,1132,91.8,98.90
+Every preset slug this site can use,gb.py presets,4215,102812,3935,6.6,96.17
+"Will woocommerce/product-price render here, inside what?",gb.py block woocommerce/product-price,433,102812,383,11.5,99.63
+"Which style key drives box-shadow, and the valid presets",gb.py presets shadow ; gb.py grammar,8109,102812,743,90.8,99.28

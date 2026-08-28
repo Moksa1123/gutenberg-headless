@@ -1,0 +1,67 @@
+<!-- wp:group {"style":{"spacing":{"padding":{"top":"var:preset|spacing|60","bottom":"var:preset|spacing|60"}}},"backgroundColor":"palette-color-6","layout":{"type":"constrained"}} -->
+<div class="wp-block-group has-palette-color-6-background-color has-background" style="padding-top:var(--wp--preset--spacing--60);padding-bottom:var(--wp--preset--spacing--60)"><!-- wp:heading {"style":{"typography":{"textAlign":"center"}},"textColor":"palette-color-4","fontSize":"x-large"} -->
+<h2 class="wp-block-heading has-text-align-center has-palette-color-4-color has-text-color has-x-large-font-size">Headless 區塊示範頁</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"dropCap":true,"className":"gbdemo-lead","fontSize":"large"} -->
+<p class="has-drop-cap gbdemo-lead has-large-font-size">這一頁不是在編輯器裡做的。整棵區塊樹由工具直接寫成序列化標記，經 validate-post 預檢後寫入資料庫，再由 verify-live 對公開網址逐項斷言。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"color":{"text":"#c0392b"},"typography":{"letterSpacing":"2px"}}} -->
+<p class="has-text-color" style="color:#c0392b;letter-spacing:2px">這段是自訂色與字距：不走 preset，而是 style 物件對應到行內樣式。</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:columns -->
+<div class="wp-block-columns"><!-- wp:column -->
+<div class="wp-block-column"><!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">左欄</h3>
+<!-- /wp:heading -->
+
+<!-- wp:list -->
+<ul class="wp-block-list"><!-- wp:list-item -->
+<li>結構驗證：parent 與 ancestor 約束</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>預設集驗證：slug 必須存在於站上</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>類別驗證：comment 與 HTML 兩邊同步</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></div>
+<!-- /wp:column -->
+
+<!-- wp:column -->
+<div class="wp-block-column"><!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">右欄</h3>
+<!-- /wp:heading -->
+
+<!-- wp:quote -->
+<blockquote class="wp-block-quote"><!-- wp:paragraph -->
+<p>編輯器只是資料模型的其中一個客戶端。</p>
+<!-- /wp:paragraph --><cite>Moksa</cite></blockquote>
+<!-- /wp:quote --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns -->
+
+<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"center"}} -->
+<div class="wp-block-buttons"><!-- wp:button {"backgroundColor":"palette-color-1","textColor":"palette-color-4"} -->
+<div class="wp-block-button"><a class="wp-block-button__link has-palette-color-4-color has-palette-color-1-background-color has-text-color has-background wp-element-button" href="https://booking.moksaweb.com/">立即預約</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:spacer {"height":"40px"} -->
+<div style="height:40px" aria-hidden="true" class="wp-block-spacer"></div>
+<!-- /wp:spacer -->
+
+<!-- wp:separator {"backgroundColor":"palette-color-3"} -->
+<hr class="wp-block-separator has-text-color has-palette-color-3-color has-alpha-channel-opacity has-palette-color-3-background-color has-background"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading {"level":3} -->
+<h3 class="wp-block-heading">下面這個是動態區塊</h3>
+<!-- /wp:heading -->
+
+<!-- wp:latest-posts {"postsToShow":3,"displayPostDate":true} /--></div>
+<!-- /wp:group -->

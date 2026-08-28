@@ -1,0 +1,31 @@
+{
+  "platform": "continue",
+  "displayName": "Continue (continue.dev)",
+  "installType": "rule",
+  "folderStructure": {
+    "projectRoot": ".continue",
+    "globalRoot": "~/.continue",
+    "skillPath": "rules",
+    "filename": "gutenberg-headless.md"
+  },
+  "sections": {
+    "skill": true,
+    "references": false,
+    "tools": false,
+    "data": false,
+    "examples": false
+  },
+  "frontmatter": {
+    "name": "gutenberg-headless",
+    "description": "Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree.",
+    "alwaysApply": false
+  },
+  "loaderBehaviour": "Continue reads .continue/rules/*.md as Rules. Set alwaysApply: true to attach to every chat, or leave false and rely on the description for relevance matching. Rule files load in lexicographic order if you split this into several numbered files. References must be embedded inline; the installer concatenates key reference files into the rule body.",
+  "embedReferences": [
+    "data-model.md",
+    "supports-and-styles.md",
+    "canonicalization.md"
+  ],
+  "verified": true,
+  "verifiedAsOf": "2026-07-11"
+}

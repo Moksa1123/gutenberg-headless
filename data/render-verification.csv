@@ -1,0 +1,303 @@
+block,verdict,note
+blocksy/about-me,renders,2241b class:ct-about-me-block 
+blocksy/breadcrumbs,empty,renders NOTHING on a bare page
+blocksy/contact-info,renders,2965b class:ct-contact-info-block 
+blocksy/dynamic-data,empty,renders NOTHING on a bare page
+blocksy/post-template,renders,849b class:ct-query-template-default is-layout-flow
+blocksy/query,empty,renders NOTHING on a bare page
+blocksy/quote,empty,renders NOTHING on a bare page
+blocksy/search,renders,1645b class:ct-search-box
+blocksy/share-box,renders,2833b class:ct-shares-block
+blocksy/socials,renders,1629b class:ct-socials-block
+blocksy/tax-query,empty,renders NOTHING on a bare page
+blocksy/tax-template,renders,156b class:ct-query-template-default is-layout-flow
+blocksy/widgets-wrapper,empty,renders NOTHING on a bare page
+core/accordion,empty,renders NOTHING on a bare page
+core/accordion-heading,content-block,content is the saved HTML; void test meaningless
+core/accordion-item,empty,renders NOTHING on a bare page
+core/accordion-panel,empty,renders NOTHING on a bare page
+core/archives,renders,212b class:wp-block-archives-list wp-block-archives
+core/audio,content-block,content is the saved HTML; void test meaningless
+core/avatar,empty,renders NOTHING on a bare page
+core/block,empty,renders NOTHING on a bare page
+core/breadcrumbs,empty,renders NOTHING on a bare page
+core/button,content-block,content is the saved HTML; void test meaningless
+core/buttons,empty,renders NOTHING on a bare page
+core/calendar,renders,1320b class:wp-block-calendar
+core/categories,renders,310b class:wp-block-categories-list wp-block-categories-taxonomy-catego
+core/code,content-block,content is the saved HTML; void test meaningless
+core/column,empty,renders NOTHING on a bare page
+core/columns,empty,renders NOTHING on a bare page
+core/comment-author-name,empty,renders NOTHING on a bare page
+core/comment-content,empty,renders NOTHING on a bare page
+core/comment-date,empty,renders NOTHING on a bare page
+core/comment-edit-link,empty,renders NOTHING on a bare page
+core/comment-reply-link,empty,renders NOTHING on a bare page
+core/comment-template,empty,renders NOTHING on a bare page
+core/comments,empty,renders NOTHING on a bare page
+core/comments-pagination,empty,renders NOTHING on a bare page
+core/comments-pagination-next,empty,renders NOTHING on a bare page
+core/comments-pagination-numbers,empty,renders NOTHING on a bare page
+core/comments-pagination-previous,empty,renders NOTHING on a bare page
+core/comments-title,renders,82b class:wp-block-comments-title
+core/cover,content-block,content is the saved HTML; void test meaningless
+core/details,content-block,content is the saved HTML; void test meaningless
+core/embed,content-block,content is the saved HTML; void test meaningless
+core/file,content-block,content is the saved HTML; void test meaningless
+core/footnotes,empty,renders NOTHING on a bare page
+core/freeform,content-block,content is the saved HTML; void test meaningless
+core/gallery,content-block,content is the saved HTML; void test meaningless
+core/group,empty,renders NOTHING on a bare page
+core/heading,content-block,content is the saved HTML; void test meaningless
+core/home-link,renders,192b class:wp-block-navigation-item wp-block-home-link
+core/html,empty,renders NOTHING on a bare page
+core/icon,empty,renders NOTHING on a bare page
+core/image,content-block,content is the saved HTML; void test meaningless
+core/latest-comments,renders,1098b class:has-avatars has-dates has-excerpts wp-block-latest-comments
+core/latest-posts,renders,1056b class:wp-block-latest-posts__list wp-block-latest-posts is-layout-
+core/legacy-widget,empty,renders NOTHING on a bare page
+core/list,content-block,content is the saved HTML; void test meaningless
+core/list-item,content-block,content is the saved HTML; void test meaningless
+core/loginout,renders,156b class:logged-out wp-block-loginout
+core/math,content-block,content is the saved HTML; void test meaningless
+core/media-text,content-block,content is the saved HTML; void test meaningless
+core/missing,content-block,content is the saved HTML; void test meaningless
+core/more,empty,renders NOTHING on a bare page
+core/navigation,renders,10883b class:is-responsive wp-block-navigation is-layout-flex wp-block-na
+core/navigation-link,empty,renders NOTHING on a bare page
+core/navigation-overlay-close,renders,322b class:wp-block-navigation-overlay-close
+core/navigation-submenu,empty,renders NOTHING on a bare page
+core/nextpage,empty,renders NOTHING on a bare page
+core/page-list,renders,5904b class:wp-block-page-list
+core/page-list-item,empty,renders NOTHING on a bare page
+core/paragraph,content-block,content is the saved HTML; void test meaningless
+core/pattern,empty,renders NOTHING on a bare page
+core/playlist,empty,renders NOTHING on a bare page
+core/playlist-track,empty,renders NOTHING on a bare page
+core/post-author,empty,renders NOTHING on a bare page
+core/post-author-biography,empty,renders NOTHING on a bare page
+core/post-author-name,empty,renders NOTHING on a bare page
+core/post-comments,empty,renders NOTHING on a bare page
+core/post-comments-count,empty,renders NOTHING on a bare page
+core/post-comments-form,empty,renders NOTHING on a bare page
+core/post-comments-link,empty,renders NOTHING on a bare page
+core/post-content,empty,renders NOTHING on a bare page
+core/post-date,empty,renders NOTHING on a bare page
+core/post-excerpt,empty,renders NOTHING on a bare page
+core/post-featured-image,empty,renders NOTHING on a bare page
+core/post-navigation-link,empty,renders NOTHING on a bare page
+core/post-template,renders,881b class:wp-block-post-template is-layout-flow wp-block-post-template
+core/post-terms,empty,renders NOTHING on a bare page
+core/post-time-to-read,empty,renders NOTHING on a bare page
+core/post-title,empty,renders NOTHING on a bare page
+core/preformatted,content-block,content is the saved HTML; void test meaningless
+core/pullquote,content-block,content is the saved HTML; void test meaningless
+core/query,empty,renders NOTHING on a bare page
+core/query-no-results,empty,renders NOTHING on a bare page
+core/query-pagination,empty,renders NOTHING on a bare page
+core/query-pagination-next,empty,renders NOTHING on a bare page
+core/query-pagination-numbers,empty,renders NOTHING on a bare page
+core/query-pagination-previous,empty,renders NOTHING on a bare page
+core/query-title,empty,renders NOTHING on a bare page
+core/query-total,renders,67b class:wp-block-query-total
+core/quote,content-block,content is the saved HTML; void test meaningless
+core/read-more,empty,renders NOTHING on a bare page
+core/rss,renders,162b class:components-placeholder
+core/search,renders,535b class:wp-block-search__button-outside wp-block-search__text-button
+core/separator,empty,renders NOTHING on a bare page
+core/shortcode,content-block,content is the saved HTML; void test meaningless
+core/site-logo,renders,305b class:is-default-size wp-block-site-logo
+core/site-tagline,empty,renders NOTHING on a bare page
+core/site-title,renders,126b class:wp-block-site-title
+core/social-link,empty,renders NOTHING on a bare page
+core/social-links,empty,renders NOTHING on a bare page
+core/spacer,empty,renders NOTHING on a bare page
+core/tab-list,content-block,content is the saved HTML; void test meaningless
+core/tab-panel,empty,renders NOTHING on a bare page
+core/tab-panels,empty,renders NOTHING on a bare page
+core/table,content-block,content is the saved HTML; void test meaningless
+core/tabs,empty,renders NOTHING on a bare page
+core/tag-cloud,empty,renders NOTHING on a bare page
+core/template-part,empty,renders NOTHING on a bare page
+core/term-count,empty,renders NOTHING on a bare page
+core/term-description,empty,renders NOTHING on a bare page
+core/term-name,empty,renders NOTHING on a bare page
+core/term-template,empty,renders NOTHING on a bare page
+core/terms-query,empty,renders NOTHING on a bare page
+core/text-columns,content-block,content is the saved HTML; void test meaningless
+core/verse,content-block,content is the saved HTML; void test meaningless
+core/video,content-block,content is the saved HTML; void test meaningless
+core/widget-group,renders,49b class:wp-widget-group__inner-blocks
+moksafocou/coupon-cards,renders,3512b class:moksafocou-coupons
+moksafopoi/balance,empty,renders NOTHING on a bare page
+moksafopoi/how-to-earn,empty,renders NOTHING on a bare page
+moksafopoi/leaderboard,renders,783b class:moksafopoi-leaderboard
+moksafopoi/mall,renders,232b class:moksafopoi-mall
+moksafopoi/quests,empty,renders NOTHING on a bare page
+moksafopoi/tier,empty,renders NOTHING on a bare page
+woocommerce/accordion-group,empty,renders NOTHING on a bare page
+woocommerce/accordion-header,content-block,content is the saved HTML; void test meaningless
+woocommerce/accordion-item,empty,renders NOTHING on a bare page
+woocommerce/accordion-panel,empty,renders NOTHING on a bare page
+woocommerce/active-filters,empty,renders NOTHING on a bare page
+woocommerce/add-to-cart-form,empty,renders NOTHING on a bare page
+woocommerce/all-products,empty,renders NOTHING on a bare page
+woocommerce/all-reviews,empty,renders NOTHING on a bare page
+woocommerce/attribute-filter,empty,renders NOTHING on a bare page
+woocommerce/breadcrumbs,renders,243b class:woocommerce wc-block-breadcrumbs alignwide has-font-size has
+woocommerce/cart,renders,6b
+woocommerce/cart-accepted-payment-methods-block,empty,renders NOTHING on a bare page
+woocommerce/cart-cross-sells-block,empty,renders NOTHING on a bare page
+woocommerce/cart-cross-sells-products-block,empty,renders NOTHING on a bare page
+woocommerce/cart-express-payment-block,empty,renders NOTHING on a bare page
+woocommerce/cart-items-block,empty,renders NOTHING on a bare page
+woocommerce/cart-line-items-block,empty,renders NOTHING on a bare page
+woocommerce/cart-link,renders,813b class:wp-block-woocommerce-cart-link
+woocommerce/cart-order-summary-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-coupon-form-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-discount-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-fee-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-heading-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-shipping-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-subtotal-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-taxes-block,empty,renders NOTHING on a bare page
+woocommerce/cart-order-summary-totals-block,empty,renders NOTHING on a bare page
+woocommerce/cart-totals-block,empty,renders NOTHING on a bare page
+woocommerce/catalog-sorting,empty,renders NOTHING on a bare page
+woocommerce/category-description,empty,renders NOTHING on a bare page
+woocommerce/category-title,empty,renders NOTHING on a bare page
+woocommerce/checkout,empty,renders NOTHING on a bare page
+woocommerce/checkout-actions-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-additional-information-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-billing-address-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-contact-information-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-express-payment-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-fields-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-note-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-cart-items-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-coupon-form-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-discount-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-fee-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-shipping-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-subtotal-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-taxes-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-order-summary-totals-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-payment-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-pickup-options-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-shipping-address-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-shipping-method-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-shipping-methods-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-terms-block,empty,renders NOTHING on a bare page
+woocommerce/checkout-totals-block,empty,renders NOTHING on a bare page
+woocommerce/classic-shortcode,renders,433b class:woocommerce wp-block-group alignwide
+woocommerce/coming-soon,empty,renders NOTHING on a bare page
+woocommerce/coupon-code,renders,582b class:email-coupon-code-cell
+woocommerce/customer-account,renders,880b class:wp-block-woocommerce-customer-account 
+woocommerce/dropdown,empty,renders NOTHING on a bare page
+woocommerce/email-content,renders,15b
+woocommerce/empty-cart-block,empty,renders NOTHING on a bare page
+woocommerce/empty-mini-cart-contents-block,renders,364b class:wp-block-woocommerce-empty-mini-cart-contents-block
+woocommerce/featured-category,empty,renders NOTHING on a bare page
+woocommerce/featured-product,empty,renders NOTHING on a bare page
+woocommerce/filled-cart-block,empty,renders NOTHING on a bare page
+woocommerce/filled-mini-cart-contents-block,renders,1513b class:wp-block-woocommerce-filled-mini-cart-contents-block
+woocommerce/filter-wrapper,empty,renders NOTHING on a bare page
+woocommerce/handpicked-products,renders,17831b class:wc-block-grid wp-block-handpicked-products wp-block-woocomme
+woocommerce/legacy-template,empty,renders NOTHING on a bare page
+woocommerce/mini-cart,renders,966b class:wc-block-mini-cart wp-block-woocommerce-mini-cart 
+woocommerce/mini-cart-cart-button-block,renders,346b class:wc-block-components-button wp-element-button wc-block-mini-c
+woocommerce/mini-cart-checkout-button-block,renders,336b class:wc-block-components-button wp-element-button wc-block-mini-c
+woocommerce/mini-cart-contents,renders,787b class:wp-block-woocommerce-mini-cart-contents
+woocommerce/mini-cart-footer-block,renders,1466b class:wc-block-mini-cart__footer wp-block-woocommerce-mini-cart-fo
+woocommerce/mini-cart-items-block,renders,160b class:wc-block-mini-cart__items wp-block-woocommerce-mini-cart-ite
+woocommerce/mini-cart-products-table-block,renders,9133b class:wc-block-mini-cart__products-table wp-block-woocommerce-mini
+woocommerce/mini-cart-shopping-button-block,renders,411b class:wp-block-button has-text-align-center
+woocommerce/mini-cart-title-block,renders,146b class:wc-block-mini-cart__title wp-block-woocommerce-mini-cart-tit
+woocommerce/mini-cart-title-items-counter-block,renders,267b class:wp-block-woocommerce-mini-cart-title-items-counter-block
+woocommerce/mini-cart-title-label-block,renders,149b class:wp-block-woocommerce-mini-cart-title-label-block
+woocommerce/order-confirmation-additional-fields,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-additional-fields-wrapper,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-additional-information,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-billing-address,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-billing-wrapper,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-create-account,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-downloads,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-downloads-wrapper,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-shipping-address,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-shipping-wrapper,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-status,renders,551b class:wp-block-woocommerce-order-confirmation-status wc-block-orde
+woocommerce/order-confirmation-summary,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-totals,empty,renders NOTHING on a bare page
+woocommerce/order-confirmation-totals-wrapper,empty,renders NOTHING on a bare page
+woocommerce/page-content-wrapper,empty,renders NOTHING on a bare page
+woocommerce/payment-method-icons,empty,renders NOTHING on a bare page
+woocommerce/price-filter,empty,renders NOTHING on a bare page
+woocommerce/proceed-to-checkout-block,empty,renders NOTHING on a bare page
+woocommerce/product-average-rating,empty,renders NOTHING on a bare page
+woocommerce/product-best-sellers,renders,16629b class:wc-block-grid wp-block-product-best-sellers wp-block-woocomm
+woocommerce/product-button,empty,renders NOTHING on a bare page
+woocommerce/product-categories,renders,1392b class:wp-block-woocommerce-product-categories wc-block-product-cat
+woocommerce/product-category,renders,15829b class:wc-block-grid wp-block-product-category wp-block-woocommerce
+woocommerce/product-collection,empty,renders NOTHING on a bare page
+woocommerce/product-collection-no-results,empty,renders NOTHING on a bare page
+woocommerce/product-description,empty,renders NOTHING on a bare page
+woocommerce/product-details,empty,renders NOTHING on a bare page
+woocommerce/product-filter-active,renders,434b class:wp-block-woocommerce-product-filter-active wc-block-product-
+woocommerce/product-filter-attribute,empty,renders NOTHING on a bare page
+woocommerce/product-filter-checkbox-list,empty,renders NOTHING on a bare page
+woocommerce/product-filter-chips,empty,renders NOTHING on a bare page
+woocommerce/product-filter-clear-button,empty,renders NOTHING on a bare page
+woocommerce/product-filter-price,renders,349b class:wc-block-product-filter--hidden wp-block-woocommerce-product
+woocommerce/product-filter-price-slider,empty,renders NOTHING on a bare page
+woocommerce/product-filter-rating,renders,400b class:wc-block-product-filter--hidden wp-block-woocommerce-product
+woocommerce/product-filter-removable-chips,empty,renders NOTHING on a bare page
+woocommerce/product-filter-status,renders,412b class:wc-block-product-filter--hidden wp-block-woocommerce-product
+woocommerce/product-filter-taxonomy,renders,417b class:wc-block-product-filter--hidden wp-block-woocommerce-product
+woocommerce/product-filters,renders,2487b class:wc-block-product-filters wp-block-woocommerce-product-filter
+woocommerce/product-gallery,empty,renders NOTHING on a bare page
+woocommerce/product-gallery-large-image,empty,renders NOTHING on a bare page
+woocommerce/product-gallery-large-image-next-previous,renders,1805b class:wc-block-next-previous-buttons is-layout-flex wp-container-w
+woocommerce/product-gallery-thumbnails,empty,renders NOTHING on a bare page
+woocommerce/product-image,empty,renders NOTHING on a bare page
+woocommerce/product-image-gallery,empty,renders NOTHING on a bare page
+woocommerce/product-meta,empty,renders NOTHING on a bare page
+woocommerce/product-new,renders,15809b class:wc-block-grid wp-block-product-new wp-block-woocommerce-prod
+woocommerce/product-on-sale,renders,6837b class:wc-block-grid wp-block-product-on-sale wp-block-woocommerce-
+woocommerce/product-price,empty,renders NOTHING on a bare page
+woocommerce/product-query,empty,renders NOTHING on a bare page
+woocommerce/product-rating,empty,renders NOTHING on a bare page
+woocommerce/product-rating-counter,empty,renders NOTHING on a bare page
+woocommerce/product-rating-stars,empty,renders NOTHING on a bare page
+woocommerce/product-results-count,renders,274b class: woocommerce wc-block-product-results-count wp-block-woocomm
+woocommerce/product-review-author-name,empty,renders NOTHING on a bare page
+woocommerce/product-review-content,empty,renders NOTHING on a bare page
+woocommerce/product-review-date,empty,renders NOTHING on a bare page
+woocommerce/product-review-form,empty,renders NOTHING on a bare page
+woocommerce/product-review-rating,empty,renders NOTHING on a bare page
+woocommerce/product-review-template,empty,renders NOTHING on a bare page
+woocommerce/product-reviews,empty,renders NOTHING on a bare page
+woocommerce/product-reviews-pagination,empty,renders NOTHING on a bare page
+woocommerce/product-reviews-pagination-next,empty,renders NOTHING on a bare page
+woocommerce/product-reviews-pagination-numbers,empty,renders NOTHING on a bare page
+woocommerce/product-reviews-pagination-previous,empty,renders NOTHING on a bare page
+woocommerce/product-reviews-title,empty,renders NOTHING on a bare page
+woocommerce/product-sale-badge,empty,renders NOTHING on a bare page
+woocommerce/product-search,renders,884b class:wc-block-product-search wp-block-woocommerce-product-search
+woocommerce/product-sku,empty,renders NOTHING on a bare page
+woocommerce/product-specifications,empty,renders NOTHING on a bare page
+woocommerce/product-stock-indicator,empty,renders NOTHING on a bare page
+woocommerce/product-summary,empty,renders NOTHING on a bare page
+woocommerce/product-tag,renders,15809b class:wc-block-grid wp-block-product-tag wp-block-woocommerce-prod
+woocommerce/product-template,renders,2277b class:wc-block-product-template wp-block-woocommerce-product-templ
+woocommerce/product-title,empty,renders NOTHING on a bare page
+woocommerce/product-top-rated,renders,15833b class:wc-block-grid wp-block-product-top-rated wp-block-woocommerc
+woocommerce/products-by-attribute,renders,15849b class:wc-block-grid wp-block-products-by-attribute wp-block-woocom
+woocommerce/rating-filter,empty,renders NOTHING on a bare page
+woocommerce/related-products,empty,renders NOTHING on a bare page
+woocommerce/reviews-by-category,empty,renders NOTHING on a bare page
+woocommerce/reviews-by-product,empty,renders NOTHING on a bare page
+woocommerce/single-product,empty,renders NOTHING on a bare page
+woocommerce/stock-filter,empty,renders NOTHING on a bare page
+woocommerce/store-notices,renders,190b class:wc-block-store-notices woocommerce alignwide wp-block-woocom
+wpforms/form-selector,empty,renders NOTHING on a bare page
