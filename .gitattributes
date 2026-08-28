@@ -1,0 +1,6 @@
+# examples byte-identity depends on LF - the editor serializes 
+ only
+* text=auto eol=lf
+*.jpg binary
+*.jpeg binary
+*.png binary
