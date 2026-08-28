@@ -283,7 +283,11 @@ def apply_element_width(st: Style, s: dict):
         return
     w = size(s.get("_element_custom_width"))
     if w:
-        st.layout_css(f"max-width:{w}")
+        # Elementor applies this to the widget WRAPPER, so the text element
+        # itself still computes max-width:none and simply inherits the width.
+        # Setting it on the text element instead makes the box narrower than
+        # the original by its own padding - measured 534 vs 600.
+        st.layout_css(f"max-width:{w};width:100%")
 
 
 def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_filter=None):
@@ -551,9 +555,9 @@ def conv_icon_list(e, ctx) -> str:
         st.layout_css(";".join(decls))
     if gap:
         # Elementor spaces items with a gap between rows, not a bottom margin.
-        st.layout_css(f"display:flex;flex-direction:column;gap:{gap};padding-left:1.15em;margin-block:0")
+        st.layout_css(f"display:flex;flex-direction:column;gap:{gap};padding-left:1.2em;margin-block:0")
     else:
-        st.layout_css("margin-block:0;padding-left:1.15em")
+        st.layout_css("margin-block:0;padding-left:1.2em")
     if isinstance(marker, str) and marker:
         note("info", "icon-list", f"icons -> list markers in {marker}")
 
@@ -669,10 +673,15 @@ def convert_element(e, ctx) -> str:
         # outrank - the page came out 23% taller than the Elementor original
         # from stacked default spacing alone. So every container states its
         # gap AND its margin explicitly, in the design layer, where it wins.
-        gap = size(s.get("flex_gap"))
-        if gap:
-            st.set(("spacing", "blockGap"), gap)          # keep it in the attrs
-        st.layout_css(f"gap:{gap or '0px'};margin-block:0")
+        # Elementor's own DEFAULT container gap is 20px, not zero: a container
+        # that declares no flex_gap still renders 20px apart. Emitting 0 for
+        # silence (the first attempt here) collapses every undeclared section -
+        # measured: the hero lost its 20px rhythm and the page came out 7%
+        # SHORT. State the default explicitly, the same as any other value.
+        ELEMENTOR_DEFAULT_GAP = "20px"
+        gap = size(s.get("flex_gap")) or ELEMENTOR_DEFAULT_GAP
+        st.set(("spacing", "blockGap"), gap)              # keep it in the attrs
+        st.layout_css(f"gap:{gap};margin-block:0")
 
         # Width is layout INTENT, and the block `layout` attribute cannot carry
         # it on a classic theme: layout.type "constrained" resolves against
@@ -695,16 +704,44 @@ def convert_element(e, ctx) -> str:
         if bw:
             st.layout_css(f"max-width:{bw};margin-left:auto;margin-right:auto")
 
-        is_row = s.get("flex_direction") in ("row", "row-reverse")
-        layout = {"type": "flex"} if is_row else {"type": "constrained"}
+        # EVERY Elementor container is a flex container. Treating a
+        # `flex_direction: column` one as `layout:{type:"constrained"}` throws
+        # away its alignment and its gap, because constrained is a *flow*
+        # layout - children stack, but align-items and justify-content mean
+        # nothing. Measured on moksaweb.com: whole sections collapsed sideways
+        # and lost their vertical rhythm. Both directions are now emitted as
+        # real flex, with alignment restated in the design layer where the
+        # theme cannot outrank it.
+        direction = s.get("flex_direction") or "column"
+        is_row = direction in ("row", "row-reverse")
+        layout = {"type": "flex", "orientation": "horizontal" if is_row else "vertical"}
+        # The block flex layout WRAPS by default, in BOTH orientations; an
+        # Elementor container does not. Silence means nowrap, and emitting
+        # nothing lets a row - or a column - reflow that never reflowed in the
+        # original. Setting it once here covers both branches; putting it only
+        # in the row branch (the first attempt) left 17 columns wrapping.
+        layout["flexWrap"] = "wrap" if s.get("flex_wrap") == "wrap" else "nowrap"
         if is_row:
             just = {"center": "center", "flex-start": "left", "flex-end": "right",
                     "space-between": "space-between"}.get(s.get("flex_justify_content", ""))
             if just:
                 layout["justifyContent"] = just
-            if s.get("flex_wrap") == "wrap":
-                layout["flexWrap"] = "wrap"
+            pass
+        else:
+            just = {"center": "center", "flex-start": "top", "flex-end": "bottom",
+                    "space-between": "space-between"}.get(s.get("flex_justify_content", ""))
+            if just:
+                layout["justifyContent"] = just
+
+        # align-items has no block-layout equivalent in either direction.
+        align = s.get("flex_align_items")
+        if align in ("center", "flex-start", "flex-end", "stretch"):
+            st.layout_css(f"align-items:{align}")
+        if direction == "row-reverse" or direction == "column-reverse":
+            st.layout_css(f"flex-direction:{direction}")
+
         full = s.get("content_width") == "full" or (s.get("width") or {}).get("size") == 100
+
 
         style, classes, inline = st.resolve()
         attrs = {}

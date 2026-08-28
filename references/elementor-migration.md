@@ -216,6 +216,29 @@ explicitly on both pages before collecting** — a default window can be narrow
 enough to trip the responsive breakpoint, and then you are diffing desktop
 against mobile.
 
+### The scan, and what a full sweep found that point-fixes never would
+
+Fixing what someone points at is not a method. `tools/collect-fingerprint.js` +
+`tools/diff-fingerprints.py` scan **every** element of both pages - 35 computed
+properties, text-bearing or not - pair them, and report every property that
+actually differs. Run on this page it paired 142 of 146 and reported 145
+differences; working the list top-down took that to **46**, and each fix was a
+class of bug rather than one spot:
+
+| found by the scan | fix |
+|---|---|
+| `flex_direction: column` containers converted to `layout:constrained` — a *flow* layout, so their alignment and gap were thrown away and whole sections collapsed sideways | both directions now emit real flex with `orientation`; `align-items` restated in the design layer |
+| the block flex layout **wraps by default, in both orientations**; an Elementor container does not — 17 columns were free to reflow | `flexWrap:"nowrap"` unless the original said otherwise |
+| Elementor's **default container gap is 20px**, not zero. The previous "state the silence" fix emitted `0`, which collapsed every undeclared section and made the page 7% *short* | the default is stated explicitly, like any other value |
+| `_element_custom_width` applied to the text element rather than its wrapper, making the box narrower than the original by its own padding (534 vs 600) | `max-width` + `width:100%` so the element fills the wrapper |
+
+The scan also earned its own two corrections. Text-less boxes were keyed by
+`y`-position, so any rhythm change above them unpaired every box below —
+they are now keyed by document order and width (paired 127 → 142). And
+`<span>` vs `<li>` was reporting 50 differences in `display` and `paddingLeft`
+that are the same rendering by two structures: those properties are now
+excluded **across a tag mismatch only**, and still compared on same-tag pairs.
+
 Method note: `getComputedStyle` over every element of both pages, paired and
 diffed as data, is what found these. "Looks about right" would not have, and
 neither would a checklist of properties someone thought to check.
