@@ -176,6 +176,9 @@ def cmd_block(s, a):
     if b.get("render_verdict"):
         print(f"  render-sweep: {b['render_verdict']}"
               + (f" - {b['render_note']}" if b.get("render_note") else ""))
+    ctx = render_context()
+    if ctx:
+        print(f"  needs        : {classify(name, b, ctx)}")
     if b.get("parent"):
         print(f"  parent-ONLY inside: {', '.join(b['parent'])}")
     if b.get("ancestor"):
@@ -495,6 +498,65 @@ def cmd_settings(s, a):
             print(f"    {name:28} {', '.join(sorted(decl))}")
 
 
+_CTX = [None]
+
+
+def render_context():
+    """Which context each block needs before it renders anything.
+
+    `sweep-render.php` says a block renders nothing on a bare page - true for
+    205 of 302 here, and nearly useless alone, because it does not distinguish
+    "broken" from "waiting for a post". This is the same sweep run again inside
+    contexts a real page can supply. tools/sweep-context.php."""
+    if _CTX[0] is None:
+        from pathlib import Path
+        p = Path(__file__).resolve().parent.parent / "data" / "render-context.json"
+        _CTX[0] = json.loads(p.read_text(encoding="utf-8"))["blocks"] if p.exists() else {}
+    return _CTX[0]
+
+
+def classify(name, b, ctx):
+    """Why this block renders nothing, in the site's own terms."""
+    v = (ctx.get(name) or {}).get("context")
+    if v and v != "needs-more":
+        return f"renders in: {v}"
+    if b.get("parent") or b.get("ancestor"):
+        return "needs a parent block - standalone is meaningless"
+    if any(x.get("source") for x in (b.get("attributes") or {}).values()):
+        return "content-in-HTML - the void form is empty by design"
+    if not b.get("is_dynamic"):
+        return "static wrapper - you write the HTML"
+    return "unexplained - needs a context this sweep does not build, or the site has no such data"
+
+
+def cmd_context(s, a):
+    """Account for every block: what does it need before it renders?"""
+    ctx = render_context()
+    if not ctx:
+        print("data/render-context.json not shipped - run tools/sweep-context.php")
+        return
+    import collections
+    groups = collections.defaultdict(list)
+    for name, b in s["blocks"].items():
+        groups[classify(name, b, ctx)].append(name)
+    for k in sorted(groups, key=lambda x: -len(groups[x])):
+        print(f"{len(groups[k]):5}  {k}")
+    print(f"{sum(len(v) for v in groups.values()):5}  TOTAL")
+    if a.show:
+        for k in sorted(groups, key=lambda x: -len(groups[x])):
+            if a.show not in k:
+                continue
+            print(f"\n{k}:")
+            for n in sorted(groups[k]):
+                print("   ", n)
+    else:
+        print("\n`--show <word>` lists the blocks in a group, e.g. --show singular")
+    print("\nNote: 'unexplained' mixes two things measured separately - a context this "
+          "sweep\ndoes not build (a cart with items, a checkout session), and a site that "
+          "has no such\ndata at all. core/site-tagline is empty here because blogdescription "
+          "is empty;\ncore/tag-cloud because the site has 0 tags. Neither is broken.")
+
+
 def cmd_rwd(s, a):
     """Every responsive mechanism the block editor gives you HERE, with the
     width each one actually uses.
@@ -715,6 +777,8 @@ def main():
     p.add_argument("--grep")
     p = sub.add_parser("save")
     p.add_argument("block")
+    p = sub.add_parser("context")
+    p.add_argument("--show")
     p = sub.add_parser("rwd")
     p.add_argument("--grep")
     sub.add_parser("settings")

@@ -68,3 +68,55 @@ contract instead: each pure-dynamic block in the tree must either deliver its
 sweep - in which case the gap is *explained* and reported as such. A dynamic
 block that the sweep says renders, but which is absent from the delivered page,
 fails the run.
+
+## "Renders nothing" is not a diagnosis
+
+`sweep-render.php` says whether a block produces output on a bare page. For 205
+of 302 blocks here the answer is no, and on its own that verdict is close to
+useless: it cannot tell a broken block from one waiting for a post.
+
+`tools/sweep-context.php` renders every block again inside contexts a real page
+can supply - cheapest first - and records the FIRST one that yields output.
+`gb.py context` accounts for all 302:
+
+```
+  101  needs a parent block - standalone is meaningless
+   69  renders in: bare
+   64  unexplained - needs a context this sweep does not build, or no such data
+   23  content-in-HTML - the void form is empty by design
+   17  renders in: singular          core/post-title, post-content, post-date, ...
+   15  renders in: product           woocommerce/product-price, add-to-cart-form, ...
+    9  static wrapper - you write the HTML
+    2  renders in: term-archive      core/term-name, core/term-count
+    2  renders in: logged-in         moksafopoi/balance, moksafopoi/tier
+```
+
+`gb.py block <name>` prints the same verdict per block, so "why is my page
+blank" is answerable before publishing rather than after.
+
+### The bug that made the first run worthless
+
+The first version entered a context per block and left it again. It never
+actually left: `wp_reset_postdata()` restores `$post` from `$wp_query->post`,
+which is exactly the value the enter step had just written. From the first
+block that needed a post onwards, every later block's "bare" test ran with a
+post still in scope, and `core/post-content` reported 3,849 bytes of "bare"
+output - the post's own content.
+
+Contexts are now entered once per PASS, with the globals snapshotted and
+written back wholesale. The corrected bare pass produces **69**, which is
+exactly what the independent `sweep-render.php` reports - the cross-check that
+says the fix is right.
+
+### What "unexplained" mixes
+
+Two different things, both measured rather than assumed:
+
+- a context this sweep does not build - a cart with items, a checkout session,
+  an archive with results, `core/tabs`'s own inner context;
+- the site simply has no such data. `core/site-tagline` is empty here because
+  `blogdescription` is an empty string, and `core/tag-cloud` because the site
+  has 0 tags. Neither block is broken, and no context would help.
+
+Re-run the sweep on the target site rather than trusting these numbers: like
+everything else in this repo, the answer is a property of that site.

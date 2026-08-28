@@ -124,6 +124,7 @@ python tools/gb.py settings                       # what the editor ALLOWS here,
 python tools/gb.py patterns --show hero-product   # canonical markup core/Woo/the theme ship, for THIS site
 python tools/gb.py rwd                            # every responsive mechanism here, with its real width
 python tools/gb.py templates                      # the Site Editor surface, if the theme has one
+python tools/gb.py context                        # what each block NEEDS before it renders anything
 ```
 
 The Site Editor exists only on a BLOCK theme. To describe a site as if another
