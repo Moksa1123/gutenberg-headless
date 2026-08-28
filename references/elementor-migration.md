@@ -96,7 +96,30 @@ the *other* site's schema would have been meaningless, so moksaweb's schema was
 re-extracted first (`extract-block-schema.php` + `sweep-render.php`, two
 commands).
 
-Three real bugs it surfaced, each now fixed at the root:
+### Visual fidelity is a separate question from validity
+
+The first pass scored 179 blocks / 0 invalid and **still did not look like the
+original**. `isValid` says the editor accepts the markup; it says nothing about
+whether the page renders like the page it came from. Comparing the two full-page
+screenshots side by side is not optional, and it exposed three layout failures a
+validator structurally cannot see:
+
+| symptom | root cause | fix |
+|---|---|---|
+| content ran edge-to-edge, right column clipped | Elementor's `width: 1160px` was skipped as "layout-handled", but `layout.type:constrained` resolves against `--wp--style--global--content-size`, which a **classic theme never defines** | width/`boxed_width` now emit real `max-width` (px) or `flex-basis` (%) |
+| those max-widths never reached the browser | per-block `style.css` compiles to a **hash class injected at render**; Perfmatters' remove-unused-CSS scans the raw HTML, never sees it, strips the rule | layout rules go into one design-layer `<style>` under a stable class the markup itself carries |
+| content still hugged the left edge | Blocksy sets `margin-left:-22px` on children of a constrained layout to cancel container padding, which beats a plain `margin:auto` | design-layer selectors are doubled (`.x.x`) and marked `!important` |
+| every ghost button rendered solid white | the CSS map reports the same property for `button_background_hover_color` as for the normal one, so an undiscriminating pass wrote the HOVER colour as the resting colour | `auto_style` skips any `*_hover_*` control; states are set explicitly per converter |
+
+Also measured: `rgba(0,0,0,0)` is a **deliberate** transparent (ghost buttons
+depend on it), not an absence — treating it as empty makes the block inherit a
+solid colour it never had.
+
+After those four fixes the converted page matches the original's structure,
+widths, colours and CTA styling; what remains different is height (+23%, mostly
+looser vertical rhythm where Elementor's negative margins are gone).
+
+Three earlier bugs, also fixed at the root:
 
 - **`header_size: div`** — Elementor's heading widget is routinely used as
   styled TEXT. 45 of the 55 headings on that page were `div`; emitting `h2` for

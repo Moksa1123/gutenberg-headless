@@ -55,6 +55,30 @@ except Exception:
 
 REPORT: list[tuple[str, str, str]] = []
 
+# Rules that must survive aggressive "remove unused CSS" optimisers. Per-block
+# style.css compiles to a hash class injected at RENDER time, so a plugin that
+# scans the raw HTML (Perfmatters RUCSS - measured on moksaweb.com) never sees
+# the class and strips the rule. Layout the page cannot do without - content
+# max-widths, column flex-basis - therefore goes into ONE design-layer <style>
+# keyed by a stable class written into the markup itself.
+DESIGN_RULES: list[str] = []
+_SEQ = [0]
+
+
+def design_rule(css_body: str) -> str:
+    """Register a layout rule; returns the stable class to put on the element.
+
+    The selector is doubled (`.x.x`) and every declaration marked important:
+    themes routinely apply negative margins to the children of a constrained
+    layout to cancel container padding (measured: Blocksy sets
+    `margin-left:-22px` on them), which silently defeats a plain
+    `margin-left:auto`. Layout the converted page depends on has to win."""
+    _SEQ[0] += 1
+    cls = f"el2b-{_SEQ[0]}"
+    body = ";".join(f"{d.strip()} !important" for d in css_body.split(";") if d.strip())
+    DESIGN_RULES.append(f".{cls}.{cls}{{{body}}}")
+    return cls
+
 
 def note(level, widget, msg):
     REPORT.append((level, widget, msg))
@@ -139,7 +163,11 @@ def box(v):
 
 
 def scalar(val):
-    """Turn any Elementor control value into a CSS scalar, or None."""
+    """Turn any Elementor control value into a CSS scalar, or None.
+
+    `rgba(0,0,0,0)` is a DELIBERATE transparent - ghost buttons and overlay-free
+    sections rely on it. Treating it as "no value" makes the block inherit a
+    solid colour it was never meant to have."""
     if isinstance(val, dict):
         return size(val)
     if isinstance(val, (int, float)):
@@ -157,7 +185,7 @@ BOX_PROPS = {"padding": ("spacing", "padding"), "margin": ("spacing", "margin")}
 # auto_style also write them into style.css would duplicate - and fight - it.
 LAYOUT_HANDLED = {
     "flex_direction", "flex_justify_content", "flex_align_items", "flex_wrap",
-    "content_width", "boxed_width", "width",
+    "content_width",
 }
 # Effects Elementor renders with machinery blocks have no equivalent for. They
 # are reported once, not smuggled into style.css where they would not work.
@@ -171,6 +199,13 @@ UNSUPPORTED = {
 class Style:
     def __init__(self):
         self.style: dict = {}
+        self.extra_classes: list[str] = []
+
+    def layout_css(self, css_body):
+        """Layout an optimiser must not be able to strip - goes to the design
+        layer under a stable class, not to per-block style.css."""
+        if css_body:
+            self.extra_classes.append(design_rule(css_body))
 
     def set(self, path, value):
         if value in (None, "", {}):
@@ -223,8 +258,8 @@ class Style:
 
     def resolve(self, block=None):
         self.normalize(block)
-        rules, classes, _ = gblib.style_expectations(self.style)
-        return self.style, classes, ";".join(f"{p}:{v}" for p, v in rules)
+        rules, classes, _ = gblib.style_expectations(self.style, block)
+        return self.style, classes + self.extra_classes, ";".join(f"{p}:{v}" for p, v in rules)
 
 
 def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_filter=None):
@@ -236,6 +271,13 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
             continue
         if ctrl in LAYOUT_HANDLED:
             continue          # the block `layout` attribute already carries it
+        if "hover" in ctrl or ctrl.endswith("_focus"):
+            # Measured: the CSS map reports the same property for the hover
+            # control as for the normal one, so an undiscriminating pass writes
+            # the HOVER colour as the resting colour - four ghost buttons on the
+            # test page came out solid white. States are handled explicitly by
+            # each converter (style[":hover"]).
+            continue
         if ctrl in UNSUPPORTED:
             if scalar(val) or isinstance(val, dict):
                 note("warn", widget, f"{ctrl}: Elementor-only effect, dropped (no block equivalent)")
@@ -525,6 +567,27 @@ def convert_element(e, ctx) -> str:
         if gap:
             st.set(("spacing", "blockGap"), gap)
 
+        # Width is layout INTENT, and the block `layout` attribute cannot carry
+        # it on a classic theme: layout.type "constrained" resolves against
+        # --wp--style--global--content-size, which a classic theme never
+        # defines - the content then fills the viewport. Measured on
+        # moksaweb.com (Blocksy): the converted page ran edge-to-edge and
+        # clipped its own right column until this was handled.
+        #   px  -> a centred max-width (the section's content well)
+        #   %   -> a flex-basis (a column inside a row)
+        w = s.get("width")
+        wv = size(w)
+        if wv:
+            unit = (w or {}).get("unit", "px")
+            if unit == "%":
+                if wv != "100%":
+                    st.layout_css(f"flex:0 0 {wv};max-width:{wv}")
+            else:
+                st.layout_css(f"max-width:{wv};margin-left:auto;margin-right:auto")
+        bw = size(s.get("boxed_width"))
+        if bw:
+            st.layout_css(f"max-width:{bw};margin-left:auto;margin-right:auto")
+
         is_row = s.get("flex_direction") in ("row", "row-reverse")
         layout = {"type": "flex"} if is_row else {"type": "constrained"}
         if is_row:
@@ -575,7 +638,16 @@ def main():
     ctx = {"elmap": elmap, "cssmap": css_to_style_path()}
 
     tree = json.loads(Path(a.file).read_text(encoding="utf-8"))
-    markup = "\n\n".join(x for x in (convert_element(e, ctx) for e in tree) if x) + "\n"
+    body = "\n\n".join(x for x in (convert_element(e, ctx) for e in tree) if x)
+    # The design layer goes FIRST and carries the layout rules an optimiser
+    # must not be able to strip (see DESIGN_RULES).
+    if DESIGN_RULES:
+        layer = ("<!-- wp:html -->\n<style>\n" + "\n".join(DESIGN_RULES) +
+                 "\n</style>\n<!-- /wp:html -->")
+        body = layer + "\n\n" + body
+        note("info", "-", f"{len(DESIGN_RULES)} layout rules in a design-layer <style> "
+                          f"(survives remove-unused-CSS plugins; per-block style.css does not)")
+    markup = body + "\n"
 
     if a.report:
         agg = {}
