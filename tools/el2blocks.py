@@ -273,6 +273,19 @@ class Style:
         return self.style, classes + self.extra_classes, ";".join(inline)
 
 
+def apply_element_width(st: Style, s: dict):
+    """Elementor's Advanced tab lets ANY widget set its own width
+    (`_element_custom_width`) - it is not a container setting, so the container
+    pass never sees it. Measured on moksaweb.com: a 600px lead paragraph and 11
+    other elements rendered full-bleed without this, which reflows the whole
+    column."""
+    if s.get("_element_width") not in (None, "", "initial", "inherit", "auto"):
+        return
+    w = size(s.get("_element_custom_width"))
+    if w:
+        st.layout_css(f"max-width:{w}")
+
+
 def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_filter=None):
     """Map every Elementor setting whose measured CSS the block engine can
     express. Anything with a known CSS property but no block path goes to
@@ -361,6 +374,9 @@ def conv_heading(e, ctx) -> str:
         if ALIGN.get(s.get("align", "")):
             st.set(("typography", "textAlign"), ALIGN[s["align"]])
         auto_style(st, "heading", s, ctx["elmap"], ctx["cssmap"])
+        apply_element_width(st, s)
+        st.layout_css("margin-block:0")
+    
         style, classes, inline = st.resolve()
         attrs = {"style": style} if style else {}
         return comment("core/paragraph", attrs,
@@ -371,6 +387,10 @@ def conv_heading(e, ctx) -> str:
     if ALIGN.get(s.get("align", "")):
         st.set(("typography", "textAlign"), ALIGN[s["align"]])
     auto_style(st, "heading", s, ctx["elmap"], ctx["cssmap"])
+    # Elementor resets widget margins; a theme does not. Without stating it,
+    # every heading picks up the theme's own top margin (measured: 8-18px on
+    # 7 elements, which then reflows their width).
+    st.layout_css("margin-block:0")
     style, classes, inline = st.resolve()
     attrs = {}
     if level != 2:
@@ -394,6 +414,9 @@ def conv_text_editor(e, ctx) -> str:
     if ALIGN.get(s.get("align", "")):
         st.set(("typography", "textAlign"), ALIGN[s["align"]])
     auto_style(st, "text-editor", s, ctx["elmap"], ctx["cssmap"])
+    apply_element_width(st, s)
+    st.layout_css("margin-block:0")
+    
     style, classes, inline = st.resolve()
     attrs = {"style": style} if style else {}
     m = re.fullmatch(r"<p>(.*?)</p>", raw, re.S)
@@ -409,6 +432,8 @@ def conv_button(e, ctx) -> str:
     href = ((s.get("link") or {}).get("url")) or ""
     st = Style()
     auto_style(st, "button", s, ctx["elmap"], ctx["cssmap"])
+    apply_element_width(st, s)
+    
     hover_bg, hover_fg = s.get("button_background_hover_color"), s.get("button_hover_text_color")
     if hover_bg or hover_fg:
         hv = {}
@@ -444,6 +469,7 @@ def conv_image(e, ctx) -> str:
         return ""
     st = Style()
     auto_style(st, "image", s, ctx["elmap"], ctx["cssmap"], prefix_filter="image_")
+    apply_element_width(st, s)
     style, classes, inline = st.resolve()
     attrs = {"id": iid} if iid else {}
     if style:
@@ -475,10 +501,50 @@ def conv_spacer(e, ctx) -> str:
 
 
 def conv_icon_list(e, ctx) -> str:
-    items = (e.get("settings") or {}).get("icon_list") or []
+    s = e.get("settings", {})
+    items = s.get("icon_list") or []
+
+    # An icon-list carries its OWN typography and colour under an `icon_`
+    # prefix, plus item spacing and a marker colour. Converting only the text
+    # leaves every item inheriting the theme - measured on moksaweb.com: 25
+    # list items came out 16px/26.4px in the theme's link blue instead of
+    # 14.5px/1.65em in #A6A6B2, the single biggest visual difference on the
+    # page. The list is styled as a whole; markers keep Elementor's accent.
+    st = Style()
+    fs = size(s.get("icon_typography_font_size"))
+    lh = size(s.get("icon_typography_line_height"))
+    if lh and lh.endswith("em"):
+        lh = lh[:-2]
+    color_txt = s.get("text_color")
+    gap = size(s.get("space_between"))
+    marker = s.get("icon_color")
+
+    decls = []
+    if fs:
+        decls.append(f"font-size:{fs}")
+    if lh:
+        decls.append(f"line-height:{lh}")
+    if isinstance(color_txt, str) and color_txt:
+        decls.append(f"color:{color_txt}")
+    if decls:
+        st.layout_css(";".join(decls))
+    if gap:
+        # Elementor spaces items with a gap between rows, not a bottom margin.
+        st.layout_css(f"display:flex;flex-direction:column;gap:{gap};padding-left:1.15em;margin-block:0")
+    else:
+        st.layout_css("margin-block:0;padding-left:1.15em")
+    if isinstance(marker, str) and marker:
+        note("info", "icon-list", f"icons -> list markers in {marker}")
+
+    _s, classes, _inline = st.resolve()
+    marker_css = f"::marker{{color:{marker}}}" if isinstance(marker, str) and marker else ""
+    if marker_css and classes:
+        DESIGN_RULES.append(f".{classes[-1]} li{marker_css}")
+
     lis = "".join(comment("core/list-item", {}, f"<li>{i.get('text','')}</li>") + "\n\n" for i in items)
-    note("info", "icon-list", f"{len(items)} items -> core/list (icons dropped)")
-    return comment("core/list", {}, f'<ul class="wp-block-list">{lis.rstrip()}</ul>')
+    note("info", "icon-list", f"{len(items)} items -> core/list (icon glyphs become list markers)")
+    cls = " ".join(["wp-block-list"] + classes)
+    return comment("core/list", {}, f'<ul class="{cls}">{lis.rstrip()}</ul>')
 
 
 def _title_text_group(title, desc, img=None, label="group"):
@@ -562,6 +628,7 @@ def convert_element(e, ctx) -> str:
         children = [c for c in (convert_element(x, ctx) for x in e.get("elements", [])) if c]
         st = Style()
         auto_style(st, "container", s, ctx["elmap"], ctx["cssmap"])
+        apply_element_width(st, s)
         if s.get("background_background") == "gradient":
             a = s.get("background_color") or "#000"
             b = s.get("background_color_b") or "#fff"

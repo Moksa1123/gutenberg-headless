@@ -160,8 +160,43 @@ reads as "close enough":
   `_wp_page_template` to whatever the original used, or the converted page
   starts with a band of nothing.
 
-Method note: `getComputedStyle` on every text node of both pages, compared as
-data, is what found these. "Looks about right" would not have.
+### The full element-by-element diff
+
+Checkpoints are still cherry-picking. The honest method is to fingerprint
+**every** text-bearing element on both pages — 25 computed properties each —
+pair them by their own text, and diff every property. On this page that is 123
+elements on each side, **paired 123, none missing, none extra**.
+
+The first full run reported differences on 8 properties. Two were real and
+large, and neither would have been noticed by looking:
+
+- **icon-list carried none of its styling.** Elementor keeps a list's
+  typography under an `icon_` prefix (`icon_typography_font_size`,
+  `icon_typography_line_height`) plus `text_color`, `icon_color` and
+  `space_between` — the converter only took the text. 25 list items rendered at
+  the theme's 16px/26.4px in its link colour instead of 14.5px/1.65em in
+  `#A6A6B2`: the single biggest visual difference on the page, and invisible in
+  a thumbnail. Fixing it removed the `fontSize`, `color`, `lineHeight` and
+  `borderTopColor` differences in one go.
+- **`_element_custom_width` was ignored.** Elementor's Advanced tab lets *any*
+  widget set its own width; it is not a container setting, so the container
+  pass never saw it. A 600px lead paragraph ran the full column width.
+
+Everything else the diff reported was an equivalence, and saying so precisely
+matters as much as fixing the rest: `start`/`left` and `end`/`right` are the
+same value; `minHeight:0px`/`auto` likewise; and 70 of the 123 pairs compare an
+Elementor `<span>` against a block `<a>`/`<p>` because the two systems nest text
+differently — those must be compared as boxes, not as text nodes, and when you
+do, the buttons match exactly (15/34 padding, 8px radius, transparent ghost fill,
+2.4px border, the orange CTA).
+
+After the fixes: of 53 same-tag comparable pairs, **12 differences remain, all
+of them width**, and all downstream of percentage columns resolving against a
+slightly different parent width — the ratios are consistent (76% of 1160 = 882).
+
+Method note: `getComputedStyle` over every element of both pages, paired and
+diffed as data, is what found these. "Looks about right" would not have, and
+neither would a checklist of properties someone thought to check.
 
 After all of it the converted page matches the original's structure, widths,
 type scale, colours, CTA styling and section rhythm.
