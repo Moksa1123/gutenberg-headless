@@ -159,7 +159,13 @@ def _css_value(v):
     return preset_ref_to_var(v) or v
 
 
-def style_expectations(style):
+# Blocks whose save() does NOT write the style object's colors inline - the
+# attribute alone drives them (the theme/render pipeline reads it). Measured:
+# core/separator carries has-text-color but an empty style attribute.
+NO_INLINE_COLOR_BLOCKS = {"core/separator"}
+
+
+def style_expectations(style, block=None):
     """What the saved HTML must carry for a style attribute object.
 
     Returns (rules, classes, notes):
@@ -167,6 +173,9 @@ def style_expectations(style):
       classes [class names] expected in the class attribute
       notes   style keys that are render-time or unknown (asserted by
               verify-live against the delivered page, not against saved HTML)
+
+    `block` lets a block opt out of rules that are block-specific (see
+    NO_INLINE_COLOR_BLOCKS) - measured behaviour, not a guess.
     """
     rules, classes, notes = [], [], []
     if not isinstance(style, dict):
@@ -177,8 +186,17 @@ def style_expectations(style):
         classes.append("has-custom-css")
 
     engine = _engine()
+    skip_color = block in NO_INLINE_COLOR_BLOCKS
     for group, props in style.items():
         if group == "css":
+            continue
+        if skip_color and group == "color":
+            # attribute-only: still emit the classes, never the inline CSS
+            if isinstance(props, dict):
+                if props.get("text"):
+                    classes.append("has-text-color")
+                if props.get("background"):
+                    classes.append("has-background")
             continue
         if STATE_KEY.match(group):
             notes.append(f"style.{group} (state - render-time wp-states-* CSS)")

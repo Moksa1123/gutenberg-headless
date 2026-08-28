@@ -120,7 +120,7 @@ def main():
         for an, av in attrs.items():
             for cls in gblib.classes_for(name, an, av, bdef):
                 check(cls in page, f"{name}: class '{cls}' not delivered")
-        rules, style_classes, _ = gblib.style_expectations(attrs.get("style") or {})
+        rules, style_classes, _ = gblib.style_expectations(attrs.get("style") or {}, name)
         for prop, val in rules:
             want = re.sub(r"\s+", "", f"{prop}:{val}")
             hit = want in page_flat

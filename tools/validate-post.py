@@ -203,7 +203,7 @@ def validate(tree, schema, rep):
                 if slug not in presets.get(skind, {}):
                     rep.err("E-PRESET", where,
                             f"style references var:preset|{skind}|{slug} - no such preset here")
-            rules, style_classes, _notes = gblib.style_expectations(style)
+            rules, style_classes, _notes = gblib.style_expectations(style, name)
             norm = re.sub(r"\s+", "", style_str)
             for prop, val in rules:
                 want = re.sub(r"\s+", "", f"{prop}:{val}")

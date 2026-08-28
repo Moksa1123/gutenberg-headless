@@ -75,6 +75,40 @@ converted page — the editor normalizes key order per block type
 **`isValid` on every block is the shipping bar**; byte-identity is the polish
 pass, reached by the same console loop as any hand-written page.
 
+## Second real page: moksaweb.com, a different site entirely
+
+The same converter, run against the author's main site (moksaweb.com — 176
+registered blocks, no WooCommerce, Jetpack instead; **a completely different
+block surface from the first test site's 302**) on a real published case
+study, 84 KB of tree, 75 containers:
+
+```
+179 blocks emitted
+  0 validator errors        (against moksaweb's OWN re-extracted schema)
+  0 invalid blocks in the editor
+1096 verify-live assertions passed on the delivered public page
+```
+
+Live result: <https://moksaweb.com/camping-case-blocks/> (converted) beside the
+Elementor original. The exercise also proves the skill's own first rule — the
+block surface is a property of the SITE: validating the converted page against
+the *other* site's schema would have been meaningless, so moksaweb's schema was
+re-extracted first (`extract-block-schema.php` + `sweep-render.php`, two
+commands).
+
+Three real bugs it surfaced, each now fixed at the root:
+
+- **`header_size: div`** — Elementor's heading widget is routinely used as
+  styled TEXT. 45 of the 55 headings on that page were `div`; emitting `h2` for
+  all of them would have invented a document outline the original never had.
+  They now convert to styled paragraphs, and only real `h1`-`h6` stay headings.
+- **`core/separator`** carries its color in the style ATTRIBUTE only, never
+  inline, and always ships `has-alpha-channel-opacity`. gblib now knows
+  (`NO_INLINE_COLOR_BLOCKS`), so the validator agrees with the editor.
+- **CSS custom properties leaking**: Elementor writes `--overflow: hidden`;
+  its stylesheet consumes that, ours does not. Escalations to `style.css` now
+  strip the `--` and emit the real property.
+
 ## Canonicalization rules this work surfaced
 
 - A custom `style.typography.fontSize` marks the element `has-custom-font-size`

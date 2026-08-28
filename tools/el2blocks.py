@@ -262,8 +262,14 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
                 st.set(path, v)
                 break
         else:
-            st.css(f"{props[0]}:{v}")
-            note("info", widget, f"{ctrl} -> style.css ({'/'.join(props[:2])}: no block-native path)")
+            # Elementor writes many properties as CSS custom properties
+            # (--overflow, --align-items). Its own stylesheet consumes those;
+            # ours does not, so emit the REAL property in style.css.
+            prop = props[0]
+            if prop.startswith("--"):
+                prop = prop[2:]
+            st.css(f"{prop}:{v}")
+            note("info", widget, f"{ctrl} -> style.css ({prop}: no block-native path)")
 
 
 def wrapper(tag, classes, inline, inner, *, extra=""):
@@ -290,7 +296,24 @@ def comment(name, attrs, inner=None):
 def conv_heading(e, ctx) -> str:
     s = e.get("settings", {})
     raw = s.get("header_size", "h2")
-    level = int(raw[1]) if re.fullmatch(r"h[1-6]", raw or "") else 2
+
+    # Elementor's heading widget is routinely used as styled TEXT with
+    # header_size div/span/p. Emitting h2 for those would invent a document
+    # outline the original never had - 45 sibling h2s on one real page. Those
+    # convert to a paragraph carrying the same styling; only real h1-h6 stay
+    # headings.
+    if not re.fullmatch(r"h[1-6]", raw or ""):
+        note("info", "heading", f"header_size '{raw}' is styled text, not a heading -> core/paragraph")
+        st = Style()
+        if ALIGN.get(s.get("align", "")):
+            st.set(("typography", "textAlign"), ALIGN[s["align"]])
+        auto_style(st, "heading", s, ctx["elmap"], ctx["cssmap"])
+        style, classes, inline = st.resolve()
+        attrs = {"style": style} if style else {}
+        return comment("core/paragraph", attrs,
+                       wrapper("p", classes, inline, s.get("title", "")))
+
+    level = int(raw[1])
     st = Style()
     if ALIGN.get(s.get("align", "")):
         st.set(("typography", "textAlign"), ALIGN[s["align"]])
@@ -307,8 +330,6 @@ def conv_heading(e, ctx) -> str:
         classes = classes + ["has-custom-font-size"]
     if style:
         attrs["style"] = style
-    if raw in ("div", "span", "p"):
-        note("info", "heading", f"header_size '{raw}' is not a heading tag - emitted h{level}")
     return comment("core/heading", attrs,
                    wrapper(f"h{level}", ["wp-block-heading"] + classes, inline, s.get("title", "")))
 
@@ -382,16 +403,16 @@ def conv_image(e, ctx) -> str:
 
 
 def conv_divider(e, ctx) -> str:
-    st = Style()
+    # Measured: core/separator's save() puts the color in the style ATTRIBUTE
+    # only (never inline CSS on the <hr>), and always carries
+    # has-alpha-channel-opacity for its default opacity attribute.
     c = e.get("settings", {}).get("color")
     attrs = {}
+    classes = ["wp-block-separator", "has-alpha-channel-opacity"]
     if isinstance(c, str) and c:
-        st.set(("color", "text"), c)
-        attrs["style"] = st.style
-    _s, classes, inline = st.resolve()
-    return comment("core/separator", attrs,
-                   f'<hr class="{" ".join(["wp-block-separator"] + classes)}"'
-                   + (f' style="{inline}"' if inline else "") + "/>")
+        attrs["style"] = {"color": {"text": c}}
+        classes.append("has-text-color")
+    return comment("core/separator", attrs, f'<hr class="{" ".join(classes)}"/>')
 
 
 def conv_spacer(e, ctx) -> str:
