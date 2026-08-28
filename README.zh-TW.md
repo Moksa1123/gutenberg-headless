@@ -165,6 +165,25 @@ python tools/benchmark-tokens.py --wp-src /path/to/wordpress
 tokenizer 不是 Claude 的，絕對值會差約 ±10%；同一個 tokenizer 下的比值穩定，
 而比值才是主張。
 
+## 自訂 CSS 與 JS — WordPress 到底給了什麼
+
+**per-block 自訂 CSS 是原生的**（WP 7.0+，`style.css` 屬性，支援 `&` 巢狀，
+編譯進 `:root :where(...)`）。**per-block 自訂 JS 核心完全沒有。** 頁面級的
+CSS 與 JS 走一個 `core/html` 設計層＋一個行為層 — 這是本 repo 範例頁使用、
+且編輯器逐位元組接受的模式。完整實測（含特異性天花板、以及 WP-CLI 寫入時會
+吃掉 `style.css` 的剝除過濾器）在
+[custom-css-js.md](references/custom-css-js.md)。
+
+## 從 Elementor 搬過來
+
+`tools/el2blocks.py` 把 `_elementor_data` 轉成區塊，而且不用猜：它讀姊妹技能
+[elementor-headless](https://github.com/Moksa1123/elementor-headless) 實測出的
+control→CSS 對照表（25,357 列），跟本技能的樣式引擎對照表比對。在測試站真實的
+Elementor 首頁（63 KB 的樹、12 種 widget）上：**158 個區塊、validator 0 錯誤、
+編輯器 0 個 invalid**，每個有損的決定都由 `--report` 列出（背景疊層丟棄、
+icon-box 圖示丟棄、兩個 widget 保留成帶原始設定的可見佔位）。做法與誠實限制：
+[elementor-migration.md](references/elementor-migration.md)。
+
 ## 準不準？讓它自己證明。
 
 **1. 解析器對得上 WordPress 嗎？** `blockmark.py` 對活站真實文章做

@@ -202,6 +202,11 @@ def style_expectations(style):
                 if val in TEXT_ALIGN_VALUES:
                     classes.append(f"has-text-align-{val}")
                 continue
+            # NOTE: a custom style.typography.fontSize does NOT automatically emit
+            # has-custom-font-size. Measured: core/button's save adds it,
+            # core/heading's does not - on heading the editor carries it as an
+            # explicit `className`. So it is never generated here; where a
+            # block needs it, the caller writes className (see el2blocks.py).
             if key in BOX_GROUPS:
                 base = BOX_GROUPS[key]
                 if isinstance(val, dict):

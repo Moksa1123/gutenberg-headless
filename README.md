@@ -268,6 +268,28 @@ counts use tiktoken `cl100k_base` — OpenAI's tokenizer, not Claude's, so
 absolute counts shift by roughly ±10%; ratios under one tokenizer are stable,
 and the ratio is the claim.
 
+## Custom CSS and JS — what WordPress actually gives you
+
+Per-block custom CSS is native since WP 7.0 (`style.css`, with `&` nesting,
+compiled under `:root :where(...)`). **Per-block custom JS does not exist in
+core at all.** Page-level CSS and JS ride in one `core/html` design layer and
+one behaviour layer — a pattern this repo's own example pages use and the
+editor accepts byte-identically. The full measured account, including the
+specificity ceiling and the `style.css` strip filter that eats it on WP-CLI
+writes, is in [custom-css-js.md](references/custom-css-js.md).
+
+## Coming from Elementor
+
+`tools/el2blocks.py` converts `_elementor_data` into blocks, and it does not
+guess: it reads the sibling [elementor-headless](https://github.com/Moksa1123/elementor-headless)
+skill's measured control→CSS table (25,357 rows) and matches it against this
+skill's style-engine map. On the test site's real Elementor home page — 63 KB
+of tree, 12 widget types — it emitted **158 blocks, 0 validator errors, 0
+invalid blocks in the editor**, with every lossy decision listed by `--report`
+(background overlays dropped, icon-box icons dropped, two widgets left as
+visible placeholders carrying their settings). Recipe and honest limits:
+[elementor-migration.md](references/elementor-migration.md).
+
 ## Is it accurate? Make it prove it.
 
 Don't trust it — test it. Every check reads a different artefact: the parser's
@@ -381,6 +403,7 @@ tools/
   validate-post.py           pre-flight both halves of every block
   apply-post.php             write past kses/slashing/strip-filters, byte-verify, purge
   verify-live.py             the public URL, through the cache, fluid-aware
+  el2blocks.py               Elementor -> blocks, driven by elementor-headless's measured CSS map
   audit-contrast.js          in-page WCAG contrast audit (gradients, cover dims, symbols)
   extract-block-schema.php   dump a live site's full surface
   sweep-render.php           render all blocks, record who shows nothing
@@ -388,6 +411,7 @@ tools/
 
 references/  data-model · supports-and-styles · dynamic-blocks · canonicalization
              wp71-new-surface · woo-onepage · fidelity · extraction-traps
+             custom-css-js · elementor-migration
 examples/    demo-page.html          the first proof page (editor byte-identical)
              wp71-features.html      WP 7.1's new surface, exercised and verified
              fidelity-target.html    a hand-designed HTML/CSS/JS/SVG page...
