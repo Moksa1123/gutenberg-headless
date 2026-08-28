@@ -46,8 +46,20 @@ IGNORED = {
     # families it unlocks are separate controls and are checked on their own.
     "typography_typography", "icon_typography_typography",
 }
-IGNORED_PREFIX = ("__", "_transform_", "_animation", "motion_fx", "sticky",
-                  "_background_hover", "e_", "advanced_rules")
+IGNORED_PREFIX = ("__", "e_", "advanced_rules")
+
+# Elementor subsystems a block page has no direct equivalent for. These are NOT
+# folded into "ignored": swallowing them is how a page quietly loses its
+# entrance animations. They get their own section, with what rebuilding them
+# takes. (The reference page sets none of these - measured, not assumed.)
+NO_EQUIVALENT = {
+    "_animation": "entrance animation - rebuild in the behaviour layer with an "
+                  "IntersectionObserver (references/custom-css-js.md)",
+    "motion_fx": "scroll / mouse motion effects - Elementor Pro subsystem",
+    "sticky": "sticky positioning - `position:sticky` in the design layer",
+    "_transform": "transform effects - expressible in the design layer",
+    "_background_hover": "hover background - the block :hover state or the design layer",
+}
 
 
 # Controls that ARE dropped, on purpose, with the reason. Keeping them out of
@@ -104,6 +116,16 @@ def main():
         real_auto(st, widget, settings, elmap, cssmap, **kw)
         for ctrl in before:
             base, bp = E.split_breakpoint(ctrl)
+            # A state control is SKIPPED by auto_style on purpose (writing a
+            # hover colour as the resting colour is worse than dropping it) and
+            # is meant to be picked up by the widget converter instead. Crediting
+            # the skip as a read is how three of them - `hover_color`,
+            # `button_hover_border_color` and the button's whole transition -
+            # hid behind a report that said 0 dropped while every button on the
+            # page had the wrong hover. Only an explicit read by a converter,
+            # seen through the settings proxy below, counts for these.
+            if "hover" in ctrl or ctrl.endswith(("_focus", "_active")):
+                continue
             if ctrl.startswith("hide_") or base in E.LAYOUT_HANDLED or base in E.UNSUPPORTED:
                 read.add((widget, ctrl))
             elif elmap.get((widget, base)) or bp:
@@ -146,17 +168,33 @@ def main():
     handled = {k: n for k, n in counts.items() if k in read and interesting(k[1])}
     rest = {k: n for k, n in counts.items()
             if k not in read and interesting(k[1])}
+    def no_equiv(ctrl):
+        for pre, why in NO_EQUIVALENT.items():
+            if ctrl.startswith(pre):
+                return why
+        return None
+
     deliberate = {k: n for k, n in rest.items() if k in DELIBERATE}
-    missed = {k: n for k, n in rest.items() if k not in DELIBERATE}
+    unconvertible = {k: n for k, n in rest.items()
+                     if k not in DELIBERATE and no_equiv(k[1])}
+    missed = {k: n for k, n in rest.items()
+              if k not in DELIBERATE and not no_equiv(k[1])}
 
     total = sum(counts.values())
     nh, nd, nm = sum(handled.values()), sum(deliberate.values()), sum(missed.values())
+    nu = sum(unconvertible.values())
     print(f"{total} control values set on this page")
     print(f"  {nh:5} read by the converter")
     print(f"  {nd:5} dropped ON PURPOSE (reason recorded below)")
+    print(f"  {nu:5} no block equivalent - REBUILD BY HAND (listed below)")
     print(f"  {nm:5} NOT read  <- every one of these is silently dropped")
-    print(f"  {total - nh - nd - nm:5} ignored by policy (ids, classes, editor-only)")
+    print(f"  {total - nh - nd - nu - nm:5} ignored by policy (ids, classes, editor-only)")
     print("=" * 78)
+
+    if unconvertible:
+        print("\nNO BLOCK EQUIVALENT - these need rebuilding by hand")
+        for (who, ctrl), n in sorted(unconvertible.items()):
+            print(f"    x{n:<4} {who}.{ctrl}\n           {no_equiv(ctrl)}")
 
     if deliberate:
         print("\nDROPPED ON PURPOSE")

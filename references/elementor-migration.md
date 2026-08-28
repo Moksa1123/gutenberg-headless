@@ -367,6 +367,61 @@ and justified in the tool's `DELIBERATE` table. Run it on any page before
 trusting a conversion - and treat a non-empty list as the work not being done,
 not as a report.
 
+## The states nobody measures: hover, focus, transition
+
+A resting-state fingerprint reads computed styles once, with nothing hovered.
+A converted page can match it exactly and still have every button behave
+wrongly, and that is what happened here: the resting diff was down to 14
+differences, all explained, while all three buttons on the page had the wrong
+hover, the wrong transition and the wrong corner radius.
+
+`tools/collect-states.js` + the hover loop in the migration driver enumerate
+every interactive element, hover each one, and diff resting AND hovered
+computed styles between the two pages. First run: **3 of 41 paired elements
+differ**, and each was a distinct defect:
+
+- **`hover_color`.** Elementor names the button's hover TEXT colour flatly -
+  no `button_` prefix, no `_text_` in it - unlike its `button_background_hover_color`
+  and `button_hover_border_color` siblings. Reading only the symmetrical name
+  found nothing, so the background inverted to white on hover while the text
+  stayed white with it.
+- **`border_radius` is a BOX**, `{top,right,bottom,left}`, and `scalar()`
+  returns None for a box. Every radius on the page was dropped and each
+  element fell back to the theme's - 8px where the design says 3px. This is
+  the one the RESTING diff should have caught and did not: it pairs an
+  Elementor label `<span>` against a block `<a>`, and radius is on the
+  cross-tag structural exclusion list. The two tools cover each other; run
+  both.
+- **`.elementor-button { transition: all .3s }`**, again read off the
+  original's stylesheet. A converted button inherited the theme's 0.12s.
+
+Then a fourth, only visible once the first three were fixed: the four cards
+whose `custom_css` does `selector:hover{transform:...;border-color:...}` moved
+on hover but never changed colour. Authored CSS carries no `!important`, and
+the design layer writes the RESTING border colour with one. The transform in
+the same rule worked, which is exactly what makes it easy to miss. Custom CSS
+declarations are now raised to the same level rather than lowering the layer.
+
+After that: **0 of 47 paired interactive elements differ.**
+
+Two things worth checking the same way, both measured rather than assumed on
+this page:
+
+- The 114 elements that are "interactive" in the original and not in the
+  conversion have **no declared `:hover` rule and do not change when hovered** -
+  Elementor puts a `transition` on every widget wrapper. Inert.
+- Animations: both pages run **16** animations, the same keyframe names at the
+  same 6s duration (`document.getAnimations().length` on each). The SVG
+  decorations carry their own `<style>`, which `core/html` passes through
+  verbatim.
+
+A related blind spot in the coverage audit had to be fixed for any of this to
+be trustworthy: `auto_style` skips `*hover*` controls deliberately (writing a
+hover colour as the resting colour is worse than dropping it), and the audit
+was crediting that skip as a read. It reported `0 NOT read` while three hover
+controls were being dropped. State controls now only count when a converter
+actually reads them.
+
 ## Canonicalization rules this work surfaced
 
 - A custom `style.typography.fontSize` marks the element `has-custom-font-size`

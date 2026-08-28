@@ -116,13 +116,14 @@ def new_design_class() -> str:
     return f"el2b-{_SEQ[0]}"
 
 
-def emit_design_rule(cls: str, css_body: str, breakpoint: str | None = None):
+def emit_design_rule(cls: str, css_body: str, breakpoint: str | None = None,
+                     pseudo: str | None = None):
     """Write one rule for an already-allocated class, optionally inside a
-    breakpoint's media query."""
+    breakpoint's media query and/or for a pseudo-state."""
     body = ";".join(f"{d.strip()} !important" for d in css_body.split(";") if d.strip())
     if not body:
         return
-    rule = f".{cls}.{cls}{{{body}}}"
+    rule = f".{cls}.{cls}{pseudo or ''}{{{body}}}"
     if breakpoint:
         MEDIA_RULES.setdefault(breakpoint, []).append(rule)
     else:
@@ -271,6 +272,15 @@ class Style:
         if css_body:
             self.responsive.setdefault(breakpoint, []).insert(0, css_body)
 
+    def layout_css_state(self, pseudo, css_body):
+        """A declaration for a pseudo-state (`:hover`, `:focus`) that the
+        block's own state object cannot express - it carries colours only, so
+        a hover border, transform or shadow has nowhere else to go."""
+        if css_body:
+            cls = new_design_class()
+            emit_design_rule(cls, css_body, pseudo=pseudo)
+            self.extra_classes.append(cls)
+
     def layout_css(self, css_body):
         """Layout an optimiser must not be able to strip - goes to the design
         layer under a stable class, not to per-block style.css."""
@@ -401,7 +411,21 @@ def apply_custom_css(st: "Style", s: dict, widget: str):
     if not isinstance(css, str) or not css.strip():
         return
     cls = new_design_class()
-    DESIGN_RULES.append(css.replace("selector", f".{cls}.{cls}").strip())
+    body = css.replace("selector", f".{cls}.{cls}").strip()
+
+    # Every declaration the design layer writes is !important, including the
+    # element's RESTING border colour. Authored CSS carries none, so a
+    # `selector:hover{border-color:...}` lost to the resting rule and four
+    # cards moved on hover without changing colour - the transform in the same
+    # block worked, which is exactly what makes it easy to miss. Raise the
+    # authored declarations to the same level rather than lowering the layer.
+    def _important(m):
+        decls = [d.strip() for d in m.group(1).split(";") if d.strip()]
+        return "{" + ";".join(d if "!important" in d else f"{d} !important"
+                              for d in decls) + "}"
+    body = re.sub(r"\{([^{}]*)\}", _important, body)
+
+    DESIGN_RULES.append(body)
     st.extra_classes.append(cls)
     note("info", widget, "custom_css -> design layer (`selector` rewritten to its class)")
 
@@ -545,6 +569,25 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
         # that to one value drew a 2.4px box around each of them - the most
         # visible error on the page. Uniform widths stay native; anything
         # per-side goes to the design layer where all four sides survive.
+        # Border radius is a BOX in Elementor ({top,right,bottom,left}) and
+        # `scalar()` returns None for it, so every radius on the page was
+        # dropped and each element fell back to the theme's - measured 3px
+        # against 8px on every button. The block takes either one value or a
+        # per-corner object; Elementor's box maps corner-wise clockwise from
+        # top-left.
+        if ctrl == "border_radius" or ctrl.endswith("_border_radius"):
+            b = box(val)
+            if not b:
+                continue
+            vals = set(b.values())
+            if len(vals) == 1:
+                st.set(("border", "radius"), next(iter(vals)))
+            else:
+                st.set(("border", "radius"), {
+                    "topLeft": b.get("top", "0px"), "topRight": b.get("right", "0px"),
+                    "bottomRight": b.get("bottom", "0px"), "bottomLeft": b.get("left", "0px")})
+            continue
+
         if ctrl in ("border_width",) or ctrl.endswith("_border_width"):
             b = box(val)
             if not b:
@@ -697,7 +740,13 @@ def conv_button(e, ctx) -> str:
         note("warn", "button", f"icon '{icon}' dropped - Font Awesome is not loaded on a block page; "
                                f"re-add as an inline SVG if it carries meaning")
 
-    hover_bg, hover_fg = s.get("button_background_hover_color"), s.get("button_hover_text_color")
+    # Elementor names the button's hover TEXT colour `hover_color` - flatly,
+    # with no `button_` prefix and no `_text_` in it, unlike its background and
+    # border siblings. Reading only the symmetrical name found nothing, so
+    # every button kept its resting text colour while the background inverted
+    # underneath it: white on white on all three buttons of the page.
+    hover_bg = s.get("button_background_hover_color")
+    hover_fg = s.get("hover_color") or s.get("button_hover_text_color")
     if hover_bg or hover_fg:
         hv = {}
         if hover_bg:
@@ -705,6 +754,17 @@ def conv_button(e, ctx) -> str:
         if hover_fg:
             hv["text"] = hover_fg
         st.style[":hover"] = {"color": hv}   # button IS in the pseudo allowlist
+
+    # The block :hover state carries colours only. A hover BORDER colour, and
+    # the transition that makes any of it a fade rather than a jump, go to the
+    # design layer. Elementor's own stylesheet says
+    # `.elementor-button { transition: all .3s }`; a converted button inherited
+    # the theme's 0.12s, which reads as a different button.
+    hover_border = s.get("button_hover_border_color")
+    trans = "transition:all .3s"
+    st.layout_css(trans)
+    if hover_border:
+        st.layout_css_state(":hover", f"border-color:{hover_border}")
     style, classes, inline = st.resolve("core/button")
     attrs = {"style": style} if style else {}
     # Measured, and the OPPOSITE of core/heading: core/button's own save()

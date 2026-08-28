@@ -174,7 +174,10 @@ this loop:
                                              the scrollbar (themes clip it)
 9. compare against a      collect-fingerprint.js  35 computed properties per element,
    reference page         + diff-fingerprints.py  paired and diffed
-10. (converting) prove    audit-coverage.py  every source control read, or named
+10. audit the states      collect-states.js  hover/focus/transition on every
+                                             interactive element - a resting
+                                             diff cannot see any of it
+11. (converting) prove    audit-coverage.py  every source control read, or named
     nothing was dropped                     as a deliberate drop
 ```
 
@@ -410,6 +413,7 @@ tools/
   verify-live.py             the public URL, through the cache, fluid-aware
   el2blocks.py               Elementor -> blocks, driven by elementor-headless's measured CSS map
   audit-coverage.py          every Elementor control the converter never read - the completeness check
+  collect-states.js          hover/focus/transition per interactive element
   audit-contrast.js          in-page WCAG contrast audit (gradients, cover dims, symbols)
   check-rwd.js               per-breakpoint overflow/type/target audit, clip-aware
   collect-fingerprint.js     35 computed properties per element, for a real diff
