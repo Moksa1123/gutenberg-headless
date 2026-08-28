@@ -30,7 +30,10 @@
   const PROBE_STYLE = {
     border: { color: '#333333', radius: '9px', style: 'solid', width: '1px' },
     color: { background: '#111111', text: '#222222' },
-    dimensions: { minHeight: '10px', aspectRatio: '16/9' },
+    // All four, because a property the probe never sets has no position in the
+    // canonical order and sorts to the end - `width` did exactly that, and the
+    // converted page put it after padding where save() puts it before.
+    dimensions: { minHeight: '10px', height: '20px', width: '100px', aspectRatio: '16/9' },
     spacing: {
       margin: { top: '1px', right: '2px', bottom: '3px', left: '4px' },
       padding: { top: '5px', right: '6px', bottom: '7px', left: '8px' }
@@ -38,7 +41,12 @@
     typography: {
       fontSize: '16px', fontFamily: 'PF', fontStyle: 'italic', fontWeight: '600',
       letterSpacing: '1px', lineHeight: '2', textDecoration: 'underline',
-      textTransform: 'uppercase'
+      textTransform: 'uppercase',
+      // Produces has-text-align-*, which every aligned paragraph carries.
+      // It is NOT the `align` attribute (that yields alignfull) and not
+      // `textAlign` either - both were probed and produced no class at all,
+      // so the class had no recorded position and sorted to the end.
+      textAlign: 'left'
     },
     shadow: '0 0 1px #000'
   };
@@ -50,13 +58,26 @@
   // attribute combination and treating the result as THE order produces false
   // reports on markup that is provably canonical. So every block is probed
   // several ways, and only orderings that hold in ALL of them are a rule.
+  //
+  // Every variant sets `align` and per-block custom CSS as well, because a
+  // canonical order is only useful if it covers the classes a page actually
+  // carries: `alignfull` and `has-custom-css` are two of them, and a token the
+  // probe never saw has no defined position at all.
+  const V_STYLE = (extra) => ({ css: 'color:red', ...extra });
   const VARIANTS = [
-    { name: 'full', style: PROBE_STYLE, fontFamily: 'pf', fontSize: 'large' },
-    { name: 'colors', style: { color: PROBE_STYLE.color } },
-    { name: 'text-only', style: { color: { text: '#222222' } } },
-    { name: 'type', style: { typography: PROBE_STYLE.typography } },
-    { name: 'border', style: { border: PROBE_STYLE.border } },
-    { name: 'spacing', style: { spacing: PROBE_STYLE.spacing } },
+    { name: 'full', style: V_STYLE(PROBE_STYLE), fontFamily: 'pf', fontSize: 'large' },
+    { name: 'colors', style: V_STYLE({ color: PROBE_STYLE.color }) },
+    { name: 'text-only', style: V_STYLE({ color: { text: '#222222' } }) },
+    { name: 'type', style: V_STYLE({ typography: PROBE_STYLE.typography }) },
+    { name: 'border', style: V_STYLE({ border: PROBE_STYLE.border }) },
+    { name: 'spacing', style: V_STYLE({ spacing: PROBE_STYLE.spacing }) },
+    // Preset slugs produce has-{slug}-color / has-{slug}-background-color,
+    // which sit in a different place from the literal has-text-color pair.
+    { name: 'presets', style: V_STYLE({}), backgroundColor: 'palette-color-6',
+      textColor: 'palette-color-1', fontFamily: 'pf', fontSize: 'large' },
+    // Text alignment WITHOUT anything else, so its class is constrained
+    // against the wrapper classes rather than only against typography.
+    { name: 'align', style: V_STYLE({ typography: { textAlign: 'left' } }) },
   ];
 
   // Fill the attributes a block needs before save() will produce anything -
@@ -146,7 +167,9 @@
       for (const v of VARIANTS) {
         const attrs = fillContent(type, {
           ...B.getBlockAttributes(type, ''), className: PROBE_CLASS,
-          style: v.style, fontFamily: v.fontFamily, fontSize: v.fontSize
+          align: v.align || 'full', textAlign: v.textAlign,
+          style: v.style, fontFamily: v.fontFamily, fontSize: v.fontSize,
+          backgroundColor: v.backgroundColor, textColor: v.textColor
         });
         let html;
         try { html = B.getSaveContent(type, attrs, []); } catch (e) { continue; }

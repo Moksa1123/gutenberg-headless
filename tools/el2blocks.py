@@ -324,44 +324,13 @@ class Style:
                         "outline", "background", "dimensions", "elements", "css"],
     }
 
-    # The order of the DECLARATIONS in the saved inline style, read out of the
-    # editor itself: `getSaveContent` on synthetic attributes that set every
-    # style group, for each block type. It is a flat CSS-property order, not an
-    # order over the style object's groups - which is what this file assumed,
-    # and why a page could be valid in the editor and still not survive its
-    # resave byte for byte.
-    CSS_ORDER = [
-        "border-color", "border-style", "border-width", "border-radius",
-        "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
-        "border-top-left-radius", "border-top-right-radius",
-        "border-bottom-right-radius", "border-bottom-left-radius",
-        "color", "background", "background-color", "background-image",
-        "background-size", "background-position", "background-repeat",
-        # dimensions, in the editor's own order: height, min-height, width
-        "aspect-ratio", "height", "min-height", "width", "max-width",
-        "margin-top", "margin-right", "margin-bottom", "margin-left",
-        "padding-top", "padding-right", "padding-bottom", "padding-left",
-        "font-family", "font-size", "font-style", "font-weight",
-        "letter-spacing", "line-height", "text-decoration", "text-transform",
-        "box-shadow", "outline-color", "outline-style", "outline-width", "outline-offset",
-    ]
-    # core/button composes its own: box-shadow lands BEFORE typography on the
-    # link, and min-height belongs to the wrapper instead.
-    CSS_ORDER_BY_BLOCK = {
-        "core/button": [
-            "border-color", "border-style", "border-width", "border-radius",
-            "border-top-width", "border-right-width", "border-bottom-width", "border-left-width",
-            "color", "background", "background-color", "background-image",
-            "margin-top", "margin-right", "margin-bottom", "margin-left",
-            "padding-top", "padding-right", "padding-bottom", "padding-left",
-            "box-shadow",
-            "font-family", "font-size", "font-style", "font-weight",
-            "letter-spacing", "line-height", "text-decoration", "text-transform",
-        ],
-    }
-
-    # Within spacing, the editor emits margin before padding - and within a box,
-    # top/right/bottom/left. Both are insertion-order dependent in the output.
+    # These order the STYLE OBJECT's keys - what goes in the comment JSON -
+    # which is a different question from the order of the inline CSS the
+    # object compiles to (that comes from the measurement, see css_order).
+    # The editor reserializes the object exactly as it parsed it, so this only
+    # has to be self-consistent, but the editor emits margin before padding and
+    # top/right/bottom/left within a box, and matching it keeps a hand-edited
+    # page and a generated one looking alike.
     SUB_ORDER = {"spacing": ["margin", "padding", "blockGap"],
                  "typography": ["fontSize", "fontFamily", "fontStyle", "fontWeight",
                                 "letterSpacing", "lineHeight", "textAlign",
@@ -388,9 +357,10 @@ class Style:
     def resolve(self, block=None):
         self.normalize(block)
         rules, classes, _ = gblib.style_expectations(self.style, block)
-        order = self.CSS_ORDER_BY_BLOCK.get(block or "", self.CSS_ORDER)
-        rank = {p: i for i, p in enumerate(order)}
-        rules = sorted(rules, key=lambda pv: (rank.get(pv[0], len(order)), pv[0]))
+        b = block or ""
+        props = [p for p, _ in rules]
+        rules = apply_order(rules, props,
+                            canonical_constraints(b, "css", styled_element(b)))
         inline = []
         for p, v in rules:
             inline.append(f"{p}:{v}")
@@ -677,86 +647,247 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
             note("info", widget, f"{ctrl} -> style.css ({prop}: no block-native path)")
 
 
-def class_rank(c: str) -> int:
-    """Where a class sits in the list the editor's save() produces.
-
-    Measured the same way as CSS_ORDER - `getSaveContent` with every class-
-    producing attribute set at once:
-
-        wp-block-group alignfull <className> has-border-color has-custom-css
-        has-text-color has-background has-x-font-family has-large-font-size
-
-    An out-of-order class list is still VALID (the validator compares class
-    tokens as a set) but not byte-identical, so the editor's next save
-    reshuffles it - and on this page that alone was 1,731 bytes of drift."""
-    if c.startswith("wp-block-"):
-        return 0
-    if c.startswith("align"):
-        return 1
-    if c.startswith("has-text-align-"):
-        return 2
-    if c.startswith("el2b-") or c == "has-custom-font-size":
-        # Both of these reach the markup through the block's `className`
-        # attribute, and the parser emits that attribute's classes as one
-        # group. (On a core/button LINK, has-custom-font-size is generated by
-        # save() instead and sits near the end - see BUTTON_LINK_RANK.)
-        return 3
-    if c == "has-border-color":
-        return 4
-    if c == "has-custom-css":
-        return 5
-    if c == "has-text-color":
-        return 6
-    if c == "has-background":
-        return 7
-    if c.endswith("-font-family"):
-        return 8
-    if c.endswith("-font-size"):
-        return 9
-    if c == "wp-element-button":
-        return 11
-    return 10
+_SURFACE = [None]
+_ORDER_CACHE: dict = {}
+PROBE_CLASS = "ZZPROBECLS"
 
 
-# core/button's <a> is built by the block's own save(), not by the className
-# support, so its list runs in a different order - measured the same way:
-#   wp-block-button__link has-text-color has-background has-border-color
-#   has-x-font-family has-large-font-size has-custom-font-size wp-element-button
-def button_link_rank(c: str) -> int:
-    for i, want in enumerate(("wp-block-button__link", "has-text-color",
-                              "has-background", "has-border-color")):
-        if c == want:
-            return i
-    if c.endswith("-font-family"):
-        return 4
-    if c == "has-custom-font-size":
-        return 6
-    if c.endswith("-font-size"):
-        return 5
-    if c == "wp-element-button":
-        return 8
-    return 7
+def _surface():
+    """data/editor-surface.json - what each block's save() actually writes.
+
+    This file replaces four hand-written tables that used to live in this
+    module. They were derived from FOUR blocks by reading the editor's output
+    by hand, and they were wrong twice: once about where `className` sits in
+    the class list, once about the inline-CSS order being an order over style
+    GROUPS rather than over CSS properties. Reading the measurement instead
+    means a different site, or the next WordPress release, moves the converter
+    with it."""
+    if _SURFACE[0] is None:
+        p = Path(__file__).resolve().parent.parent / "data" / "editor-surface.json"
+        try:
+            _SURFACE[0] = json.loads(p.read_text(encoding="utf-8"))["blocks"]
+        except Exception:
+            note("warn", "-", "data/editor-surface.json missing - canonical ordering "
+                              "falls back to input order; markup stays valid but the "
+                              "editor's next save may reshuffle it")
+            _SURFACE[0] = {}
+    return _SURFACE[0]
 
 
-def order_classes(classes, rank=class_rank):
-    seen = list(dict.fromkeys(c for c in classes if c))
-    return sorted(seen, key=lambda c: (rank(c), seen.index(c)))
+def apply_order(items, tokens, before):
+    """Order `items` by the constraints in `before`, keeping input order
+    wherever save() does not decide.
+
+    A total order cannot express this block surface. core/separator emits
+    has-text-color before has-alpha-channel-opacity when a background is set
+    and after when it is not - so any single list picks one and rewrites the
+    other case. Sorting by stable constraints only leaves the undecided pairs
+    exactly as the converter emitted them, which is what the editor does too."""
+    remaining = list(range(len(items)))
+    out = []
+    while remaining:
+        for pos, i in enumerate(remaining):
+            if not any((tokens[k], tokens[i]) in before for k in remaining if k != i):
+                out.append(items[i])
+                remaining.pop(pos)
+                break
+        else:                                   # cycle - impossible, never hang
+            out.extend(items[k] for k in remaining)
+            break
+    return out
 
 
-def wrapper(tag, classes, inline, inner, *, extra="", rank=class_rank,
-            extra_after=False):
+def canonical_constraints(block: str, kind: str, element: int = 0) -> set:
+    """Pairs (a, b) meaning save() always writes a before b."""
+    key = (block, kind, element, "pairs")
+    if key in _ORDER_CACHE:
+        return _ORDER_CACHE[key]
+    rec = (_surface().get(block) or {}).get("save") or {}
+    if element == 0:
+        lists = [v.get(kind) or [] for v in (rec.get("variants") or [])]
+    else:
+        els = rec.get("elements") or []
+        lists = [els[element].get(kind) or []] if len(els) > element else []
+    before, conflicting = set(), set()
+    for lst in [x for x in lists if x]:
+        idx = {t: i for i, t in enumerate(lst)}
+        for a in lst:
+            for b in lst:
+                if a != b and idx[a] < idx[b]:
+                    if (b, a) in before:
+                        conflicting.add((a, b))
+                        conflicting.add((b, a))
+                    before.add((a, b))
+    _ORDER_CACHE[key] = before - conflicting
+    return _ORDER_CACHE[key]
+
+
+def canonical_order(block: str, kind: str, element: int = 0) -> list[str]:
+    """A total order for `kind` ('classes' or 'css') on one element of `block`.
+
+    The probe records several attribute combinations, and a block's order is
+    not always the same list across them (core/separator moves
+    has-text-color relative to has-alpha-channel-opacity depending on whether a
+    background is set). So the orderings that hold in EVERY probe are collected
+    as pairwise constraints and topologically sorted; a pair that ever flips
+    constrains nothing."""
+    key = (block, kind, element)
+    if key in _ORDER_CACHE:
+        return _ORDER_CACHE[key]
+
+    rec = (_surface().get(block) or {}).get("save") or {}
+    if element == 0:
+        lists = [v.get(kind) or [] for v in (rec.get("variants") or [])]
+    else:
+        els = rec.get("elements") or []
+        lists = [els[element].get(kind) or []] if len(els) > element else []
+    lists = [x for x in lists if x]
+
+    before, conflicting = set(), set()
+    seen: list[str] = []
+    for lst in lists:
+        for t in lst:
+            if t not in seen:
+                seen.append(t)
+        idx = {t: i for i, t in enumerate(lst)}
+        for a in lst:
+            for b in lst:
+                if a == b:
+                    continue
+                if idx[a] < idx[b]:
+                    if (b, a) in before:
+                        conflicting.add((a, b))
+                        conflicting.add((b, a))
+                    before.add((a, b))
+    before -= conflicting
+
+    # Stable topological sort: repeatedly take the first token nothing
+    # unplaced must precede.
+    order, remaining = [], list(seen)
+    while remaining:
+        for t in remaining:
+            if not any((o, t) in before for o in remaining if o != t):
+                order.append(t)
+                remaining.remove(t)
+                break
+        else:                       # a cycle cannot happen, but never hang
+            order.extend(remaining)
+            break
+    _ORDER_CACHE[key] = order
+    return order
+
+
+def attr_after_class(block: str, element: int, attr: str) -> bool:
+    """Does save() write `attr` AFTER the class attribute on this element?
+
+    Attribute order inside the tag is part of byte-identity: core/button emits
+    `<a class="..." href="...">`, and writing the href first is valid, renders
+    identically, and is rewritten on the editor's next save."""
+    els = ((_surface().get(block) or {}).get("save") or {}).get("elements") or []
+    if len(els) <= element:
+        return False
+    order = els[element].get("attrs") or []
+    if attr not in order or "class" not in order:
+        return False
+    return order.index(attr) > order.index("class")
+
+
+def styled_element(block: str) -> int:
+    """Which element of this block carries the style attribute.
+
+    core/button splits itself: the wrapper takes min-height, the <a> takes
+    everything else. Picking the richest one from the measurement avoids
+    naming the block here."""
+    els = ((_surface().get(block) or {}).get("save") or {}).get("elements") or []
+    best, best_n = 0, -1
+    for i, el in enumerate(els):
+        n = len(el.get("css") or [])
+        if n > best_n:
+            best, best_n = i, n
+    return best
+
+
+def css_order(block: str) -> list[str]:
+    return canonical_order(block, "css", styled_element(block))
+
+
+def token_fn(block: str, element: int = 0, declared: set | None = None):
+    """Map a class in OUR markup to the token the probe recorded for it.
+
+    `declared` is what went into the block's `className` attribute; those land
+    wherever the probe's placeholder landed, whatever they are called. The same
+    class can arrive two ways: core/button's save() GENERATES
+    `has-custom-font-size` near the end of the link's list, while core/heading
+    does not generate it at all and it reaches the markup only through
+    className, early."""
+    known = set(canonical_order(block, "classes", element))
+    declared = declared or set()
+
+    def token_of(c: str) -> str:
+        if c in declared and c not in known:
+            return PROBE_CLASS
+        if c in known:
+            return c
+        if c.startswith("el2b-"):
+            return PROBE_CLASS
+        # A class from a family the probe sampled once - it recorded
+        # has-text-align-LEFT and the page uses right - stands in for its sibling.
+        if c.startswith("has-text-align-"):
+            for k in known:
+                if k.startswith("has-text-align-"):
+                    return k
+        for suffix, kin in (("-font-size", "has-large-font-size"),
+                            ("-font-family", "has-pf-font-family"),
+                            ("-background-color", "has-background"),
+                            ("-color", "has-text-color")):
+            if c.endswith(suffix) and kin in known:
+                return kin
+        return c          # unknown: constrained by nothing, keeps its place
+
+    return token_of
+
+
+def wrapper(tag, classes, inline, inner, *, extra="", extra_after=False):
     """`extra_after` puts the block-specific attributes AFTER class.
 
     Attribute order inside the tag is part of byte-identity too: core/button's
     save() emits `<a class="..." href="..." style="...">`, and writing the href
     first is valid, renders the same, and still makes the editor's resave
     rewrite the tag."""
-    cls = " ".join(order_classes(classes, rank))
+    # Class ORDER is applied later, in comment(), where the block name is
+    # known - see canonicalize_classes.
+    cls = " ".join(dict.fromkeys(c for c in classes if c))
     head = ([f'class="{cls}"'] if cls else [])
     tail = ([f'style="{inline}"'] if inline else [])
     mid = [extra] if extra else []
     bits = [tag] + (head + mid if extra_after else mid + head) + tail
     return f"<{' '.join(bits)}>{inner}</{tag}>"
+
+
+def canonicalize_classes(block: str, html: str, class_name: str = "") -> str:
+    """Reorder the class attribute of this block's OWN elements to match save().
+
+    Only the part of the markup before the first nested block. `inner` contains
+    the whole subtree, so numbering every class attribute in it hands a child's
+    classes the parent's element index - which is not a shape at all, and it
+    sorted a paragraph's classes into the order of a group's third element."""
+    if not (_surface().get(block) or {}).get("save"):
+        return html
+    cut = html.find("<!-- wp:")
+    head, tail = (html[:cut], html[cut:]) if cut != -1 else (html, "")
+    idx = [0]
+    declared = set(class_name.split())
+
+    def fix(m):
+        i = idx[0]
+        idx[0] += 1
+        classes = list(dict.fromkeys(m.group(1).split()))
+        tok = token_fn(block, i, declared)
+        ordered = apply_order(classes, [tok(c) for c in classes],
+                              canonical_constraints(block, "classes", i))
+        return f'class="{" ".join(ordered)}"'
+
+    return re.sub(r'class="([^"]*)"', fix, head) + tail
 
 
 def _blockdef(name):
@@ -794,6 +925,14 @@ def comment(name, attrs, inner=None):
                 existing = [c for c in (attrs.get("className") or "").split() if c]
                 attrs["className"] = " ".join(
                     dict.fromkeys(mine + existing))
+
+    # Put every element's class list in the order this block's save() writes.
+    # Doing it HERE, where the block name is known and the markup is already
+    # built, keeps one choke point instead of threading an ordering through
+    # every converter - and means each converter can emit classes in whatever
+    # order reads best.
+    if inner:
+        inner = canonicalize_classes(name, inner, attrs.get("className", "") if attrs else "")
 
     # Attribute order in the comment JSON follows the block's REGISTERED
     # attribute order (the editor iterates blockType.attributes), not insertion
@@ -834,7 +973,7 @@ def conv_heading(e, ctx) -> str:
         apply_element_width(st, s)
         st.layout_css("margin-block:0")
     
-        style, classes, inline = st.resolve()
+        style, classes, inline = st.resolve("core/paragraph")
         attrs = {"style": style} if style else {}
         return comment("core/paragraph", attrs,
                        wrapper("p", classes, inline, s.get("title", "")))
@@ -848,7 +987,7 @@ def conv_heading(e, ctx) -> str:
     # every heading picks up the theme's own top margin (measured: 8-18px on
     # 7 elements, which then reflows their width).
     st.layout_css("margin-block:0")
-    style, classes, inline = st.resolve()
+    style, classes, inline = st.resolve("core/heading")
     attrs = {}
     if level != 2:
         attrs["level"] = level
@@ -874,7 +1013,7 @@ def conv_text_editor(e, ctx) -> str:
     apply_element_width(st, s)
     st.layout_css("margin-block:0")
     
-    style, classes, inline = st.resolve()
+    style, classes, inline = st.resolve("core/paragraph")
     attrs = {"style": style} if style else {}
     m = re.fullmatch(r"<p>(.*?)</p>", raw, re.S)
     if m or (raw and not re.search(r"<(ul|ol|table|div|h[1-6])", raw, re.I)):
@@ -962,7 +1101,7 @@ def conv_button(e, ctx) -> str:
         attrs["className"] = " ".join(design_cls)
     a = wrapper("a", link_cls, inline, s.get("text", ""),
                 extra=f'href="{html.escape(href)}"' if href else "",
-                rank=button_link_rank, extra_after=True)
+                extra_after=attr_after_class("core/button", 1, "href"))
     button = comment("core/button", attrs, wrapper("div", wrap_cls, "", a))
     layout = {}
     if s.get("align") in ALIGN:
@@ -980,7 +1119,7 @@ def conv_image(e, ctx) -> str:
     st = Style()
     auto_style(st, "image", s, ctx["elmap"], ctx["cssmap"], prefix_filter="image_")
     apply_element_width(st, s)
-    style, classes, inline = st.resolve()
+    style, classes, inline = st.resolve("core/image")
     attrs = {"id": iid} if iid else {}
     if style:
         attrs["style"] = style
@@ -1084,7 +1223,7 @@ def conv_icon_list(e, ctx) -> str:
     if isinstance(marker, str) and marker:
         note("info", "icon-list", f"icons -> list markers in {marker}")
 
-    _s, classes, _inline = st.resolve()
+    _s, classes, _inline = st.resolve("core/list")
 
     # Elementor draws a Font Awesome glyph; a block list draws a ::marker. A
     # `disc` for every icon is a visible downgrade - the reference page uses
@@ -1369,7 +1508,7 @@ def convert_element(e, ctx) -> str:
         full = s.get("content_width") == "full" or (s.get("width") or {}).get("size") == 100
 
 
-        style, classes, inline = st.resolve()
+        style, classes, inline = st.resolve("core/group")
         attrs = {}
         if full:
             attrs["align"] = "full"

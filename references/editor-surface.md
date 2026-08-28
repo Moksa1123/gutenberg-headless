@@ -101,6 +101,43 @@ and reports a violation of those as **W-ORDER**.
 Treating a single probe as THE order produced four false positives on a page the
 editor itself had confirmed byte-identical - which is worse than no check.
 
+## The converter reads this file instead of a table
+
+`el2blocks.py` used to carry four hand-written ordering tables, derived by
+reading the editor's output for FOUR blocks. They were wrong twice - about
+where `className` sits in the class list, and about the inline CSS order being
+an order over style *groups* rather than over CSS properties. Both cost a
+round of "the page looks right and the editor rewrites it".
+
+It now derives all of it from `data/editor-surface.json`:
+
+| what | from |
+|---|---|
+| inline CSS declaration order | the probes' `css` lists |
+| class order | the probes' `classes` lists |
+| where `className` goes | the position of the probe's placeholder class |
+| which element carries the style | the element with the most declarations |
+| `class` before `href` in the tag | the element's recorded attribute order |
+
+Two things make that work on real markup rather than only on the probe's:
+
+- **Only stable pairs reorder anything.** The probes are intersected into
+  pairwise constraints; a pair whose order ever flips constrains nothing and
+  the converter's own order survives. Without this, every separator on a page
+  with a coloured-but-not-backgrounded rule was rewritten.
+- **A class the probe never produced stands in for its family.** The probe
+  records `has-text-align-left`; a page uses `right`. Same slot.
+
+The acceptance test is the strongest one available: the data-driven converter
+produces output **byte-identical** to the hand-tabled version on a 180-block
+page, and that page's round-trip through the editor is byte-identical too.
+
+One table stays hand-written on purpose: the order of the keys **inside the
+style object** in the comment JSON. The editor reserializes that object exactly
+as it parsed it, so any self-consistent order round-trips - which the identical
+round-trip on that page demonstrates. It is not measurable from `save()`,
+because it never reaches the saved HTML.
+
 ## Templates: four different things
 
 ```
