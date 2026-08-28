@@ -38,7 +38,7 @@ names; the converter folds each back onto its real property before lookup.
 | Elementor | block | notes |
 |---|---|---|
 | container / section / column | `core/group` | flex direction → `layout.type` (flex/constrained), justify → `layout.justifyContent`, `flex_gap` → `spacing.blockGap`, full width → `align:full` |
-| heading | `core/heading` | level from `header_size` (`div`/`span`/`p` → h2, reported) |
+| heading | `core/heading` or `core/paragraph` | real h1-h6 stay headings; `div`/`span`/`p` are styled TEXT and become paragraphs (reported) |
 | text-editor | `core/paragraph` or `core/html` | one `<p>` becomes a paragraph; richer HTML is kept verbatim |
 | button | `core/buttons` > `core/button` | link, label, colors, radius, padding; **hover colors become native `style[":hover"]`** (button is in the pseudo-state allowlist) |
 | image / image-box | `core/image` / group | |
