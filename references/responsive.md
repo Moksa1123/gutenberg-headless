@@ -101,3 +101,69 @@ the verdict.
 
 Run it at every width you claim to support, on the original and the new page
 both - see references/elementor-migration.md for what that found.
+
+## Sampling widths is not testing responsiveness
+
+`check-rwd.js` audits one width thoroughly. Seven of them - 390, 430, 768, 820,
+1024, 1366, 1440 - all reported PASS on the converted page.
+
+A continuous sweep of 320-1600px then found an overflow band at **1040-1152px**
+that none of those seven touches. Sampling cannot find what it does not sample,
+and a layout that passes at 1024 and 1366 says nothing about 1100.
+
+`tools/rwd-scan.js` returns a cheap per-width signature; the driver sweeps the
+range, notices where the signature changes, and binary-searches each change to
+the pixel. On the reference page that gives 25 reflow points, two of which are
+the declared breakpoints:
+
+```
+   768px   height 5593 -> 5468      Elementor's mobile breakpoint
+  1025px   height 5277 -> 4123      Elementor's tablet breakpoint
+```
+
+The rest are text rewrapping. A reflow at a width nobody declared is worth a
+look; a reflow at a declared one is the design working.
+
+### The signature has to ignore mere resizing
+
+The first version hashed rounded box geometry and reported a reflow at **80 of
+81 samples** - correctly, in a sense: a fluid layout's geometry changes
+continuously. It was useless.
+
+What separates a reflow from a resize is that elements change their
+ARRANGEMENT. The signature now records, per container, the layout mode
+(`display`, `flex-direction`, `flex-wrap`, grid column count) and **how many
+rows its children occupy**. Both are invariant while a layout merely shrinks,
+and both change the moment something wraps.
+
+### Content and chrome are different problems
+
+Overflow is counted per region, because mixing them makes a conversion audit
+useless. On the reference site the widest offender between 1040 and 1296px is
+the theme-builder HEADER: a nowrap flex row with a hardcoded `width: 1300px`,
+overflowing by exactly `(1300 - viewport) / 2` on **every page of the site**,
+converted or not. Attributing that to the page under test would have been
+wrong, and "fixing" it in the converter would have been worse.
+
+## An auto margin outranks the parent's alignment - and then gives up
+
+The sweep found a real conversion defect the seven-width audit could not: in the
+1040-1168px band the converted page overflowed **142px to one side** where the
+original overflowed **52px to each**.
+
+The cause is a CSS rule worth knowing. The converter centred a fixed-width
+content well with `margin-left:auto; margin-right:auto`. In flexbox an auto
+margin **outranks `align-items`**, and it only distributes POSITIVE free space -
+so on a viewport narrower than the well it resolves to 0 and pins the box to the
+start, while also suppressing the centring the parent was already doing.
+
+Measured at 1040px on a 1160px well:
+
+| | left | overflow |
+|---|---|---|
+| with auto margins | 22 | +142px, one side |
+| without | -68 | +52px, each side |
+| the Elementor original | -68 | +52px, each side |
+
+Every container this converter emits is a flex container, so the parent's
+`align-items` is always there to do the centring. The auto margins are gone.

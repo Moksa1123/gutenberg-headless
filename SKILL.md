@@ -235,6 +235,7 @@ python tools/build-indexes.py mine.json --out data/ \
 | `audit-coverage.py` | every Elementor control a page sets that the converter never read - turns "does it look right" into a finite list |
 | `collect-states.js` | hover/focus/transition on every interactive element, paired control-to-control - a resting-state diff cannot see any of it |
 | `check-rwd.js` | per-breakpoint layout audit: real overflow (a theme's `overflow-x:hidden` hides it from the scrollbar), tiny type, small targets |
+| `rwd-scan.js` | sweep a width RANGE, binary-search each reflow to the pixel, and count overflow separately for page content and site chrome - sampling seven widths missed an 8-width overflow band |
 | `collect-fingerprint.js` + `diff-fingerprints.py` | 35 computed properties per element on two pages, paired and diffed - the only honest answer to "does it match the original" |
 | `extract-block-schema.php` | dump a live site's full block surface + theme.json |
 | `extract-editor-surface.js` | run IN the editor: variations, transforms, deprecations, and the exact shape each block's save() writes |

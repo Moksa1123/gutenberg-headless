@@ -416,6 +416,7 @@ tools/
   collect-states.js          hover/focus/transition per interactive element
   audit-contrast.js          in-page WCAG contrast audit (gradients, cover dims, symbols)
   check-rwd.js               per-breakpoint overflow/type/target audit, clip-aware
+  rwd-scan.js                sweep a width RANGE and binary-search every reflow point
   collect-fingerprint.js     35 computed properties per element, for a real diff
   diff-fingerprints.py       pair two fingerprints, report only real differences
   extract-block-schema.php   dump a live site's full surface

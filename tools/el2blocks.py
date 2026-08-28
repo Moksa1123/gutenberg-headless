@@ -1445,10 +1445,23 @@ def convert_element(e, ctx) -> str:
                 if wv != "100%":
                     st.layout_css(f"flex:0 0 {wv};max-width:{wv}")
             else:
-                st.layout_css(f"max-width:{wv};margin-left:auto;margin-right:auto")
+                # NO auto margins. In flexbox an auto margin OUTRANKS the
+                # parent's align-items, and when free space is negative it
+                # resolves to 0 - so on a viewport narrower than the well, the
+                # rule meant to centre it pinned it to the left instead and
+                # defeated the centring the parent was already doing.
+                #
+                # Measured at a 1040px viewport on a 1160px well: with the auto
+                # margins the box sat at left:22 and overflowed 142px to one
+                # side; without them it sits at left:-68 and overflows 52px each
+                # way, which is exactly what the Elementor original does. Every
+                # container this converter emits is a flex container, so the
+                # parent's alignment is always there to do the work.
+                st.layout_css(f"max-width:{wv}")
         bw = size(s.get("boxed_width"))
         if bw:
-            st.layout_css(f"max-width:{bw};margin-left:auto;margin-right:auto")
+            # Same reasoning as `width` above: no auto margins in a flex parent.
+            st.layout_css(f"max-width:{bw}")
 
         # How this container behaves as a flex ITEM inside its parent - a
         # different axis from the layout controls above, which say how it
