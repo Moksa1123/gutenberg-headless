@@ -272,3 +272,69 @@ in the editor gives `"200px"`, not `200` and not `"200"` - because the markup
 matches `core/spacer`'s one deprecation, whose `migrate()` rewrote the value on
 read. `wp.blocks.serialize` then emits `{"height":"200px"}`. Accepted today,
 rewritten on the next save, with nothing anywhere reporting it.
+
+## The Site Editor, without switching themes
+
+Everything in this repo was extracted from a site running a CLASSIC theme,
+where the Site Editor does not exist. That left half of WordPress unmeasured -
+so the extractor gained a way to describe the site **as if** another installed
+theme were active:
+
+```bash
+wp eval-file tools/extract-block-schema.php twentytwentyfive > block-schema.json
+python tools/gb.py --schema block-schema.json templates
+```
+
+Nothing is written and no visitor sees a change: the theme is swapped by filter
+inside one CLI process, the theme.json caches are dropped, and the process
+exits. Verified afterwards - `wp theme list --status=active` still says
+`blocksy`.
+
+**What that is faithful for, and what it is not**, established by diffing the
+two extractions rather than assumed:
+
+| | as-if extraction |
+|---|---|
+| theme.json settings, presets, layout, viewport | **correct** - the palette changes from `palette-color-*` to `accent-1..6`/`base` |
+| templates, template parts, style variations, customTemplates | **correct** - 8 / 7 / 23 / 1 |
+| `theme_supports` | **stale** - still the ACTIVE theme's |
+
+The stale row has a reason: `add_theme_support()` runs at `after_setup_theme`,
+long before a CLI script can filter anything. The output carries a
+`pretending` block saying so, and `gb.py templates` prints it.
+
+(One near-miss worth recording: the preset COUNTS matched between the two
+themes - 20 colours each - which read like the swap had not worked. The slugs
+were completely different. A count is not a comparison.)
+
+## What a block theme adds
+
+```
+templates      : 8   (single, archive, page-no-title, 404, page, search, home, index)
+template parts : 7   (header, footer, sidebar, vertical-header, ...)
+part areas     : uncategorized, header, footer, navigation-overlay
+style variations: 23
+customTemplates: page-no-title -> page
+```
+
+Two numbers in that output measure different things and must not be confused:
+`wp_template: 0 in the database` counts records a USER edited, while
+`templates: 8` counts what the Site Editor offers, which on an untouched theme
+is entirely files. A template's `source` says which it is - `theme` for the
+file, `custom` once someone edited it and the database copy started winning.
+That distinction is the whole of "why does the site not look like the theme any
+more".
+
+`wp_global_styles` is the third layer of the theme.json cascade (core → theme →
+**user**), one post per theme, joined by a `wp_theme` taxonomy term. It exists
+even on a classic theme: three of them here, each a 48-byte empty shell.
+
+## The model already handles FSE markup
+
+Twenty Twenty-Five's 8 templates and 7 template parts were run through the
+validator - block markup written by core, using `core/template-part`,
+`core/pattern`, query loops and `core/post-content`, none of which the
+reference site's own pages exercise.
+
+**15 of 15 clean, zero findings.** The rules built on a classic-theme site
+describe a block theme's markup correctly.

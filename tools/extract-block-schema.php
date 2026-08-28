@@ -25,6 +25,50 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit( 1 );
 }
 
+/**
+ * Optional: describe the site AS IF another theme were active.
+ *
+ *   wp eval-file tools/extract-block-schema.php twentytwentyfive
+ *
+ * Nothing is written and nothing changes for a visitor - the theme is swapped
+ * by filter inside this one CLI process, the theme.json caches are dropped, and
+ * the process exits. It exists because the block surface is a property of the
+ * THEME as much as of the site: presets, layout sizes, the whole Site Editor
+ * (templates, template parts, style variations) all appear or vanish with it.
+ * Planning a move to a block theme should not require performing it first.
+ */
+if ( ! empty( $args[0] ) ) {
+	$as_theme = preg_replace( '/[^a-z0-9_-]/i', '', (string) $args[0] );
+	$dir      = WP_CONTENT_DIR . '/themes/' . $as_theme;
+	if ( ! is_dir( $dir ) ) {
+		fwrite( STDERR, "theme '$as_theme' is not installed\n" );
+		exit( 1 );
+	}
+	foreach ( array( 'stylesheet', 'template' ) as $f ) {
+		add_filter( $f, function () use ( $as_theme ) { return $as_theme; } );
+	}
+	foreach ( array( 'stylesheet_directory', 'template_directory' ) as $f ) {
+		add_filter( $f, function () use ( $dir ) { return $dir; } );
+	}
+	if ( method_exists( 'WP_Theme_JSON_Resolver', 'clean_cached_data' ) ) {
+		WP_Theme_JSON_Resolver::clean_cached_data();
+	}
+	wp_clean_themes_cache();
+	// What this CANNOT do, measured by diffing the two extractions: it does not
+	// re-run the real theme's PHP. `add_theme_support()` calls fired at
+	// after_setup_theme long before these filters, so `theme_supports` below
+	// still describes the ACTIVE theme. Everything theme.json declares -
+	// presets, layout sizes, viewport, templates, parts, style variations -
+	// is read fresh and is correct.
+	$pretending = array(
+		'theme'  => $as_theme,
+		'faithful_for' => 'theme.json settings and styles, templates, template parts, '
+						. 'style variations, customTemplates, templateParts',
+		'stale_for'    => 'theme_supports (registered by the ACTIVE theme at after_setup_theme, '
+						. 'before this process could intervene)',
+	);
+}
+
 $registry = WP_Block_Type_Registry::get_instance();
 $blocks   = array();
 
@@ -143,6 +187,60 @@ foreach ( get_post_types( array(), 'objects' ) as $pt ) {
 		);
 	}
 }
+
+// ---- the Site Editor surface ------------------------------------------------
+// All of this is EMPTY on a classic theme and is the whole authoring surface on
+// a block one, so a schema that omits it describes only half the WordPresses
+// there are. The template types and part areas come from core and exist either
+// way; everything else is the active theme's.
+$templates['default_template_types'] = function_exists( 'get_default_block_template_types' )
+	? array_keys( get_default_block_template_types() ) : array();
+$templates['template_part_areas'] = function_exists( 'get_allowed_block_template_part_areas' )
+	? wp_list_pluck( get_allowed_block_template_part_areas(), 'area' ) : array();
+
+$templates['resolved'] = array( 'wp_template' => array(), 'wp_template_part' => array() );
+if ( function_exists( 'get_block_templates' ) ) {
+	foreach ( array( 'wp_template', 'wp_template_part' ) as $pt ) {
+		foreach ( get_block_templates( array(), $pt ) as $t ) {
+			$templates['resolved'][ $pt ][] = array(
+				'slug'   => $t->slug,
+				'title'  => $t->title,
+				// `theme` means it comes from a file; `custom` means a user
+				// edited it and it now lives in the database, overriding the file.
+				'source' => $t->source,
+				'area'   => isset( $t->area ) ? $t->area : null,
+				'bytes'  => strlen( (string) $t->content ),
+			);
+		}
+	}
+}
+
+// theme.json's own declarations - the parts a theme offers and the templates it
+// lets an author pick per post.
+$theme_json_raw = array();
+if ( class_exists( 'WP_Theme_JSON_Resolver' ) ) {
+	$theme_data = WP_Theme_JSON_Resolver::get_theme_data();
+	$raw = $theme_data ? $theme_data->get_raw_data() : array();
+	foreach ( array( 'templateParts', 'customTemplates' ) as $k ) {
+		if ( ! empty( $raw[ $k ] ) ) {
+			$theme_json_raw[ $k ] = $raw[ $k ];
+		}
+	}
+	// Alternate palettes a block theme ships in styles/*.json.
+	if ( method_exists( 'WP_Theme_JSON_Resolver', 'get_style_variations' ) ) {
+		$vars = WP_Theme_JSON_Resolver::get_style_variations();
+		$theme_json_raw['style_variations'] = array_values( array_filter( array_map(
+			function ( $v ) { return isset( $v['title'] ) ? $v['title'] : null; },
+			(array) $vars
+		) ) );
+	}
+	// The USER layer of the cascade: one wp_global_styles post per theme,
+	// highest priority of all. It exists even on a classic theme, usually empty.
+	$user = WP_Theme_JSON_Resolver::get_user_data();
+	$user_raw = $user ? $user->get_raw_data() : array();
+	$theme_json_raw['user_overrides'] = array_values( array_diff( array_keys( $user_raw ), array( 'version' ) ) );
+}
+$templates['theme_json'] = $theme_json_raw;
 
 // ---- what the EDITOR is configured to allow ---------------------------------
 // get_block_editor_settings() is where "can a human change this here" is
@@ -272,6 +370,7 @@ $out = array(
 	'block_style_defaults' => $block_styles_defaults,
 	'block_settings'     => $block_settings,
 	'block_breakpoints'  => $block_breakpoints,
+	'pretending'         => isset( $pretending ) ? $pretending : null,
 );
 
 echo wp_json_encode( $out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );

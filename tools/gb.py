@@ -564,9 +564,12 @@ def cmd_templates(s, a):
     t = s.get("templates") or {}
     block_theme = t.get("is_block_theme")
     print(f"theme            : {'BLOCK theme' if block_theme else 'CLASSIC theme'}")
-    print(f"wp_template      : {t.get('wp_template', 0)}"
-          + ("" if block_theme else "   (not available - classic themes have no Site Editor templates)"))
-    print(f"wp_template_part : {t.get('wp_template_part', 0)}")
+    # These count DATABASE records, which exist only where a user edited a
+    # template; the files the theme ships are counted under Site Editor below.
+    # Printing one number without the other reads as a contradiction.
+    print(f"wp_template      : {t.get('wp_template', 0)} in the database (user-edited only)"
+          + ("" if block_theme else "   - classic theme, so none are possible"))
+    print(f"wp_template_part : {t.get('wp_template_part', 0)} in the database")
     print(f"synced patterns  : {t.get('synced_patterns', 0)}   (wp_block post type - edit once, changes everywhere)")
     print(f"registered patterns: {len(s.get('patterns', []))}   (inserted as a COPY, then independent)")
     pts = t.get("post_type_templates") or []
@@ -576,6 +579,47 @@ def cmd_templates(s, a):
     overrides = any(b["name"] == "core/pattern-overrides" for b in (s.get("binding_sources") or []))
     print(f"pattern overrides: {'available' if overrides else 'NOT registered'}"
           f"   (a synced pattern with per-instance editable slots, bound to attributes marked role:content)")
+
+    pre = s.get("pretending")
+    if pre:
+        print(f"\n[ describing the site AS IF '{pre['theme']}' were active - nothing was changed ]")
+        print(f"  faithful for: {pre['faithful_for']}")
+        print(f"  STALE for   : {pre['stale_for']}")
+
+    # --- the Site Editor ---
+    res = t.get("resolved") or {}
+    tpl, parts = res.get("wp_template") or [], res.get("wp_template_part") or []
+    tj = t.get("theme_json") or {}
+    print(f"\nSite Editor")
+    if not block_theme and not tpl:
+        print("  not available - a classic theme has no wp_template, and the page frame")
+        print("  stays the theme's PHP. Everything below is what a BLOCK theme would add.")
+    print(f"  templates      : {len(tpl)}" +
+          (f"   ({', '.join(x['slug'] for x in tpl[:8])})" if tpl else ""))
+    if tpl:
+        # `theme` = still the file; `custom` = someone edited it and the database
+        # copy now wins. That distinction is the whole of "why does the site not
+        # look like the theme any more".
+        cust = [x["slug"] for x in tpl if x.get("source") == "custom"]
+        print(f"    of which user-edited (source=custom): {len(cust)}"
+              + (f" - {', '.join(cust)}" if cust else ""))
+    print(f"  template parts : {len(parts)}" +
+          (f"   ({', '.join(x['slug'] for x in parts[:8])})" if parts else ""))
+    print(f"  part areas     : {', '.join(t.get('template_part_areas') or [])}")
+    print(f"  template types core knows: {len(t.get('default_template_types') or [])}")
+    if tj.get("templateParts"):
+        print(f"  theme.json templateParts: "
+              + ", ".join(f"{x.get('name')}({x.get('area')})" for x in tj["templateParts"][:8]))
+    if tj.get("customTemplates"):
+        print(f"  customTemplates: "
+              + ", ".join(f"{x.get('name')} -> {','.join(x.get('postTypes') or [])}"
+                          for x in tj["customTemplates"]))
+    sv = tj.get("style_variations") or []
+    print(f"  style variations: {len(sv)}" + (f"   {', '.join(sv[:8])}" if sv else ""))
+    uo = tj.get("user_overrides")
+    if uo is not None:
+        print(f"  user global-styles overrides: "
+              + (", ".join(uo) if uo else "none (the wp_global_styles post is an empty shell)"))
 
 
 def cmd_skeleton(s, a):

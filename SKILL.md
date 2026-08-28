@@ -123,7 +123,16 @@ python tools/gb.py templates                      # the four different things ca
 python tools/gb.py settings                       # what the editor ALLOWS here, and what the theme already styles
 python tools/gb.py patterns --show hero-product   # canonical markup core/Woo/the theme ship, for THIS site
 python tools/gb.py rwd                            # every responsive mechanism here, with its real width
+python tools/gb.py templates                      # the Site Editor surface, if the theme has one
 ```
+
+The Site Editor exists only on a BLOCK theme. To describe a site as if another
+installed theme were active - without switching it - pass the theme to the
+extractor: `wp eval-file tools/extract-block-schema.php twentytwentyfive`.
+Nothing is written; the swap lives inside that one CLI process. It is faithful
+for everything theme.json declares and for templates, parts and style
+variations, and STALE for `theme_supports`, which the real theme registered at
+`after_setup_theme` before any filter could intervene. The output says so.
 
 Run `gb.py rwd` before writing any breakpoint. On the reference site FOUR
 different widths call themselves "mobile": `style["@mobile"]` is 689.98px (from
