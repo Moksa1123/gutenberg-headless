@@ -213,6 +213,13 @@ def style_expectations(style, block=None):
             continue
         for prop, val in props.items():
             key = (group, prop)
+            # An explicitly EMPTY value means "not set": the editor writes the
+            # key and emits no CSS for it. Treating it as a promise made the
+            # validator demand `min-height:` with no value - found by running
+            # these rules over WordPress's own shipped patterns, one of which
+            # carries `"dimensions":{"minHeight":""}`.
+            if val is None or (isinstance(val, str) and not val.strip()):
+                continue
             if key in RENDER_TIME_PROPS:
                 notes.append(f"style.{group}.{prop} (render-time)")
                 continue

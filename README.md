@@ -420,6 +420,8 @@ tools/
   diff-fingerprints.py       pair two fingerprints, report only real differences
   extract-block-schema.php   dump a live site's full surface
   extract-editor-surface.js  run IN the editor: variations, transforms, deprecations, save() shape
+  extract-patterns.php       every shipped pattern's markup - canonical, site-specific
+  selftest-patterns.py       run the validator's rules over WordPress's OWN markup
   sweep-render.php           render all blocks, record who shows nothing
   build-indexes.py           dumps + sweeps -> shipped data
 

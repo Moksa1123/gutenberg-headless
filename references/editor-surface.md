@@ -224,3 +224,51 @@ python tools/build-indexes.py data/block-schema.json --out data/
 
 Both must come from the SAME site: the two files are joined by block name, and
 mixing sites silently produces a schema that describes neither.
+
+## Checking the model against WordPress itself
+
+Every other check here asks whether a page agrees with the model.
+`tools/selftest-patterns.py` asks the opposite: whether the MODEL agrees with
+WordPress. The 86 registered patterns are serialized block markup written by
+core, WooCommerce and the theme, which makes them the largest corpus of
+canonical markup the target site has.
+
+It is run in `--pattern` mode, and that distinction is itself a measured fact:
+a pattern is parsed and re-serialized before it becomes page content, so its
+HTML is only a parsing vehicle. A group whose comment declares padding and
+whose HTML has no style attribute parses as **valid** and reserializes **with**
+`style="padding-top:100px"`. The same markup stored as post_content is a real
+defect - the front end renders the stored HTML verbatim, and nobody sees the
+padding until someone opens and saves the post.
+
+**Two validator bugs it found**, both fixed:
+
+- `"dimensions":{"minHeight":""}` - an explicitly empty value means "not set"
+  and the editor emits nothing for it. The validator was demanding
+  `min-height:` with no value.
+- A sourced attribute duplicated in the comment was reported as an ERROR.
+  Core's own patterns do it 22 times: `core/button`'s `url` alongside the
+  `<a href>`. When the HTML carries the same value it is redundant, not
+  broken - now W-SOURCED, and an error only when the value is absent from the
+  markup and therefore genuinely lost.
+
+**Four things that are simply true of core's own content** (57 of 86 patterns
+are completely clean; these are the rest):
+
+- **30 preset slugs that do not exist here.** Patterns ship assuming their own
+  theme's palette - `fontFamily:'inter'`, `fontSize:'extra-small'` - and on a
+  classic-theme site those classes style nothing. Patterns are site-dependent
+  exactly like everything else in this repo.
+- **29 attributes belonging to a DEPRECATED form.** `core/query`'s
+  `displayLayout` is declared by deprecations #1-#4 and by no current
+  attribute; `core/separator`'s `customColor` by deprecation #0. WordPress
+  ships patterns written against old block forms.
+- **22 redundant sourced copies.**
+- **5 duplicate anchors** inside a single pattern - two elements with `#300`.
+
+The clearest single example of the central trap is core's own spacer pattern.
+It writes `{"height":200}` where the current attribute is a string. Parsing it
+in the editor gives `"200px"`, not `200` and not `"200"` - because the markup
+matches `core/spacer`'s one deprecation, whose `migrate()` rewrote the value on
+read. `wp.blocks.serialize` then emits `{"height":"200px"}`. Accepted today,
+rewritten on the next save, with nothing anywhere reporting it.

@@ -121,7 +121,14 @@ python tools/gb.py save core/button               # the exact shape save() write
 python tools/gb.py bindings                       # what metadata.bindings may name
 python tools/gb.py templates                      # the four different things called "template"
 python tools/gb.py settings                       # what the editor ALLOWS here, and what the theme already styles
+python tools/gb.py patterns --show hero-product   # canonical markup core/Woo/the theme ship, for THIS site
 ```
+
+The 86 shipped patterns are also the corpus the validator is checked against:
+`tools/selftest-patterns.py` runs its rules over markup WordPress itself wrote.
+It found two real bugs in those rules, and four things that are simply true of
+core's own content - including patterns that carry attributes belonging to a
+DEPRECATED form of their block.
 
 The last six read `data/editor-surface.json`, extracted from the EDITOR rather
 than the PHP registry - see references/editor-surface.md. The server reports 3

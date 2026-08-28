@@ -17,8 +17,9 @@ Errors (exit 1):
               shows it only after a recovery prompt
   E-TYPE      value's JSON type contradicts the schema type
   E-ENUM      value not in the attribute's enum
-  E-SOURCED   a sourced attribute written into the comment JSON - it lives in
-              the HTML; the comment copy does nothing
+  E-SOURCED   a sourced attribute is in the comment JSON and its value is NOT
+              in the HTML - the value is lost (a copy that matches the HTML is
+              only redundant: W-SOURCED)
   E-PRESET    preset slug that does not exist on this site - the class lands in
               the HTML but no CSS anywhere defines it, so it styles NOTHING
   E-CLASS     comment attr requires a has-*/align* class the saved HTML lacks
@@ -28,8 +29,11 @@ Errors (exit 1):
   E-EMPTY     content block with no saved HTML - renders literally nothing
 
 Warnings:
-  W-ATTR      attribute the server registry does not know - a typo (the editor
-              drops it silently) or a JS-registered attribute the server can't see
+  W-ATTR      attribute the server registry does not know, split three ways
+              against the editor's own list: registered in JS only, belonging to
+              a DEPRECATED form of the block, or in neither - a typo
+  W-SOURCED   a sourced attribute duplicated in the comment JSON, matching the
+              HTML - redundant, and the editor's next save removes it
   W-DYNHTML   inner HTML on a core pure-dynamic block (the callback regenerates it)
   W-CLASSNAME className/anchor in comment but not in the HTML
   W-WRAPPER   first element lacks the wp-block-* class this block normally carries
@@ -235,7 +239,7 @@ def canon_order(rep, where, srec, classes, first_style):
                      f"save() always puts them the other way")
 
 
-def validate(tree, schema, rep):
+def validate(tree, schema, rep, pattern=False):
     blocks = schema["blocks"]
     presets = gblib.presets(schema)
     seen_anchors = {}
@@ -258,13 +262,23 @@ def validate(tree, schema, rep):
         _tag, wrapper_classes, class_set = first_tag_classes(html)
         style_str = inline_style(html)
 
+        # In a pattern the saved HTML is never what a visitor gets - the
+        # editor parses it, and save() regenerates the markup on the next
+        # serialize. Measured: a group whose comment declares padding and whose
+        # HTML has no style attribute parses as VALID and reserializes WITH
+        # `style="padding-top:100px"`. In stored post_content the same markup
+        # is a real defect, because the front end renders the HTML verbatim and
+        # nobody sees the padding until someone opens and saves the post.
+        html_is_authoritative = not pattern
+
         srec = editor_surface().get(name)
         if srec is None and editor_surface():
             rep.warn("W-EDITOR", where,
                      "registered on the SERVER but not in the editor's block registry - "
                      "the page renders, and the editor cannot read or place this block")
         elif srec:
-            canon_order(rep, where, srec, wrapper_classes, first_style(html))
+            if html_is_authoritative:
+                canon_order(rep, where, srec, wrapper_classes, first_style(html))
             deprecated_form(rep, where, srec, _tag)
 
         # parent / ancestor
@@ -290,7 +304,8 @@ def validate(tree, schema, rep):
                     if not pure_dynamic and av in gblib.TEXT_ALIGN_VALUES:
                         cls = f"has-text-align-{av}"
                         if cls not in class_set:
-                            rep.err("E-CLASS", where,
+                            if html_is_authoritative:
+                                rep.err("E-CLASS", where,
                                     f"textAlign={av!r} requires class '{cls}' in the saved HTML")
                     continue
                 # fitText: client-injected when supports.typography.fitText.
@@ -299,22 +314,68 @@ def validate(tree, schema, rep):
                 # editor's deprecation path silently EATS the attribute.
                 if an == "fitText" and typo_sup.get("fitText"):
                     if av is True and not pure_dynamic and "has-fit-text" not in class_set:
-                        rep.err("E-CLASS", where,
+                        if html_is_authoritative:
+                            rep.err("E-CLASS", where,
                                 "fitText=true requires class 'has-fit-text' in the saved HTML "
                                 "- without it the editor migrates the attribute away")
                     continue
-                rep.warn("W-ATTR", where,
-                         f"{an!r} not in the server registry - a typo (dropped silently) "
-                         f"or a JS-registered attribute the server cannot see")
+                # "a typo OR a JS attribute" was a guess. With the editor's own
+                # attribute list on record, the three cases separate - and the
+                # middle one turned out to be common in WordPress's own shipped
+                # patterns, which carry attributes only a DEPRECATION declares.
+                sr = editor_surface().get(name) or {}
+                if an in (sr.get("attributes") or []):
+                    rep.warn("W-ATTR", where,
+                             f"{an!r} is registered in JavaScript only - the server registry "
+                             f"cannot see it, so nothing server-side can validate its value")
+                else:
+                    old = [d["index"] for d in (sr.get("deprecated") or [])
+                           if an in (d.get("changedAttributes") or [])]
+                    if old:
+                        rep.warn("W-ATTR", where,
+                                 f"{an!r} belongs to deprecated form{'s' if len(old) > 1 else ''} "
+                                 f"{', '.join('#%d' % i for i in old)} of this block, not to the "
+                                 f"current one - the editor accepts it and migrates it away")
+                    else:
+                        rep.warn("W-ATTR", where,
+                                 f"{an!r} is in neither the server nor the editor registry - "
+                                 f"a typo; the editor drops it silently")
                 continue
             if adef.get("source"):
-                rep.err("E-SOURCED", where,
-                        f"{an!r} is sourced from HTML (source:{adef['source']}) - "
-                        f"the comment copy does nothing; put it in the markup")
+                # A sourced attribute is READ from the HTML, so a copy in the
+                # comment is ignored. Whether that matters depends on the HTML:
+                # if it carries the same value the comment copy is redundant
+                # (the editor drops it on the next save), and if it does not,
+                # the value is genuinely lost. WordPress's own shipped patterns
+                # write the redundant form - core/button's `url` alongside the
+                # <a href> - 22 times, so calling it an error was wrong.
+                in_html = isinstance(av, str) and av and av in (html or "")
+                if in_html:
+                    rep.warn("W-SOURCED", where,
+                             f"{an!r} is sourced from the HTML (source:{adef['source']}); "
+                             f"the comment copy is redundant and the editor's next "
+                             f"save removes it")
+                else:
+                    rep.err("E-SOURCED", where,
+                            f"{an!r} is sourced from HTML (source:{adef['source']}) and the "
+                            f"markup does not carry the value - the comment copy does "
+                            f"nothing; put it in the markup")
                 continue
             if not check_type(av, adef):
+                # A type mismatch is usually a mistake, but sometimes it is the
+                # OLD type: WordPress's own spacer pattern writes
+                # {"height":200} where the current attribute is a string, the
+                # parse matches core/spacer's single deprecation, and its
+                # migrate() rewrites the value to "200px". Naming the
+                # deprecation turns "wrong type" into what actually happens.
+                sr = editor_surface().get(name) or {}
+                mig = [d["index"] for d in (sr.get("deprecated") or [])
+                       if d.get("hasMigrate") and an in (d.get("changedAttributes") or [])]
+                extra = (f" - this matches deprecated form{'s' if len(mig) > 1 else ''} "
+                         f"{', '.join('#%d' % i for i in mig)}, whose migrate() REWRITES the "
+                         f"value on read" if mig else "")
                 rep.err("E-TYPE", where, f"{an}={json.dumps(av, ensure_ascii=False)[:40]} "
-                        f"but schema says type:{adef.get('type')}")
+                        f"but schema says type:{adef.get('type')}{extra}")
             if "enum" in adef and av not in adef["enum"]:
                 rep.err("E-ENUM", where, f"{an}={av!r} not in {adef['enum']}")
 
@@ -328,15 +389,18 @@ def validate(tree, schema, rep):
             if not pure_dynamic:
                 for cls in gblib.classes_for(name, an, av, bdef):
                     if cls not in class_set:
-                        rep.err("E-CLASS", where, f"{an}={av!r} requires class '{cls}' "
+                        if html_is_authoritative:
+                            rep.err("E-CLASS", where, f"{an}={av!r} requires class '{cls}' "
                                 f"in the saved HTML - it is not there")
                 if an == "className" and isinstance(av, str):
                     missing = [c for c in av.split() if c not in class_set]
                     if missing:
-                        rep.warn("W-CLASSNAME", where, f"className {missing} not in the HTML class attr")
+                        if html_is_authoritative:
+                            rep.warn("W-CLASSNAME", where, f"className {missing} not in the HTML class attr")
                 if an == "anchor" and isinstance(av, str):
                     if f'id="{av}"' not in html:
-                        rep.warn("W-CLASSNAME", where, f'anchor "{av}" but no id="{av}" in the HTML')
+                        if html_is_authoritative:
+                            rep.warn("W-CLASSNAME", where, f'anchor "{av}" but no id="{av}" in the HTML')
                     if av in seen_anchors:
                         rep.warn("W-CLASSNAME", where, f"duplicate anchor #{av} (also {seen_anchors[av]})")
                     seen_anchors[av] = name
@@ -353,12 +417,14 @@ def validate(tree, schema, rep):
             for prop, val in rules:
                 want = re.sub(r"\s+", "", f"{prop}:{val}")
                 if want not in norm:
-                    rep.err("E-STYLE", where,
+                    if html_is_authoritative:
+                        rep.err("E-STYLE", where,
                             f"style attr promises {prop}:{val} - saved HTML inline style "
                             f"says {style_str[:60]!r}")
             for cls in style_classes:
                 if cls not in class_set:
-                    rep.err("E-CLASS", where,
+                    if html_is_authoritative:
+                        rep.err("E-CLASS", where,
                             f"style object requires class '{cls}' in the saved HTML")
 
         # emptiness / dead HTML. Many dynamic blocks keep saved HTML as their
@@ -374,7 +440,8 @@ def validate(tree, schema, rep):
         if (not pure_dynamic and html.strip() and name not in NO_WRAPPER_CLASS):
             expect = "wp-block-" + name.replace("core/", "").replace("/", "-")
             if expect not in set(wrapper_classes.split()):
-                rep.warn("W-WRAPPER", where, f"first element lacks '{expect}'"
+                if html_is_authoritative:
+                    rep.warn("W-WRAPPER", where, f"first element lacks '{expect}'"
                          " (theme CSS that targets it will miss)")
 
         for child in node.get("innerBlocks", []):
@@ -388,6 +455,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("file")
     ap.add_argument("--schema")
+    ap.add_argument("--pattern", action="store_true",
+                    help="the file is a block PATTERN, not stored post_content. A pattern is "
+                         "always parsed and re-serialized before it becomes page content, so "
+                         "its HTML is only a parsing vehicle: the checks that compare the two "
+                         "halves are relaxed, and the comment attributes are what matter.")
     args = ap.parse_args()
 
     src = Path(args.file).read_text(encoding="utf-8")
@@ -399,7 +471,7 @@ def main():
         print(f"E-PARSE    {e}")
         sys.exit(1)
 
-    validate(tree, schema, rep)
+    validate(tree, schema, rep, args.pattern)
     n_blocks = sum(1 for _ in blockmark.walk(tree))
     for w in rep.warnings:
         print(w)

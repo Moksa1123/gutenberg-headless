@@ -269,6 +269,20 @@ def cmd_styles(s, a):
 
 
 def cmd_patterns(s, a):
+    if a.show:
+        # The content is canonical markup written by core, WooCommerce or the
+        # theme, for THIS site - the best available starting point for a layout,
+        # and the corpus tools/selftest-patterns.py checks the validator against.
+        from pathlib import Path
+        p = Path(__file__).resolve().parent.parent / "data" / "patterns.json"
+        if not p.exists():
+            sys.exit("data/patterns.json not shipped - extract it with tools/extract-patterns.php")
+        for pat in json.loads(p.read_text(encoding="utf-8"))["patterns"]:
+            if pat["name"] == a.show or a.show in pat["name"]:
+                print(f"<!-- {pat['name']} - {pat['title']} -->")
+                print(pat["content"])
+                return
+        sys.exit(f"no pattern matching {a.show!r} - list them with `gb.py patterns`")
     for p in s.get("patterns", []):
         if a.grep and a.grep.lower() not in (p["name"] + p["title"]).lower():
             continue
@@ -582,6 +596,7 @@ def main():
     p = sub.add_parser("styles")
     p.add_argument("name", nargs="?")
     p = sub.add_parser("patterns")
+    p.add_argument("--show", help="print a pattern\'s markup - canonical, site-specific reference")
     p.add_argument("--grep")
     sub.add_parser("categories")
     p = sub.add_parser("var")
