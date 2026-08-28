@@ -194,6 +194,28 @@ After the fixes: of 53 same-tag comparable pairs, **12 differences remain, all
 of them width**, and all downstream of percentage columns resolving against a
 slightly different parent width — the ratios are consistent (76% of 1160 = 882).
 
+### The diff had a blind spot, and it hid the most visible bug of all
+
+A text-keyed fingerprint only sees elements that contain text. Six containers
+on this page draw a **1px top rule** as a section divider and hold no text of
+their own — so the diff said nothing while the converted page drew a **full
+2.4px box** around each of them, the most obvious error on the screen.
+
+Cause: Elementor stores border width **per side**
+(`{top:1, right:0, bottom:0, left:0}`); the block style object's `border.width`
+is one value. Collapsing four sides into one turns a divider into a frame.
+Uniform widths now stay native; anything per-side goes to the design layer
+where all four sides survive. Verified against the original: `0.8px/0/0/0` in
+`rgba(255,255,255,.1)` on both pages, and the CLIENT strip's top-and-bottom
+rule preserved.
+
+`tools/diff-fingerprints.py` now keys text-less elements by a box signature
+(border/background + position + width) so a divider-turned-frame cannot hide
+again, and its docstring carries the other trap this cost: **set the viewport
+explicitly on both pages before collecting** — a default window can be narrow
+enough to trip the responsive breakpoint, and then you are diffing desktop
+against mobile.
+
 Method note: `getComputedStyle` over every element of both pages, paired and
 diffed as data, is what found these. "Looks about right" would not have, and
 neither would a checklist of properties someone thought to check.

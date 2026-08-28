@@ -316,6 +316,27 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
             if b:
                 st.set(BOX_PROPS[base], b)
             continue
+
+        # Border width is PER SIDE in Elementor and a single value in the block
+        # style object. Measured on moksaweb.com: six containers use a 1px TOP
+        # rule as a divider (`{top:1, right:0, bottom:0, left:0}`); collapsing
+        # that to one value drew a 2.4px box around each of them - the most
+        # visible error on the page. Uniform widths stay native; anything
+        # per-side goes to the design layer where all four sides survive.
+        if ctrl in ("border_width",) or ctrl.endswith("_border_width"):
+            b = box(val)
+            if not b:
+                continue
+            vals = set(b.values())
+            if len(vals) == 1 and len(b) == 4:
+                st.set(("border", "width"), next(iter(vals)))
+            else:
+                sides = ";".join(f"border-{side}-width:{b.get(side, '0px')}"
+                                 for side in ("top", "right", "bottom", "left"))
+                st.layout_css(sides + ";border-style:solid")
+                note("info", widget, f"per-side border {b} -> design layer (block border.width is one value)")
+            continue
+
         v = scalar(val)
         if v is None:
             continue
