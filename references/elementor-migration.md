@@ -310,6 +310,63 @@ and small-target counts, and page heights within 0.5% (1440), 0.4% (820) and
 `max-width: 100%` vs `none` equivalence on sections already exactly as wide as
 their parent.
 
+## Finding the rest of them: audit the SOURCE, not the screenshot
+
+Every bug above was found by noticing something in a rendered page. That does
+not scale and, worse, it never finishes - a dropped control is silent at every
+stage, so the only evidence it leaves is a difference someone happens to spot.
+
+`tools/audit-coverage.py` inverts the search. It reads the Elementor tree,
+converts it with the two style lookups instrumented, and reports every control
+the converter never actually read. On the reference page the first run said:
+
+```
+1339 control values set on this page
+   1166 read by the converter
+     98 NOT read  <- every one of these is silently dropped
+```
+
+That list is finite, and working it produced four more real defects that no
+screenshot had raised:
+
+- **`custom_css` (x4).** Elementor Pro's per-element CSS, where `selector`
+  stands for the element. Four cards carry their whole hover behaviour there -
+  a 10px translate and a border-colour change - and converted without it they
+  were inert. `selector` is now rewritten to the element's design-layer class.
+- **`flex_grow` (and `flex_shrink` / `flex_order` / `flex_align_self`).** These
+  say how a container behaves as a flex ITEM; the widget sweep only ever
+  recorded the controls that lay out its CHILDREN, so none of them are in the
+  measured CSS map and all were dropped. The section rules are
+  `+ [divider] +` with the middle container growing to fill: without
+  `flex-grow` it collapsed to zero, the divider vanished and both `+` bunched
+  at the left, four times on the page.
+- **The divider's own `width` and `weight`.** `core/separator`'s default style
+  is core's short centred rule (`max-width: 100px`), so even once the container
+  grew, the line was a 100px stub. Carrying the width across needs
+  `max-width: none` as well, and the thickness needs `border-top-style: solid`
+  - a theme that resets `border-style: none` makes the computed border-width 0
+  however loudly the width is declared.
+- **`icon_size`, `text_indent`, `icon_typography_font_family`.** An icon-list's
+  markers had none of them. The glyph itself now comes across too: CSS accepts
+  a STRING `list-style-type`, so `fas fa-check` becomes `"✓"` rather than a
+  bullet - 21 items on this page.
+
+Two further defaults had to be stated rather than inherited, both read off
+Elementor's own stylesheet on the rendered original:
+
+- **`.elementor-button { line-height: 1 }`.** The source sets no line-height,
+  so a converted button inherited the THEME's 26.4px against Elementor's 16px.
+  Every button was 10px taller, and that was the whole of a constant +21px
+  page-height difference at every viewport.
+- **`hr { height: 2px }`** from the theme stacks on top of the border and made
+  each rule 10px tall against Elementor's 9px; the separator now states
+  `height: 0`.
+
+After that pass the audit reads `0 NOT read`, with the one remaining drop named
+and justified in the tool's `DELIBERATE` table. Run it on any page before
+trusting a conversion - and treat a non-empty list as the work not being done,
+not as a report.
+
 ## Canonicalization rules this work surfaced
 
 - A custom `style.typography.fontSize` marks the element `has-custom-font-size`

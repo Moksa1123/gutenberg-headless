@@ -112,9 +112,13 @@ def renumber_boxes(rows):
     for r in sorted(rows, key=lambda x: (x.get("y", 0), x.get("x", 0))):
         if not str(r["key"]).startswith("BOX@"):
             continue
-        w = r.get("w", 0)
+        # Bucket the width. Keying on the exact pixel unpairs a box that is one
+        # sub-pixel different on the two pages - a 1120 vs 1121 divider showed
+        # up as four MISSING and four EXTRA instead of four matches, hiding
+        # whatever really differed inside them.
+        w = round(r.get("w", 0) / 4) * 4
         seq[w] += 1
-        r["key"] = f"BOX[w{w}]#{seq[w]}"
+        r["key"] = f"BOX[~{w}]#{seq[w]}"
     return rows
 
 

@@ -195,6 +195,7 @@ python tools/build-indexes.py mine.json --out data/ \
 | `apply-post.php` | write content past kses/slashing, byte-verify the row, purge caches |
 | `verify-live.py` | assert the page the PUBLIC receives, through every cache |
 | `audit-contrast.js` | in-page WCAG contrast audit (gradients, cover dims, symbols) - design verification |
+| `audit-coverage.py` | every Elementor control a page sets that the converter never read - turns "does it look right" into a finite list |
 | `check-rwd.js` | per-breakpoint layout audit: real overflow (a theme's `overflow-x:hidden` hides it from the scrollbar), tiny type, small targets |
 | `collect-fingerprint.js` + `diff-fingerprints.py` | 35 computed properties per element on two pages, paired and diffed - the only honest answer to "does it match the original" |
 | `extract-block-schema.php` | dump a live site's full block surface + theme.json |

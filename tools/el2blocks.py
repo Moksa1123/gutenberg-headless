@@ -387,6 +387,25 @@ def gap_css(val) -> tuple[str, str]:
     return (f"gap:{one}", one) if one else ("", "")
 
 
+def apply_custom_css(st: "Style", s: dict, widget: str):
+    """Elementor Pro's per-element Custom CSS, where `selector` stands for the
+    element itself.
+
+    Dropping it is invisible on a static screenshot and obvious in use: on the
+    reference page four cards carry their entire hover behaviour here - a 10px
+    translate and a border-colour change - and converted without it they are
+    inert. The text is authored CSS, so it is emitted as written (no
+    `!important` injection); only `selector` is rewritten, doubled so it keeps
+    the specificity the rest of the design layer relies on."""
+    css = s.get("custom_css")
+    if not isinstance(css, str) or not css.strip():
+        return
+    cls = new_design_class()
+    DESIGN_RULES.append(css.replace("selector", f".{cls}.{cls}").strip())
+    st.extra_classes.append(cls)
+    note("info", widget, "custom_css -> design layer (`selector` rewritten to its class)")
+
+
 def normalize_value(prop: str, v: str) -> str:
     """Elementor stores a font as a bare family name and its own font loader
     appends the generic fallback at render (`"Noto Sans TC", sans-serif`).
@@ -658,7 +677,26 @@ def conv_button(e, ctx) -> str:
     st = Style()
     auto_style(st, "button", s, ctx["elmap"], ctx["cssmap"])
     apply_element_width(st, s)
-    
+    apply_custom_css(st, s, "button")
+
+    # A button icon is a Font Awesome glyph loaded from Elementor's own icon
+    # font, which a block page does not ship. Reported rather than dropped: the
+    # label still converts, and the choice of replacement (an inline SVG, a
+    # text glyph, none) belongs to whoever is doing the migration.
+    # Elementor's own stylesheet says `.elementor-button { line-height: 1 }`,
+    # read off the rendered original. A converted button that stays silent
+    # inherits the THEME's line-height instead - measured 26.4px against
+    # 16px, which made every button 10px taller and was the whole of a
+    # constant +21px page-height difference. A framework default is still a
+    # value; it has to be stated, exactly like the container's 20px gap.
+    if not size(s.get("typography_line_height")):
+        st.set(("typography", "lineHeight"), "1")
+
+    icon = ((s.get("selected_icon") or {}).get("value"))
+    if icon:
+        note("warn", "button", f"icon '{icon}' dropped - Font Awesome is not loaded on a block page; "
+                               f"re-add as an inline SVG if it carries meaning")
+
     hover_bg, hover_fg = s.get("button_background_hover_color"), s.get("button_hover_text_color")
     if hover_bg or hover_fg:
         hv = {}
@@ -710,12 +748,47 @@ def conv_divider(e, ctx) -> str:
     # Measured: core/separator's save() puts the color in the style ATTRIBUTE
     # only (never inline CSS on the <hr>), and always carries
     # has-alpha-channel-opacity for its default opacity attribute.
-    c = e.get("settings", {}).get("color")
+    s = e.get("settings", {})
+    c = s.get("color")
     attrs = {}
     classes = ["wp-block-separator", "has-alpha-channel-opacity"]
     if isinstance(c, str) and c:
         attrs["style"] = {"color": {"text": c}}
         classes.append("has-text-color")
+
+    # core/separator's DEFAULT style is a short centred rule - core ships
+    # `max-width: 100px` on it. Elementor's divider is full width unless told
+    # otherwise, so a converted `+ ----- +` section rule rendered as a 100px
+    # stub between two correctly placed glyphs. Width and thickness are real
+    # settings on the widget and both have to be carried across; `max-width`
+    # must be reset explicitly or core's 100px still wins.
+    decls = []
+    w = size(s.get("width"))
+    if w:
+        decls.append(f"width:{w};max-width:none")
+    weight = size(s.get("weight"))
+    if weight:
+        # `border-top-style` is not optional here. A theme that resets
+        # `border-style: none` on the rule makes the COMPUTED border-width 0
+        # no matter how loudly the width is declared - measured: the line was
+        # 1120px wide, correctly placed, and 0px thick.
+        # `height:0` because a theme gives <hr> an intrinsic height of its own
+        # (measured: 2px), which stacks on top of the border and makes the rule
+        # box taller than Elementor's - 10px against 9px, on every divider.
+        decls.append(f"border-top-width:{weight};border-top-style:solid;"
+                     f"border-bottom-width:0;height:0")
+    if isinstance(c, str) and c:
+        # The block's own colour attribute reaches the <hr> as `color`, which
+        # a theme's explicit `border-color` outranks - the rule came out in
+        # the theme's #E1E8ED instead of the 10%-white it was given.
+        decls.append(f"border-top-color:{c}")
+    gap = size(s.get("gap"))
+    if gap:
+        # Elementor's `gap` is the breathing room on each side of the rule.
+        decls.append(f"margin-top:{gap};margin-bottom:{gap}")
+    if decls:
+        classes.append(design_rule(";".join(decls)))
+
     return comment("core/separator", attrs, f'<hr class="{" ".join(classes)}"/>')
 
 
@@ -743,12 +816,15 @@ def conv_icon_list(e, ctx) -> str:
     color_txt = s.get("text_color")
     gap = size(s.get("space_between"))
     marker = s.get("icon_color")
+    family = s.get("icon_typography_font_family")
 
     decls = []
     if fs:
         decls.append(f"font-size:{fs}")
     if lh:
         decls.append(f"line-height:{lh}")
+    if isinstance(family, str) and family:
+        decls.append(f"font-family:{normalize_value('font-family', family)}")
     if isinstance(color_txt, str) and color_txt:
         decls.append(f"color:{color_txt}")
     if decls:
@@ -762,9 +838,42 @@ def conv_icon_list(e, ctx) -> str:
         note("info", "icon-list", f"icons -> list markers in {marker}")
 
     _s, classes, _inline = st.resolve()
-    marker_css = f"::marker{{color:{marker}}}" if isinstance(marker, str) and marker else ""
-    if marker_css and classes:
-        DESIGN_RULES.append(f".{classes[-1]} li{marker_css}")
+
+    # Elementor draws a Font Awesome glyph; a block list draws a ::marker. A
+    # `disc` for every icon is a visible downgrade - the reference page uses
+    # `fas fa-check` 21 times and rendered as bullet points. CSS takes a STRING
+    # list-style-type, so the common glyphs come across as themselves.
+    FA_GLYPH = {
+        "check": "✓", "check-circle": "✔", "times": "✕",
+        "times-circle": "✖", "plus": "+", "minus": "−",
+        "arrow-right": "→", "arrow-left": "←",
+        "angle-right": "›", "chevron-right": "›",
+        "circle": "●", "dot-circle": "●", "square": "■",
+        "star": "★", "caret-right": "▸", "long-arrow-alt-right": "⟶",
+    }
+    names = {((i.get("selected_icon") or {}).get("value") or "").split("fa-")[-1].strip()
+             for i in items}
+    glyph = FA_GLYPH.get(next(iter(names))) if len(names) == 1 else None
+
+    marker_decls = []
+    if isinstance(marker, str) and marker:
+        marker_decls.append(f"color:{marker}")
+    isz = size(s.get("icon_size"))
+    if isz:
+        marker_decls.append(f"font-size:{isz}")
+    if classes:
+        if glyph:
+            DESIGN_RULES.append(f'.{classes[-1]} li{{list-style-type:"{glyph}"}}')
+            note("info", "icon-list", f"{next(iter(names))} -> list-style-type \"{glyph}\"")
+        elif len(names) > 1:
+            note("warn", "icon-list", f"mixed icons {sorted(names)} - markers left as the default bullet")
+        if marker_decls:
+            DESIGN_RULES.append(f".{classes[-1]} li::marker{{{';'.join(marker_decls)}}}")
+        indent = size(s.get("text_indent"))
+        if indent:
+            # Elementor's text_indent is the space between the glyph and the
+            # text, which for a real list is the li's own start padding.
+            DESIGN_RULES.append(f".{classes[-1]} li{{padding-inline-start:{indent}}}")
 
     lis = "".join(comment("core/list-item", {}, f"<li>{i.get('text','')}</li>") + "\n\n" for i in items)
     note("info", "icon-list", f"{len(items)} items -> core/list (icon glyphs become list markers)")
@@ -854,6 +963,7 @@ def convert_element(e, ctx) -> str:
         st = Style()
         auto_style(st, "container", s, ctx["elmap"], ctx["cssmap"])
         apply_element_width(st, s)
+        apply_custom_css(st, s, "container")
         if s.get("background_background") == "gradient":
             a = s.get("background_color") or "#000"
             b = s.get("background_color_b") or "#fff"
@@ -913,8 +1023,25 @@ def convert_element(e, ctx) -> str:
         # width_mobile:46% keeps its 2x2 grid. Exempting desktop widths too
         # left the hero heading in a 192px column; exempting nothing stacked
         # the stat grid four rows deep. Only width_mobile.
-        st.at_default("mobile", "flex-wrap:wrap" if size(s.get("width_mobile"))
-                      else "width:100%;max-width:100%;flex-basis:100%;flex-wrap:wrap")
+        # Only the WIDTH is defaulted. `flex-wrap` is NOT forced at mobile:
+        # measured on the original at 390px, the `+ ---- +` rule row computes
+        # `nowrap` there, because the element's own `--flex-wrap` survives
+        # Elementor's mobile rule. Forcing wrap put each divider on its own
+        # line and added 215px to the page. A breakpoint's wrap comes from
+        # `flex_wrap_mobile` alone, through the normal responsive path.
+        mobile_default = []
+        if not size(s.get("width_mobile")):
+            mobile_default.append("width:100%;max-width:100%;flex-basis:100%")
+        if not s.get("flex_wrap") and not s.get("flex_wrap_mobile"):
+            # `--flex-wrap` is only DEFINED on a container that sets it, so
+            # Elementor's mobile rule (`--flex-wrap: var(--flex-wrap-mobile)`,
+            # which defaults to wrap) reaches exactly the containers that stay
+            # silent. Measured at 390px on the original: seven silent
+            # containers wrap, and the `+ ---- +` rule row - which declares
+            # nowrap - does not.
+            mobile_default.append("flex-wrap:wrap")
+        if mobile_default:
+            st.at_default("mobile", ";".join(mobile_default))
 
         # Width is layout INTENT, and the block `layout` attribute cannot carry
         # it on a classic theme: layout.type "constrained" resolves against
@@ -936,6 +1063,25 @@ def convert_element(e, ctx) -> str:
         bw = size(s.get("boxed_width"))
         if bw:
             st.layout_css(f"max-width:{bw};margin-left:auto;margin-right:auto")
+
+        # How this container behaves as a flex ITEM inside its parent - a
+        # different axis from the layout controls above, which say how it
+        # arranges its own children. The widget sweep only ever recorded the
+        # latter, so NONE of these appear in the measured CSS map and every one
+        # of them was dropped in silence.
+        #
+        # Measured cost of dropping `flex_grow` alone: the decorative rule that
+        # opens each section is `+ [divider] +` in a nowrap row, where the
+        # middle container grows to fill. Without it the container collapses to
+        # zero, the divider inside it (width:100% of zero) disappears, and both
+        # `+` glyphs bunch together at the left - four times on the page.
+        # Emitted AFTER the width block above, because `flex:0 0 X` there is a
+        # shorthand that resets flex-grow.
+        for ctrl, prop in (("flex_grow", "flex-grow"), ("flex_shrink", "flex-shrink"),
+                           ("flex_order", "order"), ("flex_align_self", "align-self")):
+            v = scalar(s.get(ctrl))
+            if v is not None:
+                st.layout_css(f"{prop}:{v}")
 
         # EVERY Elementor container is a flex container. Treating a
         # `flex_direction: column` one as `layout:{type:"constrained"}` throws
