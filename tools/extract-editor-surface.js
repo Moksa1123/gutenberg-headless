@@ -141,8 +141,26 @@
     // --- deprecations: the reason "valid" is not the same as "stable" ---
     const dep = type.deprecated || [];
     if (dep.length) {
+      // What each old form's save() WROTE. A page whose markup matches one of
+      // these is accepted today and rewritten the moment anyone edits the
+      // block - the single most useful thing to be able to detect, and
+      // invisible to every server-side check.
+      const oldShape = (d) => {
+        try {
+          const dtype = { ...type, ...d, name: type.name };
+          const attrs = fillContent(dtype, {
+            ...B.getBlockAttributes(dtype, ''), className: PROBE_CLASS, align: 'full',
+            style: V_STYLE(PROBE_STYLE), fontFamily: 'pf', fontSize: 'large'
+          });
+          const html = B.getSaveContent(dtype, attrs, []);
+          if (!html || typeof html !== 'string' || !html.trim()) return null;
+          const els = tagsOf(html);
+          return els.length ? { tag: els[0].tag, classes: els[0].classes } : null;
+        } catch (e) { return null; }
+      };
       rec.deprecated = dep.map((d, i) => ({
         index: i,
+        shape: oldShape(d),
         // What the old form differed in. `migrate` means the attributes
         // themselves get rewritten, which is the destructive case.
         hasMigrate: typeof d.migrate === 'function',

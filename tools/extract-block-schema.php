@@ -144,6 +144,62 @@ foreach ( get_post_types( array(), 'objects' ) as $pt ) {
 	}
 }
 
+// ---- what the EDITOR is configured to allow ---------------------------------
+// get_block_editor_settings() is where "can a human change this here" is
+// decided. It does not constrain the markup - a page can carry an inline
+// line-height on a theme with custom-line-height off, and it renders - but it
+// decides whether anyone can edit that value afterwards, which is the
+// difference between a page and a page someone can maintain.
+$editor_settings = array();
+if ( function_exists( 'get_block_editor_settings' ) && class_exists( 'WP_Block_Editor_Context' ) ) {
+	$posts = get_posts( array( 'numberposts' => 1, 'post_type' => 'page' ) );
+	$ctx   = new WP_Block_Editor_Context( $posts ? array( 'post' => $posts[0] ) : array() );
+	$all   = get_block_editor_settings( array(), $ctx );
+	foreach ( array(
+		'alignWide', 'allowedBlockTypes', 'disableCustomColors', 'disableCustomFontSizes',
+		'disableCustomGradients', 'disableCustomSpacingSizes', 'disableLayoutStyles',
+		'enableCustomLineHeight', 'enableCustomSpacing', 'enableCustomUnits',
+		'imageDefaultSize', 'imageEditing', 'maxUploadFileSize', 'isRTL',
+		'canEditCSS', 'canUpdateBlockBindings', '__unstableIsBlockBasedTheme',
+		'__experimentalBlockBindingsSupportedAttributes',
+	) as $k ) {
+		if ( array_key_exists( $k, $all ) ) {
+			// allowedBlockTypes is `true` (everything) or a list; keep the shape.
+			$editor_settings[ $k ] = $all[ $k ];
+		}
+	}
+	$editor_settings['imageSizes'] = isset( $all['imageSizes'] )
+		? wp_list_pluck( $all['imageSizes'], 'slug' ) : array();
+	$editor_settings['editor_style_sheets'] = isset( $all['styles'] ) ? count( $all['styles'] ) : 0;
+}
+
+// ---- theme_supports: the classic-theme source of truth ----------------------
+// A classic theme declares its editor surface here, not in theme.json. Blocksy
+// is one, so this is where align-wide and the colour palette actually come
+// from - reading theme.json alone describes a file the theme may not have.
+$theme_supports = array();
+foreach ( array(
+	'align-wide', 'editor-styles', 'dark-editor-style', 'responsive-embeds',
+	'custom-line-height', 'custom-units', 'custom-spacing', 'appearance-tools',
+	'wp-block-styles', 'disable-custom-colors', 'disable-custom-font-sizes',
+	'disable-custom-gradients', 'editor-color-palette', 'editor-font-sizes',
+	'editor-gradient-presets', 'post-thumbnails', 'html5',
+) as $f ) {
+	$theme_supports[ $f ] = current_theme_supports( $f );
+}
+
+// ---- what the theme already styles, per block -------------------------------
+// theme.json `styles.blocks.*` is the reason a block can look styled before you
+// write anything - and the reason a value you DID write can look ignored.
+$block_styles_defaults = array();
+foreach ( ( isset( $global_styles['blocks'] ) ? $global_styles['blocks'] : array() ) as $name => $decl ) {
+	$block_styles_defaults[ $name ] = array_keys( (array) $decl );
+}
+$block_settings = array();
+foreach ( ( isset( $global_settings['blocks'] ) ? $global_settings['blocks'] : array() ) as $name => $decl ) {
+	$block_settings[ $name ] = $decl;
+}
+
 $pattern_categories = array();
 if ( class_exists( 'WP_Block_Pattern_Categories_Registry' ) ) {
 	foreach ( WP_Block_Pattern_Categories_Registry::get_instance()->get_all_registered() as $c ) {
@@ -188,6 +244,10 @@ $out = array(
 	'pattern_categories' => $pattern_categories,
 	'binding_sources'    => $binding_sources,
 	'templates'          => $templates,
+	'editor_settings'    => $editor_settings,
+	'theme_supports'     => $theme_supports,
+	'block_style_defaults' => $block_styles_defaults,
+	'block_settings'     => $block_settings,
 );
 
 echo wp_json_encode( $out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );

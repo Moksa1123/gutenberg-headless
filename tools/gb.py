@@ -186,6 +186,37 @@ def cmd_block(s, a):
         print("  styles: " + ", ".join(f"is-style-{x['name']}" for x in b["styles"]))
     if b.get("variations"):
         print("  variations: " + ", ".join(x["name"] for x in b["variations"]))
+
+    # What the SITE already does to this block, before any markup is written.
+    themed = (s.get("block_style_defaults") or {}).get(name)
+    if themed:
+        print(f"  theme.json already styles it: {', '.join(themed)}"
+              f"  <- you inherit this; a value you write has to outrank it")
+    bset = (s.get("block_settings") or {}).get(name)
+    if bset:
+        print(f"  block-specific settings: {', '.join(sorted(bset))}")
+
+    # And what the editor knows that the server does not.
+    sf = surface()["blocks"].get(name)
+    if sf:
+        bits = []
+        if sf.get("variations"):
+            bits.append(f"{len(sf['variations'])} variations (gb.py variations {name})")
+        if sf.get("transforms"):
+            n = len(sf["transforms"]["from"]) + len(sf["transforms"]["to"])
+            bits.append(f"{n} transforms")
+        if sf.get("deprecated"):
+            mig = sum(1 for d in sf["deprecated"] if d["hasMigrate"])
+            bits.append(f"{len(sf['deprecated'])} DEPRECATED forms"
+                        + (f" ({mig} rewrite attributes on read)" if mig else ""))
+        if sf.get("contentAttributes"):
+            bits.append("bindable: " + ", ".join(sf["contentAttributes"]))
+        if bits:
+            print("  editor: " + "  ·  ".join(bits))
+    elif surface()["blocks"]:
+        print("  editor: NOT in the editor's registry - renders for visitors, "
+              "unreadable in the editor")
+
     print("attributes:")
     for an, attr in sorted(b.get("attributes", {}).items()):
         if a.grep and a.grep.lower() not in an.lower():
@@ -394,6 +425,62 @@ def cmd_save(s, a):
         print("bindable (role:content): " + ", ".join(rec["contentAttributes"]))
 
 
+def cmd_settings(s, a):
+    """What the editor is configured to ALLOW on this site.
+
+    None of it constrains the markup - a page can carry an inline line-height
+    on a theme that switches the control off, and it renders. What it decides
+    is whether a human can change the value afterwards, which is the difference
+    between a page and a page someone can maintain."""
+    es = s.get("editor_settings") or {}
+    ts = s.get("theme_supports") or {}
+    if not es and not ts:
+        print("not in this schema - re-extract with the current extract-block-schema.php")
+        return
+
+    allowed = es.get("allowedBlockTypes")
+    print("insertable  : " + ("every registered block" if allowed is True
+                              else f"{len(allowed)} block types (restricted)" if isinstance(allowed, list)
+                              else "unknown"))
+    print(f"wide/full   : {'yes' if es.get('alignWide') else 'no'}"
+          f"   layout styles: {'off' if es.get('disableLayoutStyles') else 'on'}")
+    off = [k[len("disableCustom"):].lower() for k in
+           ("disableCustomColors", "disableCustomFontSizes", "disableCustomGradients",
+            "disableCustomSpacingSizes") if es.get(k)]
+    print("custom values: " + (f"DISABLED for {', '.join(off)}" if off
+                               else "allowed for colors, font sizes, gradients, spacing"))
+    on = [k for k in ("enableCustomLineHeight", "enableCustomSpacing") if es.get(k)]
+    units = es.get("enableCustomUnits")
+    print(f"controls    : {', '.join(on) or 'line-height and spacing OFF'}"
+          f"   units: {', '.join(units) if isinstance(units, list) else units}")
+    if es.get("imageSizes"):
+        print(f"image sizes : {', '.join(es['imageSizes'])}   default: {es.get('imageDefaultSize')}")
+    print(f"editor CSS  : {'editable' if es.get('canEditCSS') else 'not editable'}"
+          f"   bindings editable: {'yes' if es.get('canUpdateBlockBindings') else 'no'}")
+    bindable = es.get("__experimentalBlockBindingsSupportedAttributes")
+    if bindable:
+        n = sum(len(v) for v in bindable.values()) if isinstance(bindable, dict) else len(bindable)
+        print(f"bindable    : {n} attributes across "
+              f"{len(bindable) if isinstance(bindable, dict) else '?'} blocks")
+
+    print("\ntheme_supports (a CLASSIC theme declares its editor surface here,")
+    print("not in theme.json - and the resolved settings above can still differ):")
+    print("  on : " + ", ".join(k for k, v in ts.items() if v))
+    print("  off: " + ", ".join(k for k, v in ts.items() if not v))
+
+    bs = s.get("block_style_defaults") or {}
+    if bs:
+        print(f"\nblocks the theme already styles ({len(bs)}) - "
+              f"you inherit these before writing anything:")
+        for name, groups in sorted(bs.items()):
+            print(f"    {name:28} {', '.join(groups)}")
+    bset = s.get("block_settings") or {}
+    if bset:
+        print(f"\nblocks with their own settings ({len(bset)}):")
+        for name, decl in sorted(bset.items()):
+            print(f"    {name:28} {', '.join(sorted(decl))}")
+
+
 def cmd_bindings(s, a):
     """Sources a `metadata.bindings` entry may name. core/pattern-overrides is
     what turns a synced pattern into a template with editable slots."""
@@ -513,6 +600,7 @@ def main():
     p.add_argument("--grep")
     p = sub.add_parser("save")
     p.add_argument("block")
+    sub.add_parser("settings")
     sub.add_parser("bindings")
     sub.add_parser("templates")
 
