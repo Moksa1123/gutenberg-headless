@@ -2,11 +2,11 @@
 
 npm publishing is driven by git tags — never run `npm publish` by hand.
 
-## One-time setup
+## One-time setup (done)
 
-1. npmjs.com → profile → **Access Tokens** → Generate New Token → **Automation**
-2. GitHub repo → Settings → Secrets and variables → Actions →
-   **New repository secret** → name `NPM_TOKEN`, paste the token
+No token anywhere: npmjs.com → package **Settings** → **Trusted Publisher** →
+GitHub Actions, `Moksa1123/gutenberg-headless`, workflow `publish.yml`. The
+workflow authenticates via OIDC (`id-token: write`); provenance is automatic.
 
 ## Every release
 
@@ -16,7 +16,7 @@ git push --follow-tags     # the tag triggers .github/workflows/publish.yml
 ```
 
 The workflow refuses to publish when the tag and `package.json` disagree, and
-runs the installer + validator smoke tests before `npm publish --provenance`.
+runs the installer + validator smoke tests before the OIDC `npm publish`.
 Watch it: `gh run watch`.
 
 ## What "minor" means here

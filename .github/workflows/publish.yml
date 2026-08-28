@@ -5,9 +5,10 @@ name: Publish to npm
 #   npm version patch          # or minor / major - bumps package.json, commits, tags vX.Y.Z
 #   git push --follow-tags     # the tag triggers this workflow
 #
-# Requires the NPM_TOKEN repository secret (npmjs.com -> Access Tokens ->
-# Generate New Token -> Automation), added under Settings -> Secrets and
-# variables -> Actions.
+# No token, no secret: publishing uses npm Trusted Publishing (OIDC).
+# The trust is configured on npmjs.com -> package Settings -> Trusted Publisher
+# (Moksa1123/gutenberg-headless, workflow publish.yml). Requires npm >= 11.5.1,
+# which Node 24 bundles.
 
 on:
   push:
@@ -26,8 +27,11 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org
+
+      - name: npm must support trusted publishing (>= 11.5.1)
+        run: npm --version
 
       - name: Tag must match package.json version
         run: |
@@ -54,7 +58,5 @@ jobs:
           python3 tools/validate-post.py examples/fidelity-blocks.html
           python3 tools/validate-post.py examples/onepage-woo.html
 
-      - name: Publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish (OIDC trusted publishing - no token)
+        run: npm publish --access public
