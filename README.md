@@ -23,10 +23,16 @@ database — and every claim verified by rendering, resaving, and measuring,
 because WordPress stores broken markup without a word of complaint.
 
 ```
-302 block types · 3,188 attributes · 4,141 support flags · 105 preset slugs
-37 style-engine properties · 86 patterns · the theme.json viewport breakpoints
-205 of 302 blocks measured to render NOTHING without context
+SERVER   302 block types · 3,188 attributes · 4,141 support flags · 105 presets
+         37 style-engine properties · 86 patterns · the viewport breakpoints
+EDITOR   280 block types · 173 variations · 168 transforms · 192 DEPRECATED forms
+         the exact class order, CSS order and tag shape each save() writes
+CONTEXT  every one of the 302 accounted for: what it needs before it renders
 ```
+
+The two registries are not the same set, and the second one is where
+variations, transforms, deprecations and canonical form actually live. The
+server reports 3 variations; the editor has 173.
 
 English · [繁體中文](README.zh-TW.md)
 
@@ -118,12 +124,15 @@ var:preset|spacing|60
 
 ![architecture](assets/diagrams/architecture.svg)
 
-Three phases. **Extraction** runs once per site, over WP-CLI, and dumps the
-block registry, the merged theme.json, and the style engine's own
-property→CSS→class metadata. **Verification** pushes all 302 blocks through
-`do_blocks()`, round-trips the parser against `serialize_blocks()`, and folds
-the verdicts back into the data. **Query** is all an agent ever does at build
-time — the 425 KB schema is queried, never loaded.
+Three phases. **Extraction** runs twice per site, because the truth is in two
+places: over WP-CLI for the block registry, the merged theme.json and the style
+engine's metadata, and *inside the editor* for the half no server-side call can
+see — variations, transforms, deprecations, and the exact markup each block's
+`save()` writes. **Verification** pushes all 302 blocks through `do_blocks()`
+bare and then again with context, round-trips the parser against
+`serialize_blocks()` over every real post, and folds the verdicts back into the
+data. **Query** is all an agent ever does at build time — the schema is
+queried, never loaded.
 
 ## Install
 
@@ -162,7 +171,8 @@ this loop:
 1. query the surface      gb.py              which blocks exist HERE, their attrs,
                                              their families, their sweep verdicts
 2. write the markup       (the agent)        both halves, from the schema
-3. validate BEFORE write  validate-post.py   11 error classes WordPress won't raise
+3. validate BEFORE write  validate-post.py   10 error + 9 warning classes
+                                             WordPress will never raise
 4. write over WP-CLI      apply-post.php     past kses + slashing + the style.css
                                              strip filter; byte-verifies the row;
                                              purges the caches
@@ -305,16 +315,33 @@ bytes, `do_blocks()` output, the delivered page, the editor's own resave, a
 real browser's computed styles, the order table in the database.
 
 **1. Does the parser match WordPress's?**
-`blockmark.py` round-tripped against `serialize_blocks(parse_blocks(...))`
-over real posts from the live site: byte-identical, with the one divergence
-being the server's own `{}`→`[]` empty-object normalization — documented, not
-hidden.
+`blockmark.py` round-tripped over **every block post on the live site** — 19
+posts, 111 KB. It writes the canonical form, which is what both serializers
+write. Two divergence classes, both measured, neither hidden: the server's own
+`{}`→`[]` normalization, and a literal `&` `<` `>` `--` inside comment JSON,
+which every serializer escapes. Three of this repo's own examples carried
+literal `&` and `>` in a CSS selector until that check existed — a rule
+documented and enforced nowhere is a rule nothing follows, so it is
+`W-ESCAPE` now.
 
-**2. Does every block render what the schema claims?**
-All 302 registered blocks pushed through `do_blocks()` in void form, zero
-errors: 69 render bare, 205 render nothing (need context), 28 are
-content blocks. Verdicts ship in `data/render-verification.csv` and surface in
-every `gb.py block` answer.
+**2. Does every block render what the schema claims — and if not, what does it need?**
+All 302 pushed through `do_blocks()` in void form, zero errors: 69 render bare,
+205 render nothing, 28 are content blocks. "Renders nothing" is a verdict, not
+a diagnosis, so the sweep runs again inside contexts a real page can supply and
+records the first that yields output. Every block is now accounted for:
+
+```
+ 101  needs a parent block          17  renders given a post
+  69  renders bare                  15  renders given a product
+  23  content-in-HTML, void by design 2  term archive · 2 logged-in
+   9  static wrapper                64  needs a context this sweep does not build,
+                                        or the site genuinely has no such data
+```
+
+`gb.py context` prints the table; `gb.py block <name>` prints the verdict for
+one. The first run of that sweep was garbage — it leaked a post between blocks
+and reported 3,849 bytes of "bare" output from `core/post-content`. The
+corrected bare pass returns 69, exactly matching the independent sweep.
 
 **3. Is the style surface the engine's, or a human's recollection?**
 `data/style-surface.json` is `WP_Style_Engine::BLOCK_STYLE_DEFINITIONS_METADATA`
@@ -326,14 +353,25 @@ engine serializes (`textShadow`, `outline.*`) are shipped as a measured
 supplement, labelled as such.
 
 **4. Does the editor itself accept the markup — byte for byte?**
-The bar for every shipped example: open in wp-admin, every block `isValid`,
-and `wp.blocks.serialize(getBlocks()) === stored content`. The one-page
-funnel holds it at 169 blocks — including `<style>`/`<script>` layers, a
-verbatim 48-block WooCommerce checkout skeleton, and every canonicalization
-rule that iterating to `identical:true` surfaced (attribute key order follows
-the client registry; `alignfull` flips `id`/`class` order; a `<tr>` cannot
-carry a custom class; the editor's resave is the oracle, queried not argued
-with — full list in [canonicalization.md](references/canonicalization.md)).
+The bar for **every** shipped example, all four re-verified after the
+canonicalization rules were found: open in wp-admin, every block `isValid`,
+`wp.blocks.serialize(getBlocks())` identical to the stored bytes. 21, 169, 48
+and 20 blocks, zero invalid, zero drift — plus the 180-block converted page.
+
+That check had a blind spot worth knowing about. Comparing against
+`getCurrentPost().content` compares the editor's output with **what the REST
+API delivered**, and the delivery path escapes `&` `<` `>` `--` on the way to
+the browser — so a page whose *database* bytes hold a literal `&` reported
+`identical: true`. Compare hashes of the stored bytes instead, and compare
+hashes rather than lengths: PHP counts UTF-8 bytes, JavaScript counts UTF-16
+code units, so one 169-block page reads as 47,282 and 45,031.
+
+The canonical form itself is no longer folklore. `getSaveContent` is probed
+with synthetic attributes, nine ways per block, and only the orderings that
+never flip become rules — `gb.py save <block>` prints them, the converter reads
+them instead of a hand-written table, and `validate-post.py` reports `W-ORDER`
+when markup disagrees. Full list in
+[canonicalization.md](references/canonicalization.md).
 
 **5. Does the page the PUBLIC gets contain all of it?**
 `verify-live.py` fetches through the page cache and asserts every text
@@ -346,9 +384,31 @@ rather than silent.
 ancestors for real backgrounds, checking **every stop of a gradient**,
 blending cover-block dim overlays, treating star glyphs as graphics. Its first
 run found 15 real failures on a page that "looked fine" (a theme's `h1` color
-beating inheritance on a dark hero among them); the requirement is zero. RWD
-is verified at the theme.json breakpoints: no horizontal overflow, grids
-collapse, `@mobile` state styles compute, `blockVisibility` hides.
+beating inheritance on a dark hero among them); the requirement is zero.
+
+**6b. Does it survive the widths BETWEEN the ones you tested?**
+Seven sampled widths all reported PASS. A continuous sweep of 320–1600px then
+found an overflow band at **1040–1152px** that none of those seven touches.
+`rwd-scan.js` returns a per-width signature; the driver sweeps the range and
+binary-searches every change down to the pixel, so what comes out is where the
+page *actually* reflows — 768px and 1025px on the reference page, both declared
+breakpoints. Overflow is counted separately for page content and site chrome,
+because the widest offender there turned out to be the theme's own header on
+every page of the site, converted or not.
+
+That band was a real conversion defect, and the cause is worth knowing: an auto
+margin **outranks `align-items`** in flexbox and only distributes *positive*
+free space, so `margin-inline:auto` on a content well pinned it to one side on
+any viewport narrower than itself — while suppressing the centring the parent
+was already doing.
+
+**6c. Does the model agree with WordPress?**
+Every other check asks whether a page agrees with the model.
+`selftest-patterns.py` asks the reverse, running the validator's rules over the
+86 patterns WordPress, WooCommerce and the theme ship. 57 are completely clean.
+It found two real bugs in those rules — and four things simply true of core's
+own content, including patterns written against **deprecated** forms of their
+blocks and 30 preset slugs that do not exist on a classic-theme site.
 
 **7. Does commerce actually work?**
 The one-pager took a real order from the public page: add to cart → same-page
@@ -386,6 +446,21 @@ a tool behaviour, or a documented recipe:
     variations, or `save()` itself — the editor console is the only oracle for
     those, and the skill's loop queries it instead of guessing
 11. PHP normalizes `{}` to `[]` on any server-side resave; the editor doesn't
+12. A literal `&` `<` `>` `--` in comment JSON parses, renders, validates — and
+    is rewritten by the first save from either side (`W-ESCAPE`)
+13. `className` lands on `core/button`'s **wrapper**, never on the `<a>`. A
+    class written onto the link is markup `save()` would never produce: stored
+    fine, rendered fine, and the editor marks the block invalid
+14. Four different widths call themselves "mobile" on one site —
+    `style["@mobile"]` 689.98px (theme.json), `core/columns` 781px and
+    `core/media-text` 600px (both hardcoded in their own CSS, both through an
+    attribute named `isStackedOnMobile`), Elementor 767px. And `@tablet` is a
+    **range**, not a max-width
+15. An auto margin outranks `align-items` and gives up on negative free space —
+    it un-centres the thing it was added to centre
+16. 22 blocks the POST editor cannot read are mostly SITE-editor blocks; the
+    registry, the patterns and even the template list all change with the theme
+    (measured: activating one moved blocks 302→299, patterns 86→162)
 
 Full write-ups: [extraction-traps.md](references/extraction-traps.md) ·
 [canonicalization.md](references/canonicalization.md) ·
@@ -396,7 +471,12 @@ Full write-ups: [extraction-traps.md](references/extraction-traps.md) ·
 
 ```
 data/
-  block-schema.json          the full surface - queried, never loaded (425 KB)
+  block-schema.json          the SERVER surface - queried, never loaded (446 KB)
+  editor-surface.json        the EDITOR's half: variations, transforms, deprecations,
+                             and the exact shape each block's save() writes (447 KB)
+  render-context.json        what each block needs before it renders anything
+  patterns.json              all 86 shipped patterns' markup (351 KB) - the corpus
+                             the validator is checked against
   style-surface.json         the style engine's own property→CSS→class metadata
   blocks.csv                 one row per block type, with render verdicts
   attributes.csv             every (block, attribute) pair - 3,188 rows, greppable
@@ -424,6 +504,7 @@ tools/
   extract-patterns.php       every shipped pattern's markup - canonical, site-specific
   selftest-patterns.py       run the validator's rules over WordPress's OWN markup
   sweep-render.php           render all blocks, record who shows nothing
+  sweep-context.php          render them again WITH context - what does each one need?
   build-indexes.py           dumps + sweeps -> shipped data
 
 references/  data-model · supports-and-styles · dynamic-blocks · canonicalization
@@ -455,6 +536,18 @@ examples/    demo-page.html          the first proof page (editor byte-identical
 - The WooCommerce checkout skeleton is copied verbatim from the site's own
   checkout page, never hand-composed — 48 nested blocks with their own
   conventions is the plugin's territory, and the recipe says so.
+- **The surface is a property of the THEME, not just the site.** Activating a
+  block theme on the test site moved the registry 302→299 (thirteen theme
+  blocks gone, ten WooCommerce blocks appearing), patterns 86→162 and templates
+  8→16. `extract-block-schema.php <theme>` will describe another installed
+  theme without switching to it, and is faithful only for what theme.json
+  declares and the theme's own files — nothing re-runs boot, so `theme_supports`
+  and everything registered from it stays the active theme's. The output says
+  which is which.
+- **64 blocks are still unexplained** by the context sweep. That number mixes a
+  context the sweep does not build (a cart with items, a checkout session) with
+  a site that has no such data — `core/site-tagline` is empty here because the
+  tagline is an empty string. Neither is padded into a nicer figure.
 
 ## Regenerate for your install
 
