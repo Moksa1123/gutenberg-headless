@@ -33,9 +33,13 @@ Everything in `data/` was extracted from the live target site and then made to
 prove itself:
 
 ```
-PARSER    blockmark.py round-tripped against serialize_blocks() on the live
-          site over real posts: byte-identical (one divergence is the server's
-          own {}->[] normalization, documented)
+PARSER    blockmark.py round-tripped over every block post on the live site
+          (19 posts, 111 KB). It writes the CANONICAL form, which is what both
+          serializers write; where stored bytes differ from it, the stored
+          bytes are the ones WordPress will rewrite. Two divergence classes,
+          both measured: the server's {} -> [] normalization, and a literal
+          & < > or -- inside comment JSON, which every serializer escapes
+          (W-ESCAPE)
 RENDER    302/302 blocks swept through do_blocks() on a bare page, 0 errors:
           69 render, 205 render NOTHING (need context), 28 are content blocks
 EDITOR    the shipped demo page: 21/21 blocks isValid in Gutenberg itself, and

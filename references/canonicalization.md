@@ -120,8 +120,11 @@ renders identically, and still makes the editor rewrite the tag on save.
   LaTeX renderer's exact tree (`<semantics><mrow>...<annotation
   encoding="application/x-tex">`); a hand-simplified `<math>` stays valid but
   rewrites on resave.
-- **`--`, `<`, `>`, `&`** in attrs JSON
-  (serialize_block_attributes) - blockmark.serialize handles it.
+- **`--`, `<`, `>`, `&`** in attrs JSON (serialize_block_attributes) -
+  blockmark.serialize handles it. Documented here from the start and NOT
+  enforced anywhere, which is how three shipped examples kept literal `&` and
+  `>` for months. It is a validator rule now (W-ESCAPE), because a rule nothing
+  checks is a rule nothing follows.
 
 ## Rules added by the Woo one-pager (all measured)
 
@@ -153,3 +156,57 @@ stored === resaved                               // must be true
 Each iteration converges: 48-block page needed four passes (class order,
 is-open, attr key order, id/class order). The editor is the oracle; never
 argue with it, query it.
+
+## Four sequences the comment JSON must escape
+
+Both serializers - Gutenberg's `serializeAttributes` and PHP's
+`serialize_blocks` - rewrite the same four sequences inside a block comment's
+JSON:
+
+| written | stored by both serializers |
+|---|---|
+| `--` | `\u002d\u002d` |
+| `<` | `\u003c` |
+| `>` | `\u003e` |
+| `&` | `\u0026` |
+
+Written literally the markup still parses, still renders, and still validates.
+It is rewritten on the first save from either side. Three of this repo's own
+example pages carried literal `&` and `>` inside per-block `style.css` values -
+`& > *{...}` in a CSS selector - for exactly that reason. `validate-post.py`
+now reports **W-ESCAPE**.
+
+`blockmark.py` writes the canonical form, so `parse` → `serialize` is the
+fixer: where its output differs from a stored page, the stored page is the one
+WordPress will rewrite.
+
+## The editor round-trip check has a blind spot
+
+The oracle in this repo is:
+
+```js
+wp.blocks.serialize(wp.data.select('core/block-editor').getBlocks())
+  === wp.data.select('core/editor').getCurrentPost().content
+```
+
+That compares the editor's output against **what the REST API delivered**, and
+the delivery path escapes those four sequences on the way to the browser. A
+page whose DATABASE bytes contain a literal `&` therefore reports
+`identical: true` while the stored bytes are not what the editor would write.
+Measured on post 4404: `wp db query` returns a literal `&`, the editor sees
+`&`, and the check passed.
+
+The fix is to compare against the stored bytes, not the delivered ones - hash
+both sides:
+
+```js
+// in the editor
+crypto.subtle.digest('SHA-256', new TextEncoder().encode(re))
+```
+```bash
+wp eval 'echo hash("sha256", get_post(ID)->post_content);'
+```
+
+And compare hashes, never lengths: PHP counts UTF-8 BYTES and JavaScript counts
+UTF-16 code units, so the same content reads as 47,282 and 45,031 on a page
+with CJK text.

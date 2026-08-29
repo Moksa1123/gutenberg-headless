@@ -42,6 +42,9 @@ Warnings:
   W-DEPRECATED the wrapper tag matches an OLD save() of this block. WordPress
               accepts it - that is what a deprecation is for - and rewrites it
               the moment anyone edits the block, running migrate() if it has one
+  W-ESCAPE    a literal & < > or -- inside a block comment's JSON. It parses
+              and renders; both serializers rewrite it to a unicode escape on
+              the first save, so the stored bytes are not the canonical ones
   W-ORDER     class or inline-CSS order differs from what this block's save()
               writes. Legal, and the editor accepts it; what it does not survive
               is the editor's own next save, which regenerates the page and
@@ -237,6 +240,38 @@ def canon_order(rep, where, srec, classes, first_style):
             rep.warn("W-ORDER", where,
                      f"inline CSS order: '{bad[0]}' is written before '{bad[1]}', "
                      f"save() always puts them the other way")
+
+
+# Both serializers escape the same four sequences in the comment JSON. Written
+# unescaped the markup still PARSES - which is why this is invisible until
+# someone saves - and the first editor save rewrites those bytes.
+ESCAPES = (("--", "\\u002d\\u002d"), ("<", "\\u003c"),
+           (">", "\\u003e"), ("&", "\\u0026"))
+
+
+def check_escapes(src, rep):
+    """Sequences inside a block comment that BOTH serializers escape.
+
+    Measured on three of this repo's own example pages: a literal `&` in a
+    per-block `style.css` value stores fine, parses fine and renders fine, and
+    is rewritten to a \\u0026 escape the moment the block is saved from the
+    editor - and by PHP's serialize_blocks() too, so a `wp` re-save does it as
+    well. The bytes on disk are simply not the canonical ones.
+
+    It hid behind the editor check for a while: comparing the editor's
+    serialize() output against `getCurrentPost().content` compares two values
+    that are BOTH already escaped on the way to the browser, so the divergence
+    against the DATABASE is invisible there. It shows up only against the
+    stored bytes."""
+    for m in re.finditer(r"<!--\s+wp:[^\s]+\s+(\{.*?\})\s+/?-->", src, re.S):
+        payload = m.group(1)
+        line = src.count("\n", 0, m.start()) + 1
+        for raw, esc in ESCAPES:
+            if raw in payload:
+                rep.warn("W-ESCAPE", f"line {line}",
+                         f"comment JSON contains a literal {raw!r}; both serializers write "
+                         f"{esc} there, so the first save rewrites these bytes")
+                break
 
 
 def validate(tree, schema, rep, pattern=False):
@@ -479,6 +514,7 @@ def main():
         sys.exit(1)
 
     validate(tree, schema, rep, args.pattern)
+    check_escapes(src, rep)
     n_blocks = sum(1 for _ in blockmark.walk(tree))
     for w in rep.warnings:
         print(w)
