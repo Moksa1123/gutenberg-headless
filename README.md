@@ -1,5 +1,10 @@
 # gutenberg-headless
 
+[![npm](https://img.shields.io/npm/v/gutenberg-headless?color=cb3837&logo=npm)](https://www.npmjs.com/package/gutenberg-headless)
+[![downloads](https://img.shields.io/npm/d18m/gutenberg-headless?color=0a7ea4&label=downloads)](https://www.npmjs.com/package/gutenberg-headless)
+[![weekly](https://img.shields.io/npm/dw/gutenberg-headless?color=0a7ea4&label=weekly)](https://www.npmjs.com/package/gutenberg-headless)
+[![license](https://img.shields.io/npm/l/gutenberg-headless?color=444)](LICENSE)
+
 **Build WordPress block-editor pages in seconds. No visual editor. No guessing.**
 
 An [Agent Skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
