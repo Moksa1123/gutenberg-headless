@@ -1,0 +1,20 @@
+post_id,post_type,bytes,blocks,byte_identical,divergence,measured_on,trust
+4413,page,47102,169,no,escape,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+4404,page,12748,48,no,escape,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+4400,page,3391,20,no,escape,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+4398,page,3322,21,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+4393,post,48,1,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+4068,page,28,1,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+1713,page,42,1,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+1711,page,67,1,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+10,page,5357,33,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+7,page,5449,29,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+9,page,67,1,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+8,page,4498,24,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+3,page,5540,24,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+444,post,3822,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+441,post,3822,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+438,post,3822,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+435,post,3822,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+432,post,3822,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
+1,post,4321,5,yes,,"booking.moksaweb.com WP 7.1.4 / WooCommerce 11.3.0, 2026-11-15",measured
