@@ -1,0 +1,151 @@
+zh,en,note,source,trust
+按鈕,button,Button (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+按鈕組,buttons,Buttons (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+單一欄位,column,Column (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+多重欄位,columns,Columns (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+欄位,column,Columns (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+欄,column,colloquial short form of 欄位,,inferred
+群組,group,Group (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+封面,cover,Cover (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+標題,heading title,Heading (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+段落,paragraph,Paragraph (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+圖片,image,Image (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+圖庫,gallery,Gallery (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+清單,list,List (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+引文,quote,Quote (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+重要引述,pullquote,Pullquote (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+分隔符號,separator,Separator (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+分隔線,separator,colloquial for 分隔符號,,inferred
+空白間隔,spacer,Spacer (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+表格,table,Table (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+詳細資料,details,Details (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+嵌入內容,embed,Embed (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+視訊,video,Video (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+影片,video,colloquial for 視訊,,inferred
+音訊,audio,Audio (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+程式碼,code,Code (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+自訂 HTML,html,Custom HTML (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+短代碼,shortcode,Shortcode (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+媒體及文字,media-text,Media & Text (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+圖文,media-text,colloquial for 媒體及文字,,inferred
+導覽,navigation,Navigation,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+選單,navigation,colloquial for 導覽,,inferred
+導覽標記,breadcrumbs,Breadcrumbs (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+麵包屑,breadcrumbs,common Taiwanese term for 導覽標記,,inferred
+網站標誌,site-logo logo,Site Logo,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+社交網路服務圖示,social-link,Social Icons (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+社群圖示,social-link,colloquial for 社交網路服務圖示,,inferred
+查詢迴圈,query,Query Loop (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文章範本,post-template,Post Template (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文章列表,query latest-posts post-template,colloquial; core has 查詢迴圈 and 最新文章,,inferred
+最新文章,latest-posts,Latest Posts (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+開闔式內容,accordion,Accordion (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+折疊選單,accordion,Accordion (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+手風琴,accordion,colloquial for 開闔式內容,,inferred
+分頁,tabs pagination,both Tabs and Pagination are 分頁 in core zh_TW,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+搜尋,search,Search (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+範本組件,template-part,Template Part (block title),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+範本,template,Template,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+頁尾,footer,Footer,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+頁首,header,no plain Header string found in core zh_TW,,inferred
+區塊版面配置,pattern,Patterns,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+版型,pattern,colloquial for 區塊版面配置,,inferred
+商品系列,product-collection,Product Collection (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+產品範本,product-template,Product Template (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+所有商品,all-products,All Products (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品格線,product-collection product-template all-products,colloquial for a grid of products; WooCommerce has no string 商品格線,,inferred
+商品列表,product-collection product-template all-products,colloquial; see 商品格線,,inferred
+商品價格,product-price,Product Price (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品圖片,product-image,Product Image (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品標題,product-title,Product Title (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品圖庫,product-gallery,Product Gallery (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+產品評分,product-rating,Product Rating (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+加入購物車,add-to-cart,from 「加入購物車」按鈕 (Add to Cart Button block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+迷你購物車,mini-cart,Mini-Cart (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+購物車,cart,Cart,https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+結帳,checkout,Checkout (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+特色商品,featured-product,Featured Product (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+精選商品,handpicked-products,Hand-picked Products (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品分類清單,product-categories,Product Categories List (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+商品篩選條件,product-filters,Product Filters (block title),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+顧客帳號,customer-account,Customer account,https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+邊框間距,padding,Padding,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+內距,padding,designer term decided by the user 2026-11-05 (shared with mosaic-headless / elementor-headless); WordPress's string is 邊框間距,,house-style
+邊界,margin,Margin,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+外距,margin,designer term decided by the user 2026-11-05; WordPress's string is 邊界,,house-style
+區塊間距,blockgap,Block spacing,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+間距,spacing,Spacing,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+背景色彩,backgroundcolor background,Background color,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+背景色,backgroundcolor background,short form of 背景色彩,,inferred
+背景,background,Background,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文字色彩,textcolor,Text color,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文字顏色,textcolor,colloquial for 文字色彩,,inferred
+連結色彩,link,Link color,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+色彩,color,Color,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+顏色,color,Colors (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+色票,color palette,colloquial for the color presets,,inferred
+漸層色彩,gradient,Gradient,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+漸層,gradient,short form of 漸層色彩,,inferred
+雙色調,duotone,Duotone,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+字型大小,fontsize font-size,Font size,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+字級,fontsize font-size,colloquial for 字型大小,,inferred
+字體大小,fontsize font-size,colloquial for 字型大小,,inferred
+字型系列,fontfamily font-family,Font family,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+字型粗細,fontweight,Font weight,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+行高,lineheight,Line height,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+字元間距,letterspacing,Letter spacing,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+排版樣式,typography,Typography,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+框線,border,Border,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+邊框,border,colloquial for 框線,,inferred
+圓角半徑,radius,Radius,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+圓角,radius,short form of 圓角半徑,,inferred
+陰影,shadow,Shadow,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+尺寸,dimensions,Dimensions,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+寬度,width,Width,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+高度,height,Height,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+最小高度,minheight,Minimum height,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+外觀比例,aspectratio,Aspect ratio,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+版面配置,layout,Layout,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+內容寬度,contentsize,Content width,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+寬幅寬度,wide,Wide width,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+全幅寬度,full,Full width,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+滿版,full,colloquial for 全幅寬度,,inferred
+對齊方式,align,Alignment,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文字對齊方式,textalign,Text alignment,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+置中,center,colloquial,,inferred
+分散對齊方式,justify,Justification,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+方向,orientation,Orientation,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+格狀顯示,grid,Grid,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+格狀,grid,Grid (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+格線,grid,colloquial for 格狀顯示,,inferred
+直行排列,stack,Stack,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+堆疊,stack,Stack (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+資料列,row,Row,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+橫排,row,colloquial for 資料列,,inferred
+位置,position,Position,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+置頂,sticky,Sticky,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+覆疊,overlay dimratio,Overlay,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+遮罩,overlay dimratio,colloquial for 覆疊,,inferred
+游標暫留,hover,Hover,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+懸停,hover,designer term decided by the user 2026-11-05 (shared with mosaic-headless / elementor-headless); WordPress's string is 游標暫留,,house-style
+滑鼠移入,hover,Elementor's string for Hover; colloquial here,,inferred
+行動裝置,mobile,Mobile,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+手機,mobile,colloquial for 行動裝置,,inferred
+平板裝置,tablet,Tablet,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+平板,tablet,colloquial for 平板裝置,,inferred
+桌面裝置,desktop,Desktop,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+電腦版,desktop,colloquial for 桌面裝置,,inferred
+可見度,visibility,Visibility,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+隱藏,visibility hide,Hide,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+HTML 錨點,anchor,HTML anchor,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+錨點,anchor,short form of HTML 錨點,,inferred
+附加的 CSS 類別,classname,Additional CSS class(es),https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+CSS 類別,classname,short form of 附加的 CSS 類別,,inferred
+自訂 CSS,css,Custom CSS,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+樣式,style,Style,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+變化類型,variation,Variations (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented
+連結,link url href,Link,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+精選圖片,featured-image,Featured Image,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+文章標題,post-title,Post Title,https://translate.wordpress.org/projects/wp/dev/zh-tw/default/,documented
+輪播,carousel slider,colloquial; core has no carousel block and WooCommerce translates Carousel as 隨選區,,inferred
+滑桿,slider,Slider (WooCommerce string),https://translate.wordpress.org/projects/wp-plugins/woocommerce/stable/zh-tw/default/,documented

@@ -22,6 +22,85 @@ def full_name(name):
     return name if "/" in name else f"core/{name}"
 
 
+# ---- Chinese queries -------------------------------------------------------
+# data/terms-zh.csv maps a Chinese term to the English needles block names,
+# attribute names, support keys and preset slugs use (按鈕 -> button, 邊框間距 /
+# 內距 -> padding). ASCII queries pass through untouched. Block titles in the
+# schema are already the site's zh_TW strings, so a title match still counts.
+
+_STOP = set("的之和與及跟或在要")
+_TERMS = [None]
+
+
+def terms():
+    """(zh, [english needles]) pairs, longest Chinese term first."""
+    if _TERMS[0] is None:
+        import csv
+        rows = []
+        p = DATA / "terms-zh.csv"
+        if p.exists():
+            with p.open(encoding="utf-8", newline="") as f:
+                for r in csv.DictReader(f):
+                    if r.get("zh") and r.get("en"):
+                        rows.append((r["zh"].lower(), r["en"].lower().split()))
+        rows.sort(key=lambda t: -len(t[0]))
+        _TERMS[0] = rows
+    return _TERMS[0]
+
+
+def has_cjk(text):
+    return any("㐀" <= ch <= "鿿" or "豈" <= ch <= "﫿" for ch in text or "")
+
+
+def query_groups(q):
+    """A query as AND-groups of OR-needles. Unknown Chinese stays its own group,
+    so it matches nothing rather than being silently dropped."""
+    q = (q or "").lower().strip()
+    if not has_cjk(q):
+        return [[q]]
+    groups, rest, i = [], "", 0
+
+    def flush(chunk):
+        for part in chunk.split():
+            if part and not all(ch in _STOP for ch in part):
+                groups.append([part])
+
+    while i < len(q):
+        for zh, en in terms():
+            if q.startswith(zh, i):
+                flush(rest)
+                rest = ""
+                groups.append([zh] + en)
+                i += len(zh)
+                break
+        else:
+            rest += q[i]
+            i += 1
+    flush(rest)
+    return groups or [[q]]
+
+
+def matches(q, hay):
+    """True when `hay` answers the --grep query `q` (substring, Chinese expanded)."""
+    if not q:
+        return True
+    hay = hay.lower()
+    if q.lower() in hay:
+        return True
+    return all(any(n in hay for n in g) for g in query_groups(q))
+
+
+def no_match_hint(q, n):
+    """On zero hits for a Chinese query, name the words with no mapping (stderr)."""
+    import sys
+    if n or not q or not has_cjk(q):
+        return
+    unmapped = [g[0] for g in query_groups(q) if len(g) == 1 and has_cjk(g[0])]
+    print(f"no match for {q!r}" + (f"; no English mapping for: {', '.join(unmapped)}" if unmapped else "")
+          + ". Retry in English, or add the term to data/terms-zh.csv. Still not found: "
+          "record it in data/pending.csv - do not guess.", file=sys.stderr)
+
+
 # ---- preset refs -----------------------------------------------------------
 
 PRESET_KINDS = {

@@ -103,11 +103,12 @@ def cmd_blocks(s, a):
         if a.top_level and (b.get("parent") or b.get("ancestor")):
             continue
         hay = f"{name} {b['title']} {' '.join(b.get('keywords') or [])}".lower()
-        if a.grep and a.grep.lower() not in hay:
+        if a.grep and not gblib.matches(a.grep, hay):
             continue
         rows.append((name, b))
     if a.json:
         print(j([n for n, _ in rows]))
+        gblib.no_match_hint(a.grep, len(rows))
         return
     for name, b in rows:
         flags = []
@@ -121,6 +122,7 @@ def cmd_blocks(s, a):
             flags.append(b["render_verdict"])
         print(f"{name:46} {b['title'][:28]:28} {' '.join(flags)}")
     print(f"-- {len(rows)} blocks")
+    gblib.no_match_hint(a.grep, len(rows))
 
 
 def _attr_line(name, attr, block_def):
@@ -222,12 +224,12 @@ def cmd_block(s, a):
 
     print("attributes:")
     for an, attr in sorted(b.get("attributes", {}).items()):
-        if a.grep and a.grep.lower() not in an.lower():
+        if a.grep and not gblib.matches(a.grep, an):
             continue
         print(_attr_line(an, attr, b))
     sup = []
     gblib_flat(b.get("supports") or {}, "", sup)
-    shown = [f"{k}={j(v)}" for k, v in sup if not a.grep or a.grep.lower() in k.lower()]
+    shown = [f"{k}={j(v)}" for k, v in sup if not a.grep or gblib.matches(a.grep, k)]
     if shown:
         print("supports: " + "  ".join(shown))
 
@@ -257,7 +259,7 @@ def cmd_presets(s, a):
     kinds = [a.kind] if a.kind else list(pres)
     for kind in kinds:
         for slug, val in pres.get(kind, {}).items():
-            if a.grep and a.grep.lower() not in slug.lower():
+            if a.grep and not gblib.matches(a.grep, slug):
                 continue
             v = j(val) if isinstance(val, (dict, list)) else str(val)
             print(f"{kind:12} {slug:24} var(--wp--preset--{kind}--{slug})  = {v[:60]}")
@@ -287,7 +289,7 @@ def cmd_patterns(s, a):
                 return
         sys.exit(f"no pattern matching {a.show!r} - list them with `gb.py patterns`")
     for p in s.get("patterns", []):
-        if a.grep and a.grep.lower() not in (p["name"] + p["title"]).lower():
+        if a.grep and not gblib.matches(a.grep, p["name"] + " " + p["title"]):
             continue
         print(f"{p['name']:56} {p['title'][:34]:34} {p.get('bytes',0)}b")
 
@@ -349,7 +351,7 @@ def cmd_variations(s, a):
         return
     rows = [(n, len(b["variations"])) for n, b in surface()["blocks"].items() if b.get("variations")]
     for n, c in sorted(rows, key=lambda x: -x[1]):
-        if a.grep and a.grep not in n:
+        if a.grep and not gblib.matches(a.grep, n):
             continue
         print(f"{c:4}  {n}")
     print(f"-- {sum(c for _, c in rows)} variations across {len(rows)} blocks")
@@ -403,7 +405,7 @@ def cmd_deprecated(s, a):
              sum(1 for d in b["deprecated"] if d["hasMigrate"]))
             for n, b in surface()["blocks"].items() if b.get("deprecated")]
     for n, c, m in sorted(rows, key=lambda x: -x[1]):
-        if a.grep and a.grep not in n:
+        if a.grep and not gblib.matches(a.grep, n):
             continue
         print(f"{c:3} forms ({m} migrating)  {n}")
     print(f"-- {sum(c for _, c, _ in rows)} deprecated forms across {len(rows)} blocks")
@@ -585,7 +587,7 @@ def cmd_rwd(s, a):
     print(f"\n2. breakpoints blocks HARDCODE in their own stylesheet ({len(bp)} blocks)")
     print("     theme.json decides nothing about these.")
     for name, qs in sorted(bp.items()):
-        if a.grep and a.grep not in name:
+        if a.grep and not gblib.matches(a.grep, name):
             continue
         print(f"     {name:24} {', '.join(qs)}")
 
