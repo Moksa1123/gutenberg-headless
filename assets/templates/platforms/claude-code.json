@@ -17,10 +17,11 @@
   },
   "frontmatter": {
     "name": "gutenberg-headless",
-    "description": "Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree.",
+    "description": "Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree. 中文觸發：區塊編輯器、古騰堡、Gutenberg 頁面、不開編輯器做頁面、post_content、區塊標記、按鈕、欄、群組、封面、商品格線、WooCommerce 區塊頁面、結帳頁、區塊無效／嘗試復原、區塊版面配置（pattern）、Elementor 轉區塊。",
     "license": "MIT",
     "author": "moksa (https://moksaweb.com)",
-    "version": "1.0.0"
+    "version": "1.11.1",
+    "user-invocable": true
   },
   "loaderBehaviour": "Auto-loads on session start when SKILL.md frontmatter parses successfully.",
   "verified": true,

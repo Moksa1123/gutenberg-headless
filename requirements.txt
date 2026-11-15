@@ -1,0 +1,5 @@
+# Maintainer-only dependencies (skill-SOP 6-2).
+# The user path - gb.py, validate-post.py, verify-live.py, blockmark.py,
+# el2blocks.py, the self-test - is Python standard library only and imports none of these.
+
+tiktoken  # tools/benchmark-tokens.py: reproduce data/token-benchmark.csv
