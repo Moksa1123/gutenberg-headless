@@ -22,10 +22,11 @@ import sys
 
 import gblib
 
-try:
-    sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+for _s in (sys.stdout, sys.stderr):  # cp950 consoles: Chinese hints go to stderr
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 
 def j(x):
