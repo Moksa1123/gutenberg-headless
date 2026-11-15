@@ -1,0 +1,19 @@
+{"meta": {"date": "2026-11-15", "model": "claude-opus-5-5", "how": "subagent 不用任何工具，憑記憶作答"}, "answers": {
+"tabs-structure-71": "猜測：core/tabs 底下的直接子區塊是 core/tabs-menu（分頁標籤列）和 core/tab-panels（面板容器）；core/tab-panel 的 parent 限定為 core/tab-panels。（我對 7.1 的 core/tabs 沒有確切記憶，這是依 Gutenberg 實驗性 tabs 區塊推測，也可能是 core/tab 直接當子區塊。）",
+"tabs-active-index": "猜測：屬性名 activeTabIndex，型別 number（integer），預設值 0。",
+"mobile-state-breakpoint": "猜測：@mobile 編譯成 (max-width: 599px)，@tablet 編譯成 (max-width: 781px)（沿用 Gutenberg 的 600px / 782px 斷點）。也可能是 Blocksy 的 689.98px / 999.98px。不確定。",
+"bare-page-empty-count": "猜測：302 個中約 130 個空白頁什麼都不輸出，約 172 個有輸出。純屬猜測。",
+"product-price-context": "猜測：沒有商品情境時輸出空字串（什麼都不輸出）。uses_context 為 [\"query\", \"queryId\", \"postId\"]（可能還有 \"postType\"）。",
+"dynamic-count": "猜測：約 190 個 is_dynamic。core/heading 不算（它是靜態區塊，沒有 render callback）。",
+"blocksy-blocks": "猜測：註冊約 12 個 blocksy/* 區塊，其中約 6 個在空白頁上有輸出。純猜測。",
+"button-link-attr-order": "猜測：<a class=\"wp-block-button__link wp-element-button\" href=\"...\" target=\"...\" rel=\"...\">，順序為 class → href → title → target → rel（樣式類時 style 在 class 後）。class 清單最後一個是 wp-element-button。",
+"image-button-deprecations": "猜測：core/image 約 8 個 deprecated，core/button 約 12 個 deprecated。",
+"palette-color-3": "猜測：CSS 變數 --wp--preset--color--palette-color-3，值為 var(--theme-palette-color-3, #3A4F66)。",
+"preset-counts": "猜測：色彩 20 個（Blocksy 8 個 palette + 核心 12 個）、漸層 12 個、雙色調 8 個。",
+"editor-vs-registry": "猜測：文章編輯器 JS registry 量到約 290 個區塊；約 20 個伺服器有註冊但編輯器沒有（多為網站編輯器專用或 WooCommerce 範本區塊）；variations 共約 120 個。純猜測。",
+"roundtrip-live": "猜測：約 40 篇，約 35 篇位元組完全相同；其餘差異屬於空白／換行（區塊間 \\n\\n 正規化）或 JSON 跳脫（例如 \\u002d、斜線跳脫）一類，屬無害的序列化格式差異。",
+"playlist-breakpoint": "猜測：@media (min-width: 600px)。",
+"product-context-count": "猜測：約 30 個區塊（主要是 woocommerce/product-* 系列）只在商品情境下才輸出。",
+"binding-sources": "猜測：core/post-meta、core/pattern-overrides、core/post-data、core/term-data（7.x 新增），可能還有 WooCommerce 或其他外掛註冊的來源。",
+"block-visibility-mobile": "猜測：comment JSON 寫 {\"metadata\":{\"blockVisibility\":{\"viewport\":{\"mobile\":false}}}}；前台加上 class wp-block-hidden-mobile。不確定確切 key 名稱。"
+}}

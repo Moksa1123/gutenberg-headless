@@ -21,6 +21,7 @@ Prints the cache headers so a stale edge is visible rather than silent.
 """
 import re
 import sys
+import urllib.parse
 import urllib.request
 from html import unescape
 from pathlib import Path
@@ -38,6 +39,9 @@ UA = {"User-Agent": "Mozilla/5.0 (verify-live)"}
 
 
 def fetch(url):
+    # WordPress slugs are often non-ASCII (a Chinese page title): http.client
+    # only sends ASCII, so percent-encode whatever is not already encoded.
+    url = urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=%~")
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=30) as r:
         return r.read().decode("utf-8", "replace"), dict(r.headers)

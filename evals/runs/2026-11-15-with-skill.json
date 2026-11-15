@@ -1,0 +1,19 @@
+{"meta": {"date": "2026-11-15", "model": "claude-opus-5-5", "how": "subagent 讀 SKILL.md、用 gb.py 查"}, "answers": {
+"tabs-structure-71": "core/tabs 的直接子區塊是 core/tab-list 與 core/tab-panels（兩者 parent 都只限 core/tabs）。core/tab-panel 的 parent 限定是 core/tab-panels（結構：core/tabs > core/tab-list + core/tab-panels > core/tab-panel）。",
+"tabs-active-index": "屬性 activeTabIndex，型別 number，預設值 0（另有編輯器用的 editorActiveTabIndex，number、role local，無預設值）。",
+"mobile-state-breakpoint": "取自 theme.json settings.viewport（mobile=689.98px、tablet=999.98px）：\"@mobile\" → @media (width <= 689.98px)；\"@tablet\" → @media (689.98px < width <= 999.98px)，是一個範圍，不是 max-width。（@desktop 則是 width > 999.98px。）",
+"bare-page-empty-count": "302 個中 205 個什麼都不輸出（empty），69 個有輸出（renders），另外 28 個是內容區塊（content-block，內容在存檔 HTML 裡，空白頁的 void 測試沒有意義）；0 個錯誤。",
+"product-price-context": "在一般頁面渲染時什麼都不輸出（render-sweep: empty），它只在商品情境下才有輸出（renders in: product；祖先可為 woocommerce/all-products、featured-product、single-product、product-template 或 core/post-template）。uses_context 鍵：query、queryId、postId。",
+"dynamic-count": "302 個中有 272 個標成 is_dynamic（30 個 static）。core/heading 算（blocks.csv dynamic=yes），但它實際上是內容區塊（CONTENT-IN-HTML），所以 is_dynamic 會誤導。",
+"blocksy-blocks": "註冊 13 個 blocksy/* 區塊；其中 7 個在空白頁上就有輸出：about-me、contact-info、post-template、search、share-box、socials、tax-template（其餘 6 個 breadcrumbs、dynamic-data、query、quote、tax-query、widgets-wrapper 什麼都不輸出）。",
+"button-link-attr-order": "<a> 的屬性順序：class href title style target rel。class 順序 wp-block-button__link has-text-color has-background has-border-color has-pf-font-family has-text-align-left has-large-font-size has-custom-font-size wp-element-button，最後一個 class 是 wp-element-button。",
+"image-button-deprecations": "core/image 有 9 個 deprecated 形式，core/button 有 14 個。",
+"palette-color-3": "CSS 變數 --wp--preset--color--palette-color-3（用法 var(--wp--preset--color--palette-color-3)），值為 var(--theme-palette-color-3, #5a5a5a)，fallback 色碼 #5a5a5a。",
+"preset-counts": "色彩 20 個、漸層 56 個、雙色調（duotone）8 個。（另有 font-size 5、spacing 7、shadow 5。）",
+"editor-vs-registry": "文章編輯器的 JS registry 量到 280 個區塊類型；有 22 個伺服器註冊了但文章編輯器裡沒有（其中數個存在於網站編輯器）；編輯器裡共有 173 個 variations。",
+"roundtrip-live": "共 19 篇（約 111 KB，WP 7.1.4 / WooCommerce 11.3.0，2026-11-15 量測）；16 篇位元組完全相同；其餘 3 篇（post 4413、4404、4400）差異都是 escape 類（W-ESCAPE）：comment JSON 裡寫了字面的 & < > 或 --，serializer 會寫成 \\u0026 \\u003c \\u003e \\u002d\\u002d，不是解析器錯誤。",
+"playlist-breakpoint": "core/playlist 在自己的樣式表寫死 max-width:480px。",
+"product-context-count": "15 個區塊只有在商品情境才會輸出（renders in: product）：woocommerce/add-to-cart-form、product-button、product-description、product-details、product-gallery-large-image、product-image、product-image-gallery、product-price、product-rating-stars、product-review-form、product-reviews、product-reviews-title、product-sale-badge、product-sku、product-summary。",
+"binding-sources": "4 個：core/pattern-overrides、core/post-data、core/post-meta、core/term-data。",
+"block-visibility-mobile": "comment JSON 寫 {\"metadata\":{\"blockVisibility\":{\"viewport\":{\"mobile\":false}}}}（key 是 metadata.blockVisibility，不是 metadata.visibility）。前台加上 class wp-block-hidden-mobile，並輸出 @media (width <= 689.98px){.wp-block-hidden-mobile{display:none !important}}。"
+}}

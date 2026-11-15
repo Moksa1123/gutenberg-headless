@@ -29,7 +29,7 @@ missing from one half, slug that exists in neither.
 | Size | 302 block types (116 `core/*`, 165 `woocommerce/*`, 13 `blocksy/*`, plus wpforms and moksa plugins), 86 registered patterns. Current counts: `python tools/gb.py stats` - do not quote numbers from memory |
 | Render proof | every block rendered through `do_blocks()` on a bare page, 0 errors: 69 render, 205 render NOTHING (need context), 28 are content blocks (`data/render-verification.csv`) |
 | Editor surface | read IN the editor (`extract-editor-surface.js`): 280 block types, 173 variations, 168 transforms, 192 deprecated forms the PHP registry cannot see; 22 registered blocks are absent from the post editor |
-| Parser proof | `blockmark.py` round-tripped over every block post on the site - 19 posts, 111 KB (`data/roundtrip-verification.csv`, re-measured 2026-11-15); every divergence is the documented escape class (W-ESCAPE) |
+| Parser proof | `blockmark.py` round-tripped over every block post on the site - 19 posts, 111 KB (`data/roundtrip-verification.csv`, re-measured 2026-11-15 on the site as it is now, whose versions the file records - newer than the extraction); every divergence is the documented escape class (W-ESCAPE) |
 | Provenance | every row of the main CSVs carries `measured_on` + `trust`; `terms-zh.csv` carries `source` + `trust` |
 | Trust levels | `measured` (實測: read off the live site or rendered) > `documented` (official source, e.g. WordPress / WooCommerce zh_TW on translate.wordpress.org) > `inferred` / `house-style` (never present these as WordPress's rules) |
 | Last checked | 2026-11-15: self-test and SKILL.md number check pass; open gaps in `data/pending.csv` |
@@ -106,6 +106,8 @@ Chinese query finds nothing, `gb.py` names the words it could not map.
 | 「有現成的版型嗎」 | registered patterns | `gb.py patterns --grep hero` · `gb.py patterns --show <name>` |
 | 「存檔後 HTML 長什麼樣」「為什麼編輯器說無效」 | the exact shape save() writes | `gb.py save core/button` · `gb.py deprecated core/image` |
 | 「為什麼前台一片空白」「動態區塊要什麼才會顯示」 | render sweep + contexts | `gb.py block woocommerce/product-price` → `render-sweep:` · `gb.py context` |
+| 「X 裡面可以放什麼」「子區塊」 | the `parent:` / `ancestor:` flag on every block | `gb.py blocks --grep tab` (children of `core/tabs` carry `parent:core/tabs`) |
+| 「解析器可靠嗎」「存回去會不會變」 | recorded round-trip | `data/roundtrip-verification.csv` · [canonicalization.md](references/canonicalization.md) |
 | 「手機版／平板斷點」 | every responsive mechanism, real widths | `gb.py rwd` · [responsive.md](references/responsive.md) |
 | 「資料列／直行排列／格狀」 | editor variations | `gb.py variations core/group` |
 | 「段落可以轉成什麼」 | transforms | `gb.py transforms core/paragraph` |
@@ -117,7 +119,10 @@ Chinese query finds nothing, `gb.py` names the words it could not map.
 | 「這站跟資料一樣嗎」 | what site the data describes | `gb.py stats` |
 | a word that matches nothing | - | retry in English; still nothing → `data/pending.csv` |
 
-`--grep` is a plain substring match (not a regex), Chinese expanded.
+`--grep` is a plain substring match (not a regex), Chinese expanded. `gb.py context`
+splits the same bare-page sweep by cause (needs a parent, renders in a product,
+static wrapper...): a finer view of the render/empty/content verdicts, not a
+different measurement.
 
 ## Tasks
 

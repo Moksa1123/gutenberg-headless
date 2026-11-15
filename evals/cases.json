@@ -4,121 +4,266 @@
     {
       "id": "tabs-structure-71",
       "question": "WordPress 7.1 的 core/tabs 區塊：它底下的直接子區塊是哪兩個區塊名稱？core/tab-panel 的 parent 限定是哪個區塊？",
-      "must": [["core/tab-list|tab-list"], ["core/tab-panels|tab-panels"], ["tab-panel[^s]"]],
+      "must": [
+        [
+          "core/tab-list|tab-list"
+        ],
+        [
+          "core/tab-panels|tab-panels"
+        ],
+        [
+          "tab-panel[^s]"
+        ]
+      ],
       "source": "python tools/gb.py blocks --grep tab",
       "trust": "measured"
     },
     {
       "id": "tabs-active-index",
       "question": "WordPress 7.1 的 core/tabs 區塊，決定預設開啟第幾個分頁的屬性叫什麼？型別與預設值？",
-      "must": [["activeTabIndex"], ["number"], ["default[^\\n]{0,20}(?<!\\d)0(?!\\d)|預設[^\\n]{0,10}(?<!\\d)0(?!\\d)|(?<!\\d)0(?!\\d)[^\\n]{0,10}(預設|default)"]],
+      "must": [
+        [
+          "activeTabIndex"
+        ],
+        [
+          "number"
+        ],
+        [
+          "default[^\\n]{0,20}(?<!\\d)0(?!\\d)|預設[^\\n]{0,10}(?<!\\d)0(?!\\d)|(?<!\\d)0(?!\\d)[^\\n]{0,10}(預設|default)"
+        ]
+      ],
       "source": "python tools/gb.py block core/tabs --grep active",
-      "trust": "measured"
+      "trust": "measured",
+      "retired": "2026-11-15 第 1 輪沒 skill 也答對（無鑑別度）"
     },
     {
       "id": "mobile-state-breakpoint",
       "question": "在 booking.moksaweb.com（WP 7.1、Blocksy 2.1.53）上，區塊 style 物件裡的 \"@mobile\" 與 \"@tablet\" 狀態，各自編譯成什麼寬度條件？請給出精確的 px 數字。",
-      "must": [["689\\.98"], ["999\\.98"]],
+      "must": [
+        [
+          "689\\.98"
+        ],
+        [
+          "999\\.98"
+        ]
+      ],
       "source": "python tools/gb.py rwd",
-      "trust": "measured"
+      "trust": "measured",
+      "retired": "2026-11-15 第 1 輪沒 skill 也答對（無鑑別度）"
     },
     {
       "id": "bare-page-empty-count",
       "question": "booking.moksaweb.com 註冊的 302 個區塊類型，逐一放進空白頁用 do_blocks() 渲染，有幾個什麼都不輸出？幾個有輸出？",
-      "must": [["(?<!\\d)205(?!\\d)"], ["(?<!\\d)69(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)205(?!\\d)"
+        ],
+        [
+          "(?<!\\d)69(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py stats; data/render-verification.csv",
       "trust": "measured"
     },
     {
       "id": "product-price-context",
       "question": "woocommerce/product-price 放在一般頁面（沒有商品、沒有迴圈）渲染時會輸出什麼？它的 uses_context 有哪些鍵？",
-      "must": [["nothing|empty|空|不輸出|沒有輸出|無輸出|空白"], ["postId"], ["queryId"]],
+      "must": [
+        [
+          "nothing|empty|空|不輸出|沒有輸出|無輸出|空白"
+        ],
+        [
+          "postId"
+        ],
+        [
+          "queryId"
+        ]
+      ],
       "source": "python tools/gb.py block woocommerce/product-price",
-      "trust": "measured"
+      "trust": "measured",
+      "retired": "2026-11-15 第 1 輪沒 skill 也答對（無鑑別度）"
     },
     {
       "id": "dynamic-count",
       "question": "booking.moksaweb.com 的 302 個區塊類型中，WP_Block_Type_Registry 標成 is_dynamic（有 render callback）的有幾個？core/heading 算不算？",
-      "must": [["(?<!\\d)272(?!\\d)"], ["heading[^\\n]{0,60}(算|是|yes|dynamic|有)|(算|是|yes)[^\\n]{0,30}heading"]],
+      "must": [
+        [
+          "(?<!\\d)272(?!\\d)"
+        ],
+        [
+          "heading[^\\n]{0,60}(算|是|yes|dynamic|有)|(算|是|yes)[^\\n]{0,30}heading"
+        ]
+      ],
       "source": "python tools/gb.py stats; python tools/gb.py block core/heading",
       "trust": "measured"
     },
     {
       "id": "blocksy-blocks",
       "question": "Blocksy 2.1.53（含 Blocksy Companion）在 booking.moksaweb.com 註冊了幾個 blocksy/* 區塊？其中幾個在空白頁上就有輸出？",
-      "must": [["(?<!\\d)13(?!\\d)"], ["(?<!\\d)7(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)13(?!\\d)"
+        ],
+        [
+          "(?<!\\d)7(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py blocks --namespace blocksy",
       "trust": "measured"
     },
     {
       "id": "button-link-attr-order",
       "question": "core/button 的 save() 寫出的 <a> 標籤，HTML 屬性的確切順序是什麼？class 清單的最後一個 class 是什麼？",
-      "must": [["class[\\s,、→>]+href[\\s,、→>]+title[\\s,、→>]+style[\\s,、→>]+target[\\s,、→>]+rel"], ["wp-element-button"]],
+      "must": [
+        [
+          "class[\\s,、→>]+href[\\s,、→>]+title[\\s,、→>]+style[\\s,、→>]+target[\\s,、→>]+rel"
+        ],
+        [
+          "wp-element-button"
+        ]
+      ],
       "source": "python tools/gb.py save core/button",
       "trust": "measured"
     },
     {
       "id": "image-button-deprecations",
       "question": "在這個站的區塊編輯器裡，core/image 和 core/button 各有幾個 deprecated（舊版存檔格式）？",
-      "must": [["image[^\\n]{0,40}(?<!\\d)9(?!\\d)|(?<!\\d)9(?!\\d)[^\\n]{0,40}image"], ["button[^\\n]{0,40}(?<!\\d)14(?!\\d)|(?<!\\d)14(?!\\d)[^\\n]{0,40}button"]],
+      "must": [
+        [
+          "image[^\\n]{0,40}(?<!\\d)9(?!\\d)|(?<!\\d)9(?!\\d)[^\\n]{0,40}image"
+        ],
+        [
+          "button[^\\n]{0,40}(?<!\\d)14(?!\\d)|(?<!\\d)14(?!\\d)[^\\n]{0,40}button"
+        ]
+      ],
       "source": "python tools/gb.py deprecated core/image; python tools/gb.py deprecated core/button",
       "trust": "measured"
     },
     {
       "id": "palette-color-3",
       "question": "booking.moksaweb.com（Blocksy 2.1.53）的色彩 preset palette-color-3：它的 CSS 變數名稱是什麼？值（含 fallback 色碼）是什麼？",
-      "must": [["--wp--preset--color--palette-color-3"], ["#5a5a5a"]],
+      "must": [
+        [
+          "--wp--preset--color--palette-color-3"
+        ],
+        [
+          "#5a5a5a"
+        ]
+      ],
       "source": "python tools/gb.py presets color --grep palette",
       "trust": "measured"
     },
     {
       "id": "preset-counts",
       "question": "booking.moksaweb.com 的 theme.json 合併設定裡，色彩、漸層、雙色調 preset 各有幾個？",
-      "must": [["(?<!\\d)20(?!\\d)"], ["(?<!\\d)56(?!\\d)"], ["(?<!\\d)8(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)20(?!\\d)"
+        ],
+        [
+          "(?<!\\d)56(?!\\d)"
+        ],
+        [
+          "(?<!\\d)8(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py stats",
       "trust": "measured"
     },
     {
       "id": "editor-vs-registry",
       "question": "這個站的伺服器端註冊了 302 個區塊類型；在文章編輯器的 JS registry 裡實際量到幾個？有幾個伺服器註冊了但文章編輯器裡沒有？編輯器裡共有幾個 variations？",
-      "must": [["(?<!\\d)280(?!\\d)"], ["(?<!\\d)22(?!\\d)"], ["(?<!\\d)173(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)280(?!\\d)"
+        ],
+        [
+          "(?<!\\d)22(?!\\d)"
+        ],
+        [
+          "(?<!\\d)173(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py stats",
       "trust": "measured"
     },
     {
       "id": "roundtrip-live",
       "question": "把 booking.moksaweb.com 上所有含區塊標記的文章用 blockmark.py 做 parse → serialize 往返（2026-11-15 重測），共幾篇？幾篇位元組完全相同？其餘的差異是哪一類？",
-      "must": [["(?<!\\d)19(?!\\d)"], ["(?<!\\d)16(?!\\d)"], ["escape|跳脫|\\\\u0026|W-ESCAPE"]],
+      "must": [
+        [
+          "(?<!\\d)19(?!\\d)"
+        ],
+        [
+          "(?<!\\d)16(?!\\d)"
+        ],
+        [
+          "escape|跳脫|\\\\u0026|W-ESCAPE"
+        ]
+      ],
       "source": "data/roundtrip-verification.csv",
       "trust": "measured"
     },
     {
       "id": "playlist-breakpoint",
       "question": "WordPress 7.1 的 core/playlist 區塊在自己的樣式表裡寫死了哪個 media query 斷點？",
-      "must": [["(?<!\\d)480(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)480(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py rwd",
       "trust": "measured"
     },
     {
       "id": "product-context-count",
       "question": "booking.moksaweb.com 的情境渲染掃描（sweep-context）中，有幾個區塊只有在「商品」情境下才會輸出內容？",
-      "must": [["(?<!\\d)15(?!\\d)"]],
+      "must": [
+        [
+          "(?<!\\d)15(?!\\d)"
+        ]
+      ],
       "source": "python tools/gb.py context",
       "trust": "measured"
     },
     {
       "id": "binding-sources",
       "question": "這個站（WP 7.1）註冊了哪些 block bindings 來源（metadata.bindings 可以指定的 source 名稱）？",
-      "must": [["post-data"], ["term-data"], ["pattern-overrides"], ["post-meta"]],
+      "must": [
+        [
+          "post-data"
+        ],
+        [
+          "term-data"
+        ],
+        [
+          "pattern-overrides"
+        ],
+        [
+          "post-meta"
+        ]
+      ],
       "source": "python tools/gb.py bindings",
-      "trust": "measured"
+      "trust": "measured",
+      "retired": "2026-11-15 第 1 輪沒 skill 也答對（無鑑別度）"
     },
     {
       "id": "block-visibility-mobile",
       "question": "WordPress 7.x 要讓一個區塊只在手機上隱藏：comment JSON 要寫成什麼（完整的 key 路徑與值）？前台會加上什麼 class？",
-      "must": [["blockVisibility"], ["viewport"], ["wp-block-hidden-mobile"]],
+      "must": [
+        [
+          "blockVisibility"
+        ],
+        [
+          "viewport"
+        ],
+        [
+          "wp-block-hidden-mobile"
+        ]
+      ],
       "source": "references/wp71-new-surface.md",
-      "trust": "measured"
+      "trust": "measured",
+      "retired": "2026-11-15 第 1 輪沒 skill 也答對（無鑑別度）"
     }
   ]
 }
