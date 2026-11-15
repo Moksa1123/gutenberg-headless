@@ -173,6 +173,12 @@ def main():
     (out / "block-schema.json").write_text(
         json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
+    # ---- provenance: measured_on + trust on every row (skill-SOP data rule) ----
+    from provenance import TABLES, stamp
+    meta = {k: v for k, v in d.items() if k != "blocks"}
+    # a merged --render-verification CSV keeps the stamp of the sweep that made it
+    stamp(out, meta, TABLES if args.render_sweep else tuple(t for t in TABLES if t != "render-verification.csv"))
+
     n = d["block_count"]
     print(f"OK  {n} blocks -> {out}/  (blocks/attributes/supports/presets/styles/patterns CSVs + block-schema.json)")
 

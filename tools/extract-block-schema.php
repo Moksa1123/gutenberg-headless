@@ -358,6 +358,17 @@ $plugins = array();
 foreach ( (array) get_option( 'active_plugins' ) as $p ) {
 	$plugins[] = dirname( $p ) !== '.' ? dirname( $p ) : $p;
 }
+// Versions too: the data is only as true as the plugin versions it was read
+// from (WooCommerce ships most of the block surface), and a slug alone loses that.
+if ( ! function_exists( 'get_plugins' ) ) {
+	require_once ABSPATH . 'wp-admin/includes/plugin.php';
+}
+$all_plugins     = get_plugins();
+$plugin_versions = array();
+foreach ( (array) get_option( 'active_plugins' ) as $p ) {
+	$slug                     = dirname( $p ) !== '.' ? dirname( $p ) : $p;
+	$plugin_versions[ $slug ] = isset( $all_plugins[ $p ]['Version'] ) ? $all_plugins[ $p ]['Version'] : '';
+}
 
 $out = array(
 	'extracted_at'       => gmdate( 'c' ),
@@ -370,6 +381,7 @@ $out = array(
 		'is_block_theme' => function_exists( 'wp_is_block_theme' ) ? wp_is_block_theme() : false,
 	),
 	'active_plugins'     => $plugins,
+	'plugin_versions'    => $plugin_versions,
 	'block_count'        => count( $blocks ),
 	'blocks'             => $blocks,
 	'block_categories'   => $categories,
