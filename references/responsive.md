@@ -6,7 +6,7 @@ editor says so.
 
 ## Four different widths all called "mobile"
 
-Measured on booking.moksaweb.com (WP 7.1, Blocksy):
+Measured on the test site (WP 7.1, Blocksy):
 
 | mechanism | where the number comes from | this site |
 |---|---|---|

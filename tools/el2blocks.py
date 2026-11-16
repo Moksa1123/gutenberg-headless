@@ -57,7 +57,7 @@ REPORT: list[tuple[str, str, str]] = []
 
 # Rules that must survive aggressive "remove unused CSS" optimisers. Per-block
 # style.css compiles to a hash class injected at RENDER time, so a plugin that
-# scans the raw HTML (Perfmatters RUCSS - measured on moksaweb.com) never sees
+# scans the raw HTML (Perfmatters RUCSS - measured on a production site) never sees
 # the class and strips the rule. Layout the page cannot do without - content
 # max-widths, column flex-basis - therefore goes into ONE design-layer <style>
 # keyed by a stable class written into the markup itself.
@@ -387,7 +387,7 @@ class Style:
 def apply_element_width(st: Style, s: dict):
     """Elementor's Advanced tab lets ANY widget set its own width
     (`_element_custom_width`) - it is not a container setting, so the container
-    pass never sees it. Measured on moksaweb.com: a 600px lead paragraph and 11
+    pass never sees it. Measured on a production site: a 600px lead paragraph and 11
     other elements rendered full-bleed without this, which reflows the whole
     column."""
     if s.get("_element_width") not in (None, "", "initial", "inherit", "auto"):
@@ -586,7 +586,7 @@ def auto_style(st: Style, widget: str, settings: dict, elmap, cssmap, *, prefix_
             continue
 
         # Border width is PER SIDE in Elementor and a single value in the block
-        # style object. Measured on moksaweb.com: six containers use a 1px TOP
+        # style object. Measured on a production site: six containers use a 1px TOP
         # rule as a divider (`{top:1, right:0, bottom:0, left:0}`); collapsing
         # that to one value drew a 2.4px box around each of them - the most
         # visible error on the page. Uniform widths stay native; anything
@@ -1190,7 +1190,7 @@ def conv_icon_list(e, ctx) -> str:
 
     # An icon-list carries its OWN typography and colour under an `icon_`
     # prefix, plus item spacing and a marker colour. Converting only the text
-    # leaves every item inheriting the theme - measured on moksaweb.com: 25
+    # leaves every item inheriting the theme - measured on a production site: 25
     # list items came out 16px/26.4px in the theme's link blue instead of
     # 14.5px/1.65em in #A6A6B2, the single biggest visual difference on the
     # page. The list is styled as a whole; markers keep Elementor's accent.
@@ -1363,7 +1363,7 @@ def convert_element(e, ctx) -> str:
             st.set(("background", "backgroundSize"), s.get("background_size") or "cover")
             note("info", "container", "background image -> style.background (render-time)")
         # Vertical rhythm is the difference between "converted" and "looks
-        # converted". Measured on moksaweb.com: the theme gives every group a
+        # converted". Measured on a production site: the theme gives every group a
         # 24px bottom margin and a 24px row-gap when the block does not say
         # otherwise, and blockGap is RENDER-time CSS that the theme's own rules
         # outrank - the page came out 23% taller than the Elementor original
@@ -1433,7 +1433,7 @@ def convert_element(e, ctx) -> str:
         # it on a classic theme: layout.type "constrained" resolves against
         # --wp--style--global--content-size, which a classic theme never
         # defines - the content then fills the viewport. Measured on
-        # moksaweb.com (Blocksy): the converted page ran edge-to-edge and
+        # a production site (Blocksy): the converted page ran edge-to-edge and
         # clipped its own right column until this was handled.
         #   px  -> a centred max-width (the section's content well)
         #   %   -> a flex-basis (a column inside a row)
@@ -1486,7 +1486,7 @@ def convert_element(e, ctx) -> str:
         # `flex_direction: column` one as `layout:{type:"constrained"}` throws
         # away its alignment and its gap, because constrained is a *flow*
         # layout - children stack, but align-items and justify-content mean
-        # nothing. Measured on moksaweb.com: whole sections collapsed sideways
+        # nothing. Measured on a production site: whole sections collapsed sideways
         # and lost their vertical rhythm. Both directions are now emitted as
         # real flex, with alignment restated in the design layer where the
         # theme cannot outrank it.

@@ -312,6 +312,46 @@ class Provenance(unittest.TestCase):
             self.assertEqual(lines[0].split(",")[-2:], ["measured_on", "trust"])
             self.assertIn("WooCommerce 99.0", lines[1])
 
+    # Hosts a shipped file may link to; anything else is a site that leaked in.
+    PUBLIC_HOSTS = {"example.com", "wordpress.org", "translate.wordpress.org", "www.w3.org",
+                    "github.com", "img.shields.io", "www.npmjs.com", "woocommerce.com",
+                    "fonts.googleapis.com", "fonts.gstatic.com", "platform.claude.com",
+                    "facebook.com", "www.facebook.com", "instagram.com", "www.instagram.com",
+                    "youtube.com", "x.com", "www.x.com", "www.twitch.tv", "www.twitch.com"}
+    SHIPPED = ("SKILL.md", "README.md", "README.zh-TW.md", "references", "examples",
+               "tools", "data", "assets", "bin")
+
+    def test_no_site_data(self):
+        p = run("--check", tool="scrub-site-data.py")
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        author = re.search(r"https?://([^/)\s]+)", json.loads(
+            (ROOT / "package.json").read_text(encoding="utf-8"))["author"]).group(1)
+        bad = []
+        for top in self.SHIPPED:
+            base = ROOT / top
+            for f in ([base] if base.is_file() else sorted(base.rglob("*"))):
+                if not f.is_file() or f.suffix not in (".md", ".py", ".php", ".js", ".json",
+                                                       ".csv", ".html", ".txt", ".sh", ""):
+                    continue
+                if "__pycache__" in f.parts:
+                    continue
+                text = f.read_text(encoding="utf-8", errors="replace")
+                for m in re.finditer(r"https?://([A-Za-z0-9.-]+\.[A-Za-z]{2,})", text):
+                    h = m.group(1).lower()
+                    if h in self.PUBLIC_HOSTS or h.endswith(".test"):
+                        continue
+                    # the author credit (README footer, SKILL.md frontmatter) is deliberate
+                    if h == author and re.search(r"(?i)author|maintained by|打造與維護",
+                                                 text[max(0, m.start() - 80):m.start()]):
+                        continue
+                    bad.append(f"{f.relative_to(ROOT)}: {h}")
+                for m in re.finditer(r"[\w.+-]+@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})\b", text):
+                    if m.group(1).lower() not in ("example.com",) and not m.group(1).endswith((".png", ".jpg", ".webp", ".svg")):
+                        bad.append(f"{f.relative_to(ROOT)}: e-mail @{m.group(1)}")
+                if author in text.lower() and f.suffix in (".py", ".php", ".js", ".csv"):
+                    bad.append(f"{f.relative_to(ROOT)}: names {author}")
+        self.assertEqual(sorted(set(bad))[:10], [])
+
 
 # ---------------------------------------------------------------------------
 class SkillDoc(unittest.TestCase):

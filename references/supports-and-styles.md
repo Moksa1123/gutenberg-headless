@@ -98,7 +98,7 @@ targets these classes; missing one degrades styling silently (`W-WRAPPER`).
 ## theme.json presets on this site
 
 Extraction merges every origin (`default` < `theme` < `custom`) exactly as WP
-does. On booking.moksaweb.com (Blocksy 2.1.53, classic theme):
+does. On the test site (Blocksy 2.1.53, classic theme):
 
 - colors: 12 default + 8 theme (`palette-color-1`...`palette-color-8`, which
   resolve to `var(--theme-palette-color-N, #hex)` - Blocksy chains its own vars)

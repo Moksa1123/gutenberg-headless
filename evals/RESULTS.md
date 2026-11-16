@@ -1,6 +1,6 @@
 # evals 結果
 
-最新的在最上面。題目與評分標準見 `cases.json`，評分程式 `grade.py`（照抄 elementor-headless／line-api）。資料版本：booking.moksaweb.com、WP 7.1、Blocksy 2.1.53（2026-08-28 抽取）；往返資料 2026-11-15 重測。
+最新的在最上面。題目與評分標準見 `cases.json`，評分程式 `grade.py`（照抄 elementor-headless／line-api）。資料版本：測試站、WP 7.1、Blocksy 2.1.53（2026-08-28 抽取）；往返資料 2026-11-15 重測。
 
 ## 2026-11-15 第 1 輪（現行題組）
 

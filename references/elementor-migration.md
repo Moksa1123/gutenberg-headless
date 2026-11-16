@@ -75,24 +75,23 @@ converted page — the editor normalizes key order per block type
 **`isValid` on every block is the shipping bar**; byte-identity is the polish
 pass, reached by the same console loop as any hand-written page.
 
-## Second real page: moksaweb.com, a different site entirely
+## Second real page: a different site entirely
 
-The same converter, run against the author's main site (moksaweb.com — 176
+The same converter, run against the author's main site (176
 registered blocks, no WooCommerce, Jetpack instead; **a completely different
 block surface from the first test site's 302**) on a real published case
 study, 84 KB of tree, 75 containers:
 
 ```
 179 blocks emitted
-  0 validator errors        (against moksaweb's OWN re-extracted schema)
+  0 validator errors        (against that site's OWN re-extracted schema)
   0 invalid blocks in the editor
 1096 verify-live assertions passed on the delivered public page
 ```
 
-Live result: <https://moksaweb.com/camping-case-blocks/> (converted) beside the
-Elementor original. The exercise also proves the skill's own first rule — the
+The converted page was published beside the Elementor original. The exercise also proves the skill's own first rule — the
 block surface is a property of the SITE: validating the converted page against
-the *other* site's schema would have been meaningless, so moksaweb's schema was
+the *other* site's schema would have been meaningless, so that site's schema was
 re-extracted first (`extract-block-schema.php` + `sweep-render.php`, two
 commands).
 

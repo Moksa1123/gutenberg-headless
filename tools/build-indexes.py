@@ -179,6 +179,13 @@ def main():
     # a merged --render-verification CSV keeps the stamp of the sweep that made it
     stamp(out, meta, TABLES if args.render_sweep else tuple(t for t in TABLES if t != "render-verification.csv"))
 
+    # ---- the extraction site's host / admin e-mail / server paths never ship ----
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("scrub", Path(__file__).with_name("scrub-site-data.py"))
+    scrub = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(scrub)
+    scrub.scrub_dir(out)
+
     n = d["block_count"]
     print(f"OK  {n} blocks -> {out}/  (blocks/attributes/supports/presets/styles/patterns CSVs + block-schema.json)")
 

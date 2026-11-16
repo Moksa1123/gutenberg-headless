@@ -4,7 +4,7 @@ description: |
   Build and modify WordPress block-editor (Gutenberg) pages by writing the serialized block markup directly - no editor, no browser. Query the full block surface of the target site (302 block types, every attribute, support and preset) instead of guessing, with every block's bare-page render behaviour measured by an actual do_blocks() sweep, and validate that the comment JSON and the saved HTML - the two halves WordPress never checks against each other - actually agree. 中文觸發：區塊編輯器、古騰堡、Gutenberg 頁面、不開編輯器做頁面、post_content、區塊標記、按鈕、欄、群組、封面、商品格線、WooCommerce 區塊頁面、結帳頁、區塊無效／嘗試復原、區塊版面配置（pattern）、Elementor 轉區塊。
 license: "MIT"
 author: "moksa (https://moksaweb.com)"
-version: "1.11.1"
+version: "1.12.0"
 user-invocable: true
 ---
 
@@ -25,7 +25,7 @@ missing from one half, slug that exists in neither.
 
 | | |
 |---|---|
-| Surface | Extracted from the live registry of booking.moksaweb.com: **WP 7.1, Blocksy 2.1.53, extracted 2026-08-28** (`extract-block-schema.php`). WooCommerce's version was not recorded by that extraction - `data/pending.csv` |
+| Surface | Extracted from the live registry of a test site: **WP 7.1, Blocksy 2.1.53, extracted 2026-08-28** (`extract-block-schema.php`). WooCommerce's version was not recorded by that extraction - `data/pending.csv` |
 | Size | 302 block types (116 `core/*`, 165 `woocommerce/*`, 13 `blocksy/*`, plus wpforms and moksa plugins), 86 registered patterns. Current counts: `python tools/gb.py stats` - do not quote numbers from memory |
 | Render proof | every block rendered through `do_blocks()` on a bare page, 0 errors: 69 render, 205 render NOTHING (need context), 28 are content blocks (`data/render-verification.csv`) |
 | Editor surface | read IN the editor (`extract-editor-surface.js`): 280 block types, 173 variations, 168 transforms, 192 deprecated forms the PHP registry cannot see; 22 registered blocks are absent from the post editor |
@@ -48,7 +48,7 @@ why does it render nothing".
 | Elementor pages (`_elementor_data`) | `elementor-headless` |
 | Mosaic Pro (Nextend) sites | `mosaic-headless` |
 | Writing SEO articles / Rank Math scores (FAQ/HowTo blocks in an article) | `rankmath-seo-wp` |
-| Publishing moksaweb.com articles | `moksa-wp-publish` |
+| Publishing the author's own blog articles | `moksa-wp-publish` |
 | Packaging a plugin for wordpress.org | `wporg-plugin-submit` |
 | Site health, plugin audits, theme building | out of scope - say so |
 
@@ -206,7 +206,9 @@ For maintainers.
   `wp eval-file tools/extract-block-schema.php > dump.json`,
   `wp eval-file tools/sweep-render.php > render-sweep.json`, then
   `python tools/build-indexes.py dump.json --out data/ --render-sweep render-sweep.json`
-  (stamps `measured_on` / `trust` through `provenance.py`); re-run
+  (stamps `measured_on` / `trust` through `provenance.py`, then
+  `scrub-site-data.py` swaps the site's host for example.com and drops its
+  admin e-mail and server paths); re-run
   `extract-editor-surface.js` in the editor. Pass a theme slug to the extractor
   to describe an installed, inactive theme ([extraction-traps.md](references/extraction-traps.md)).
   `data/` is generated - never hand-edit it.

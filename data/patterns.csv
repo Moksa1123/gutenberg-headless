@@ -1,87 +1,87 @@
 name,title,categories,inserter,bytes,measured_on,trust
-core/query-standard-posts,標準,query,yes,576,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/query-medium-posts,圖片位於左側,query,yes,812,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/query-small-posts,小型圖片及標題,query,yes,919,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/query-grid-posts,格狀顯示,query,yes,749,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/query-large-title-posts,大型標題,query,yes,1750,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/query-offset-posts,交錯,query,yes,1777,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/navigation-overlay,Navigation Overlay,navigation,yes,1073,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/navigation-overlay-black-bg,Overlay with black background,navigation,yes,1656,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/navigation-overlay-accent-bg,Overlay with orange background,navigation,yes,1926,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/navigation-overlay-centered,Overlay with centered navigation,navigation,yes,1322,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-core/navigation-overlay-centered-with-extras,Overlay with site info and CTA,navigation,yes,2930,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/banner,Banner,woo-commerce|featured-selling,yes,4307,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/coming-soon-entire-site,Coming Soon Entire Site,woo-commerce,no,5167,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/coming-soon-store-only,Coming Soon Store Only,woo-commerce,no,1182,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/coming-soon,Coming Soon,woo-commerce,no,68,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/content-right-with-image-left,Content Right with Image Left,woo-commerce|about,yes,3620,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/featured-category-cover-image,Featured Category Cover Image,woo-commerce|intro,yes,3888,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/featured-category-triple,Featured Category Triple,woo-commerce|featured-selling,yes,8241,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/footer-large,Large Footer,woo-commerce,yes,3729,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/footer-simple-menu,Footer with Simple Menu,woo-commerce,yes,2285,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/footer-with-3-menus,Footer with 3 Menus,woo-commerce,yes,2848,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/four-image-grid-content-left,Four Image Grid Content Left,woo-commerce|about,yes,5275,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/header-centered-menu,Centered Header Menu,woo-commerce,yes,2540,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/header-distraction-free,Distraction Free Header,woo-commerce,yes,708,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/header-essential,Essential Header,woo-commerce,yes,1422,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/header-large,Large Header,woo-commerce,yes,2614,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/header-minimal,Minimal Header,woo-commerce,yes,1628,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/heading-with-three-columns-of-content-with-link,Heading with Three Columns of Content and Link,woo-commerce|services,yes,5222,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/hero-product-3-split,Hero Product 3 Split,woo-commerce|featured-selling,yes,6566,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/hero-product-chessboard,Hero Product Chessboard,woo-commerce|featured-selling,yes,8389,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/hero-product-split,Hero Product Split,woo-commerce|intro,yes,3243,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/centered-content-with-image-below,Centered Content with Image Below,woo-commerce|intro,yes,3583,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/just-arrived-full-hero,Just Arrived Full Hero,woo-commerce|intro,yes,1740,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/no-products-found-clear-filters,No Products Found - Clear Filters,woo-commerce,no,356,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/no-products-found,No Products Found,woo-commerce,no,88,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-default,Default Coming Soon,woo-commerce,no,5159,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-image-gallery,Coming Soon Image Gallery,woo-commerce,no,12102,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-minimal-left-image,Coming Soon Minimal Left Image,woo-commerce,no,6792,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-modern-black,Coming Soon Modern Black,woo-commerce,no,4606,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-split-right-image,Coming Soon Split Right Image,woo-commerce,no,6192,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/page-coming-soon-with-header-footer,Coming Soon with Header and Footer,woo-commerce,no,1225,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/product-collection-3-columns,Product Collection 3 Columns,woo-commerce,yes,1839,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/product-collection-4-columns,Product Collection 4 Columns,woo-commerce|featured-selling,yes,3825,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/product-collection-5-columns,Product Collection 5 Columns,woo-commerce|featured-selling,yes,3790,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/product-collection-featured-products-5-columns,Product Collection: Featured Products 5 Columns,woo-commerce|featured-selling,yes,4422,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/product-query-product-gallery,Product Gallery,woo-commerce|featured-selling,yes,3897,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/product-search-form,Product Search,woo-commerce,no,127,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/related-products,Related Products,woo-commerce,no,1930,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/social-follow-us-in-social-media,Social: Follow Us on Social Media,woo-commerce|social-media,yes,5914,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/testimonials-3-columns,Testimonials 3 Columns,woo-commerce|reviews,yes,3999,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/testimonials-single,Testimonial Single,woo-commerce|reviews,yes,3555,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce-blocks/three-columns-with-images-and-content,Three Columns with Images and Content,woo-commerce|services,yes,6777,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-1,Blocksy - 主視覺區塊,intro|blocksy,yes,9094,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-2,Blocksy - 價格表,call-to-action|blocksy,yes,13883,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-3,Blocksy - 文字卡片,services|blocksy,yes,8128,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-4,Blocksy - 主視覺區塊,intro|blocksy,yes,12739,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-5,Blocksy - 團隊成員,about|blocksy,yes,18922,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-6,Blocksy - 主視覺區塊,intro|blocksy,yes,7173,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-7,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,9936,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-8,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,8858,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-9,Blocksy - 主視覺區塊,about|blocksy,yes,4897,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-10,Blocksy - 見證,reviews|blocksy,yes,4286,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-11,Blocksy - 價格方案,call-to-action|blocksy,yes,16530,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/pattern-12,Blocksy - 行動號召,call-to-action|blocksy,yes,6708,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/posts-layout-1,文章 - 版面配置 1,blocksy,yes,1029,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/posts-layout-2,文章 - 版面配置 2,blocksy,yes,1321,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/posts-layout-3,文章 - 版面配置 3,blocksy,yes,1667,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/posts-layout-4,文章 - 版面配置 4,blocksy,yes,2099,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/posts-layout-5,文章 - 版面配置 5,blocksy,yes,1146,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/tax-layout-1,分類法 - 版面配置 1,blocksy,yes,613,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/tax-layout-2,分類法 - 版面配置 2,blocksy,yes,1203,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/tax-layout-3,分類法 - 版面配置 3,blocksy,yes,1175,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/tax-layout-4,分類法 - 版面配置 4,blocksy,yes,675,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-blocksy/tax-layout-5,分類法 - 版面配置 5,blocksy,yes,1089,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/order-confirmation-totals-heading,,,no,169,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/order-confirmation-downloads-heading,,,no,163,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/order-confirmation-shipping-heading,,,no,163,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/order-confirmation-billing-heading,,,no,163,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/order-confirmation-additional-fields-heading,,,no,163,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/mini-cart-empty-cart-message,迷你購物車中空無一物的訊息,,no,149,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/default-attribute-filter,,,no,717,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/cart-heading,,,no,119,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/cart-cross-sells-message,,,no,150,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/cart-empty-message,,,no,450,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/cart-new-in-store-message,,,no,130,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
-woocommerce/checkout-heading,,,no,116,"booking.moksaweb.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-standard-posts,標準,query,yes,576,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-medium-posts,圖片位於左側,query,yes,812,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-small-posts,小型圖片及標題,query,yes,919,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-grid-posts,格狀顯示,query,yes,749,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-large-title-posts,大型標題,query,yes,1750,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/query-offset-posts,交錯,query,yes,1777,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/navigation-overlay,Navigation Overlay,navigation,yes,1073,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/navigation-overlay-black-bg,Overlay with black background,navigation,yes,1656,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/navigation-overlay-accent-bg,Overlay with orange background,navigation,yes,1926,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/navigation-overlay-centered,Overlay with centered navigation,navigation,yes,1322,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+core/navigation-overlay-centered-with-extras,Overlay with site info and CTA,navigation,yes,2930,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/banner,Banner,woo-commerce|featured-selling,yes,4307,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/coming-soon-entire-site,Coming Soon Entire Site,woo-commerce,no,5167,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/coming-soon-store-only,Coming Soon Store Only,woo-commerce,no,1182,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/coming-soon,Coming Soon,woo-commerce,no,68,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/content-right-with-image-left,Content Right with Image Left,woo-commerce|about,yes,3620,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/featured-category-cover-image,Featured Category Cover Image,woo-commerce|intro,yes,3888,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/featured-category-triple,Featured Category Triple,woo-commerce|featured-selling,yes,8241,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/footer-large,Large Footer,woo-commerce,yes,3729,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/footer-simple-menu,Footer with Simple Menu,woo-commerce,yes,2285,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/footer-with-3-menus,Footer with 3 Menus,woo-commerce,yes,2848,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/four-image-grid-content-left,Four Image Grid Content Left,woo-commerce|about,yes,5275,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/header-centered-menu,Centered Header Menu,woo-commerce,yes,2540,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/header-distraction-free,Distraction Free Header,woo-commerce,yes,708,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/header-essential,Essential Header,woo-commerce,yes,1422,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/header-large,Large Header,woo-commerce,yes,2614,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/header-minimal,Minimal Header,woo-commerce,yes,1628,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/heading-with-three-columns-of-content-with-link,Heading with Three Columns of Content and Link,woo-commerce|services,yes,5222,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/hero-product-3-split,Hero Product 3 Split,woo-commerce|featured-selling,yes,6566,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/hero-product-chessboard,Hero Product Chessboard,woo-commerce|featured-selling,yes,8389,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/hero-product-split,Hero Product Split,woo-commerce|intro,yes,3243,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/centered-content-with-image-below,Centered Content with Image Below,woo-commerce|intro,yes,3583,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/just-arrived-full-hero,Just Arrived Full Hero,woo-commerce|intro,yes,1740,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/no-products-found-clear-filters,No Products Found - Clear Filters,woo-commerce,no,356,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/no-products-found,No Products Found,woo-commerce,no,88,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-default,Default Coming Soon,woo-commerce,no,5159,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-image-gallery,Coming Soon Image Gallery,woo-commerce,no,12102,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-minimal-left-image,Coming Soon Minimal Left Image,woo-commerce,no,6792,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-modern-black,Coming Soon Modern Black,woo-commerce,no,4606,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-split-right-image,Coming Soon Split Right Image,woo-commerce,no,6192,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/page-coming-soon-with-header-footer,Coming Soon with Header and Footer,woo-commerce,no,1225,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/product-collection-3-columns,Product Collection 3 Columns,woo-commerce,yes,1839,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/product-collection-4-columns,Product Collection 4 Columns,woo-commerce|featured-selling,yes,3825,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/product-collection-5-columns,Product Collection 5 Columns,woo-commerce|featured-selling,yes,3790,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/product-collection-featured-products-5-columns,Product Collection: Featured Products 5 Columns,woo-commerce|featured-selling,yes,4422,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/product-query-product-gallery,Product Gallery,woo-commerce|featured-selling,yes,3897,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/product-search-form,Product Search,woo-commerce,no,127,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/related-products,Related Products,woo-commerce,no,1930,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/social-follow-us-in-social-media,Social: Follow Us on Social Media,woo-commerce|social-media,yes,5914,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/testimonials-3-columns,Testimonials 3 Columns,woo-commerce|reviews,yes,3999,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/testimonials-single,Testimonial Single,woo-commerce|reviews,yes,3555,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce-blocks/three-columns-with-images-and-content,Three Columns with Images and Content,woo-commerce|services,yes,6777,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-1,Blocksy - 主視覺區塊,intro|blocksy,yes,9094,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-2,Blocksy - 價格表,call-to-action|blocksy,yes,13883,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-3,Blocksy - 文字卡片,services|blocksy,yes,8128,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-4,Blocksy - 主視覺區塊,intro|blocksy,yes,12739,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-5,Blocksy - 團隊成員,about|blocksy,yes,18922,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-6,Blocksy - 主視覺區塊,intro|blocksy,yes,7173,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-7,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,9936,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-8,Blocksy - 主視覺區塊,call-to-action|blocksy,yes,8858,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-9,Blocksy - 主視覺區塊,about|blocksy,yes,4897,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-10,Blocksy - 見證,reviews|blocksy,yes,4286,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-11,Blocksy - 價格方案,call-to-action|blocksy,yes,16530,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/pattern-12,Blocksy - 行動號召,call-to-action|blocksy,yes,6708,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/posts-layout-1,文章 - 版面配置 1,blocksy,yes,1029,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/posts-layout-2,文章 - 版面配置 2,blocksy,yes,1321,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/posts-layout-3,文章 - 版面配置 3,blocksy,yes,1667,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/posts-layout-4,文章 - 版面配置 4,blocksy,yes,2099,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/posts-layout-5,文章 - 版面配置 5,blocksy,yes,1146,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/tax-layout-1,分類法 - 版面配置 1,blocksy,yes,613,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/tax-layout-2,分類法 - 版面配置 2,blocksy,yes,1203,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/tax-layout-3,分類法 - 版面配置 3,blocksy,yes,1175,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/tax-layout-4,分類法 - 版面配置 4,blocksy,yes,675,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+blocksy/tax-layout-5,分類法 - 版面配置 5,blocksy,yes,1089,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/order-confirmation-totals-heading,,,no,169,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/order-confirmation-downloads-heading,,,no,163,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/order-confirmation-shipping-heading,,,no,163,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/order-confirmation-billing-heading,,,no,163,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/order-confirmation-additional-fields-heading,,,no,163,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/mini-cart-empty-cart-message,迷你購物車中空無一物的訊息,,no,149,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/default-attribute-filter,,,no,717,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/cart-heading,,,no,119,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/cart-cross-sells-message,,,no,150,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/cart-empty-message,,,no,450,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/cart-new-in-store-message,,,no,130,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured
+woocommerce/checkout-heading,,,no,116,"example.com WP 7.1 / Blocksy 2.1.53 live registry, extracted 2026-08-28",measured

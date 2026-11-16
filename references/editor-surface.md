@@ -1,7 +1,7 @@
 # The half the server does not know
 
 `WP_Block_Type_Registry` is the whole truth for attributes and supports, and
-almost nothing about everything else. Measured on booking.moksaweb.com (WP 7.1,
+almost nothing about everything else. Measured on the test site (WP 7.1,
 302 registered blocks):
 
 | | PHP registry | the editor |

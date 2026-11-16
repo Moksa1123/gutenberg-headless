@@ -1,5 +1,5 @@
 {
-  "about": "gutenberg-headless 真題：模型憑記憶答不出、只能從本 skill 的資料查到的東西。資料：booking.moksaweb.com、WP 7.1、Blocksy 2.1.53，2026-08-28 抽取；往返資料 2026-11-15 重測。評分：must 每一組都要命中（組內任一正規式命中即可），不分大小寫。沒 skill 也答對的題沒有鑑別度（SOP 6-4），標 retired 換題。答案出處都是 gb.py 查詢或 data/ 檔。",
+  "about": "gutenberg-headless 真題：模型憑記憶答不出、只能從本 skill 的資料查到的東西。資料：測試站、WP 7.1、Blocksy 2.1.53，2026-08-28 抽取；往返資料 2026-11-15 重測。評分：must 每一組都要命中（組內任一正規式命中即可），不分大小寫。沒 skill 也答對的題沒有鑑別度（SOP 6-4），標 retired 換題。答案出處都是 gb.py 查詢或 data/ 檔。",
   "cases": [
     {
       "id": "tabs-structure-71",
@@ -38,7 +38,7 @@
     },
     {
       "id": "mobile-state-breakpoint",
-      "question": "在 booking.moksaweb.com（WP 7.1、Blocksy 2.1.53）上，區塊 style 物件裡的 \"@mobile\" 與 \"@tablet\" 狀態，各自編譯成什麼寬度條件？請給出精確的 px 數字。",
+      "question": "在 測試站（WP 7.1、Blocksy 2.1.53）上，區塊 style 物件裡的 \"@mobile\" 與 \"@tablet\" 狀態，各自編譯成什麼寬度條件？請給出精確的 px 數字。",
       "must": [
         [
           "689\\.98"
@@ -53,7 +53,7 @@
     },
     {
       "id": "bare-page-empty-count",
-      "question": "booking.moksaweb.com 註冊的 302 個區塊類型，逐一放進空白頁用 do_blocks() 渲染，有幾個什麼都不輸出？幾個有輸出？",
+      "question": "測試站 註冊的 302 個區塊類型，逐一放進空白頁用 do_blocks() 渲染，有幾個什麼都不輸出？幾個有輸出？",
       "must": [
         [
           "(?<!\\d)205(?!\\d)"
@@ -85,7 +85,7 @@
     },
     {
       "id": "dynamic-count",
-      "question": "booking.moksaweb.com 的 302 個區塊類型中，WP_Block_Type_Registry 標成 is_dynamic（有 render callback）的有幾個？core/heading 算不算？",
+      "question": "測試站 的 302 個區塊類型中，WP_Block_Type_Registry 標成 is_dynamic（有 render callback）的有幾個？core/heading 算不算？",
       "must": [
         [
           "(?<!\\d)272(?!\\d)"
@@ -99,7 +99,7 @@
     },
     {
       "id": "blocksy-blocks",
-      "question": "Blocksy 2.1.53（含 Blocksy Companion）在 booking.moksaweb.com 註冊了幾個 blocksy/* 區塊？其中幾個在空白頁上就有輸出？",
+      "question": "Blocksy 2.1.53（含 Blocksy Companion）在 測試站 註冊了幾個 blocksy/* 區塊？其中幾個在空白頁上就有輸出？",
       "must": [
         [
           "(?<!\\d)13(?!\\d)"
@@ -141,7 +141,7 @@
     },
     {
       "id": "palette-color-3",
-      "question": "booking.moksaweb.com（Blocksy 2.1.53）的色彩 preset palette-color-3：它的 CSS 變數名稱是什麼？值（含 fallback 色碼）是什麼？",
+      "question": "測試站（Blocksy 2.1.53）的色彩 preset palette-color-3：它的 CSS 變數名稱是什麼？值（含 fallback 色碼）是什麼？",
       "must": [
         [
           "--wp--preset--color--palette-color-3"
@@ -155,7 +155,7 @@
     },
     {
       "id": "preset-counts",
-      "question": "booking.moksaweb.com 的 theme.json 合併設定裡，色彩、漸層、雙色調 preset 各有幾個？",
+      "question": "測試站 的 theme.json 合併設定裡，色彩、漸層、雙色調 preset 各有幾個？",
       "must": [
         [
           "(?<!\\d)20(?!\\d)"
@@ -189,7 +189,7 @@
     },
     {
       "id": "roundtrip-live",
-      "question": "把 booking.moksaweb.com 上所有含區塊標記的文章用 blockmark.py 做 parse → serialize 往返（2026-11-15 重測），共幾篇？幾篇位元組完全相同？其餘的差異是哪一類？",
+      "question": "把 測試站 上所有含區塊標記的文章用 blockmark.py 做 parse → serialize 往返（2026-11-15 重測），共幾篇？幾篇位元組完全相同？其餘的差異是哪一類？",
       "must": [
         [
           "(?<!\\d)19(?!\\d)"
@@ -217,7 +217,7 @@
     },
     {
       "id": "product-context-count",
-      "question": "booking.moksaweb.com 的情境渲染掃描（sweep-context）中，有幾個區塊只有在「商品」情境下才會輸出內容？",
+      "question": "測試站 的情境渲染掃描（sweep-context）中，有幾個區塊只有在「商品」情境下才會輸出內容？",
       "must": [
         [
           "(?<!\\d)15(?!\\d)"
